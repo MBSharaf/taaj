@@ -1,5 +1,5 @@
 // Client-side validation, role tab switching, password visibility, and API submission for login/register.
-import { initPreferences } from '../core/i18n.js?v=7';
+import { initPreferences } from '../core/i18n.js?v=8';
 
 initPreferences();
 

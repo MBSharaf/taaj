@@ -16,10 +16,10 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/auth.css?v=6">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=11">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=12">
 </head>
 <body class="page-auth">
-  <p class="demo-notice" role="status" hidden>نسخة عرض للواجهة فقط: تسجيل الدخول والبيانات الحية غير متاحة في هذه النسخة.</p>
+  <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
   <main class="auth-frame" aria-labelledby="login-title">
     <section class="auth-pane">
       <div class="auth-top">
@@ -34,6 +34,16 @@
         </div>
 
         <div id="auth-alert" class="alert alert-error" role="alert" hidden></div>
+
+        <div class="demo-accounts" hidden>
+          <p class="demo-accounts-title">حسابات تجريبية</p>
+          <p class="demo-accounts-hint">اضغط على حساب لملء البيانات ثم اضغط «تسجيل الدخول».</p>
+          <div class="demo-accounts-list">
+            <button type="button" data-demo-login="doctor@labstage.eg|Doctor@12345"><b>طبيب</b><span class="ltr">doctor@labstage.eg · Doctor@12345</span></button>
+            <button type="button" data-demo-login="lab@labstage.eg|Lab@12345"><b>معمل</b><span class="ltr">lab@labstage.eg · Lab@12345</span></button>
+            <button type="button" data-demo-login="admin@labstage.eg|Admin@12345"><b>مدير المنصة</b><span class="ltr">admin@labstage.eg · Admin@12345</span></button>
+          </div>
+        </div>
 
         <form id="login-form" class="auth-form" novalidate>
           <div class="field">
@@ -96,8 +106,8 @@
 
   <script src="/assets/vendor/gsap/gsap.min.js?v=6" defer></script>
 <script src="/assets/vendor/gsap/ScrollTrigger.min.js?v=6" defer></script>
-<script type="module" src="/assets/js/core/site.js?v=9"></script>
-  <script type="module" src="/assets/js/pages/auth.js?v=9"></script>
+<script type="module" src="/assets/js/core/site.js?v=10"></script>
+  <script type="module" src="/assets/js/pages/auth.js?v=10"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

@@ -290,3 +290,14 @@ html[lang="en"] :is(html[data-theme="dark"] .brand, .page-home .site-header:not(
   padding: 10px 16px; border-radius: var(--r-pill); text-align: center; font-size: var(--fs-sm); font-weight: 600;
   background: var(--warning-soft); color: var(--warning); border: 1px solid rgb(154 91 0 / .25); box-shadow: var(--sh-2); }
 .demo-notice[hidden] { display: none; }
+.demo-notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px; border-radius: var(--r-lg); }
+.demo-reset { border: 0; background: none; padding: 0; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.demo-accounts { margin-block-end: var(--sp-4); padding: var(--sp-4); border-radius: var(--r-md); background: var(--surface-tint); border: 1px solid var(--line); }
+.demo-accounts[hidden] { display: none; }
+.demo-accounts-title { margin: 0; font-weight: 700; font-family: var(--font-display); }
+.demo-accounts-hint { margin: 2px 0 var(--sp-3); font-size: var(--fs-xs); color: var(--ink-2); }
+.demo-accounts-list { display: grid; gap: 6px; }
+.demo-accounts-list button { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; padding: 10px 12px; border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--fs-sm); cursor: pointer; text-align: start; }
+.demo-accounts-list button:hover { border-color: var(--primary); }
+.demo-accounts-list .ltr { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink-2); }

@@ -177,7 +177,12 @@ const EXACT_AR_TO_EN = {
   'اكتب عنوان العيادة ليصل المندوب.': 'Enter the clinic address for the courier.',
 
   // Static demo (GitHub Pages)
-  'نسخة عرض للواجهة فقط: تسجيل الدخول والبيانات الحية غير متاحة في هذه النسخة.': 'Front-end demo only: sign-in and live data are not available in this version.',
+  'نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.': 'Demo version with sample data stored only in your browser.',
+  'إعادة ضبط بيانات العرض': 'Reset demo data',
+  'حسابات تجريبية': 'Demo accounts',
+  'اضغط على حساب لملء البيانات ثم اضغط «تسجيل الدخول».': 'Tap an account to fill the form, then press Sign in.',
+  'طبيب': 'Dentist',
+  'مدير المنصة': 'Platform admin',
 
   // Governorates & Badges
   'الكل': 'All',
@@ -935,5 +940,5 @@ export function initPreferences() {
 
 // Static front-end demo (GitHub Pages has no API): reveal the notice written in each page.
 if (/\.github\.io$/.test(window.location.hostname)) {
-  document.querySelectorAll('.demo-notice').forEach((el) => { el.hidden = false; });
+  document.querySelectorAll('.demo-notice, .demo-accounts').forEach((el) => { el.hidden = false; });
 }

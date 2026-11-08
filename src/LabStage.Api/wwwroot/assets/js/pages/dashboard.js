@@ -1,4 +1,4 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=8';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=9';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -734,7 +734,8 @@ async function initOrderDetails(isLabView) {
         const r = await fetch(`/api/v1/orders/${encodeURIComponent(orderNumber)}/stages/${st}/transition`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ targetStatus, notes: `تم التحديث إلى ${statusAr[targetStatus] || targetStatus}`, reason }),
+          // The API takes StageStatus as a number (no string-enum converter is registered).
+          body: JSON.stringify({ targetStatus: { NotStarted: 0, InProgress: 1, SubmittedForReview: 2, RevisionRequested: 3, Approved: 4, Completed: 5, Blocked: 6 }[targetStatus], notes: `تم التحديث إلى ${statusAr[targetStatus] || targetStatus}`, reason }),
         });
         const out = await r.json().catch(() => ({}));
         if (!r.ok) { showMsg(out.detail || 'انتقال غير مسموح.', false); return; }

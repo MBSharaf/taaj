@@ -3,7 +3,7 @@
 The ASP.NET app serves the site at the domain root and has server routes (/labs, /labs/{slug}).
 GitHub Pages serves a project site under /<repo>/ with static files only, so this script copies
 wwwroot to _site and rewrites root-absolute links to /<repo>/..., mapping the server routes to their
-HTML files. API calls (/api/...) are left alone: they fail on Pages and the pages show the demo notice.
+HTML files. API calls (/api/...) are answered in the browser by assets/js/demo/mock-api.js (demo data in localStorage).
 Usage: python3 .github/pages/build_pages.py [repo-name]
 """
 import pathlib, re, shutil, sys
@@ -40,9 +40,13 @@ if OUT.exists():
 shutil.copytree(SRC, OUT)
 count = 0
 for f in OUT.rglob('*'):
-    if f.suffix in {'.html', '.css', '.js', '.xml', '.txt', '.webmanifest'} and 'vendor' not in f.parts:
+    if f.suffix in {'.html', '.css', '.js', '.xml', '.txt', '.webmanifest'} and 'vendor' not in f.parts and 'demo' not in f.parts:
         s = f.read_text(encoding='utf-8')
         t = rewrite(s)
+        if f.suffix == '.html':
+            # In-browser demo API (Pages only): a classic script that runs before the page's modules.
+            tag = f'<script src="{P}assets/js/demo/mock-api.js?v=1"></script>'
+            t = t.replace('<meta charset="utf-8">', '<meta charset="utf-8">' + chr(10) + '  ' + tag, 1)
         if t != s:
             f.write_text(t, encoding='utf-8')
             count += 1
