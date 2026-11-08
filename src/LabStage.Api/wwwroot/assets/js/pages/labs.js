@@ -1,4 +1,4 @@
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=5';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=7';
 
 // Progressive enhancement for /labs and /lab-profile.html connected to /api/v1/labs.
 const grid = document.getElementById('labs-grid');
@@ -159,7 +159,9 @@ if (profileServicesRoot) {
   }
 
   const pathParts = window.location.pathname.split('/').filter(Boolean);
-  const slug = pathParts[0] === 'labs' && pathParts[1] ? pathParts[1] : 'cairo-digital-dental-lab';
+  // /labs/{slug} on the server; ?slug= on the static demo (GitHub Pages)
+  const slug = pathParts[0] === 'labs' && pathParts[1] ? pathParts[1]
+    : (new URLSearchParams(window.location.search).get('slug') || 'cairo-digital-dental-lab');
 
   const catEnMap = {
     'تركيبات الزركونيا والبورسلين': 'CROWN & BRIDGE',

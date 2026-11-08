@@ -1,4 +1,4 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=6';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=8';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -38,7 +38,7 @@ const ICONS = {
 function enhanceDashboard3DAndIcons() {
   // 1. Upgrade sidebar brand & nav links with modern 3D duotone SVG icons
   const brand = document.querySelector('.dash-sidebar .brand');
-  if (brand && !brand.querySelector('svg')) {
+  if (brand && !brand.querySelector('svg, img')) {
     brand.insertAdjacentHTML('afterbegin', ICONS.brand);
   }
   document.querySelectorAll('.dash-nav a').forEach((a) => {
@@ -115,7 +115,7 @@ function enhanceDashboard3DAndIcons() {
       banner.innerHTML = `
         <div class="greeting-copy">
           <span class="greeting-eyebrow">${ICONS.shield} الرقابة المالية والتشغيلية الموحدة</span>
-          <h1>مركز قيادة منصة لاب ستيج — مصر</h1>
+          <h1>مركز قيادة منصة تاج — مصر</h1>
           <p>مراقبة فورية لدفتر الأستاذ المالي، عمولات المنصة (2% معمل + 1% طبيب)، مصروفات بوابة الدفع، وتوثيق المعامل.</p>
         </div>
         <div class="dash-3d-stage" id="dash-3d-crown-host">${ICONS.crown3dWire}<span class="dash-3d-pill">3D CAD/CAM LIVE</span></div>

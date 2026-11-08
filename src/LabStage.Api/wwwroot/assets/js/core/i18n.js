@@ -6,7 +6,7 @@ const LANG_KEY = 'labstage_lang';
 
 const EXACT_AR_TO_EN = {
   // Brand & Top Navigation
-  'لاب ستيج': 'LabStage',
+  'تاج': 'Taaj',
   'تخطَّ إلى المحتوى': 'Skip to main content',
   'تخطّي إلى المحتوى الرئيسي': 'Skip to main content',
   'المعامل': 'Labs',
@@ -79,7 +79,7 @@ const EXACT_AR_TO_EN = {
   'ملاءمة دقيقة فوق الزرعة': 'A precise fit on the implant',
 
   // Homepage Audience, Payments & FAQ
-  'لمن المنصة': 'Who Is LabStage For',
+  'لمن المنصة': 'Who Is Taaj For',
   'مساحة عمل واحدة للطبيب والمعمل': 'One Unified Workspace for Dentists & Labs',
   'سوق لاكتشاف المعامل، ونظام متكامل لإدارة الحالات والمراحل والفواتير.': 'A marketplace to discover verified labs and a complete system to manage cases, stages, and invoices.',
   'لأطباء الأسنان': 'For Dentists',
@@ -109,10 +109,10 @@ const EXACT_AR_TO_EN = {
   'عند الجاهزية للتسليم (80%)': 'On Delivery Readiness (80%)',
   'أسئلة شائعة': 'Frequently Asked Questions',
   'كل ما تريد معرفته قبل البدء': 'Everything You Need to Know Before Starting',
-  'كيف يتم دفع قيمة الحالة على المنصة؟': 'How do case payments work on LabStage?',
+  'كيف يتم دفع قيمة الحالة على المنصة؟': 'How do case payments work on Taaj?',
   'هل يجب اختيار المراحل الأربع في كل حالة؟': 'Do I have to select all four stages for every case?',
-  'ما المزايا التي يحصل عليها طبيب الأسنان؟': 'What benefits do dentists get on LabStage?',
-  'ما المزايا التي يحصل عليها معمل الأسنان؟': 'What benefits do dental labs get on LabStage?',
+  'ما المزايا التي يحصل عليها طبيب الأسنان؟': 'What benefits do dentists get on Taaj?',
+  'ما المزايا التي يحصل عليها معمل الأسنان؟': 'What benefits do dental labs get on Taaj?',
   'هل ملفات الحالات والحسابات المالية محمية؟': 'Are 3D case files and financial accounts protected?',
   'جاهز تبدأ حالتك القادمة؟': 'Ready to Start Your Next Case?',
   'أنشئ حسابك مجانًا وابحث عن المعمل المناسب في محافظتك.': 'Create your account and find the right dental lab in your governorate.',
@@ -175,6 +175,9 @@ const EXACT_AR_TO_EN = {
   'اختر مرحلة تصنيع واحدة على الأقل.': 'Choose at least one production stage.',
   'تعذّر حساب التكلفة. اختر نوع التركيبة والأسنان.': 'Could not compute the cost. Choose a restoration type and teeth.',
   'اكتب عنوان العيادة ليصل المندوب.': 'Enter the clinic address for the courier.',
+
+  // Static demo (GitHub Pages)
+  'نسخة عرض للواجهة فقط: تسجيل الدخول والبيانات الحية غير متاحة في هذه النسخة.': 'Front-end demo only: sign-in and live data are not available in this version.',
 
   // Governorates & Badges
   'الكل': 'All',
@@ -332,7 +335,7 @@ const EXACT_AR_TO_EN = {
   'تم رفع التصميم واعتماده من الطبيب.': 'Design uploaded and approved by the dentist.',
 
   // Admin dashboard
-  'لاب ستيج · الإدارة': 'LabStage · Admin',
+  'تاج · الإدارة': 'Taaj · Admin',
   'الرسوم البيانية والملخص': 'Charts & Summary',
   'قواعد العمل والعمولة': 'Business Rules & Commission',
   'توثيق المعامل والاشتراكات': 'Lab Verification & Subscriptions',
@@ -341,7 +344,7 @@ const EXACT_AR_TO_EN = {
   'لوحة مدير المنصة — الإعدادات المالية، توثيق المعامل، التسويات، وسجل التدقيق': 'Platform Admin — financial settings, lab verification, settlements, and audit log',
   'مدير المنصة': 'Platform Admin',
   'الرقابة المالية والتشغيلية الموحدة': 'Unified financial & operational oversight',
-  'مركز قيادة منصة لاب ستيج — مصر': 'LabStage Command Center — Egypt',
+  'مركز قيادة منصة تاج — مصر': 'Taaj Command Center — Egypt',
   'مراقبة فورية لدفتر الأستاذ المالي، عمولات المنصة (2% معمل + 1% طبيب)، مصروفات بوابة الدفع، وتوثيق المعامل.': 'Real-time monitoring of the financial ledger, platform commissions (2% lab + 1% dentist), payment gateway costs, and lab verification.',
   'إجمالي المحصل عبر البوابة': 'Total Collected via Gateway',
   'جميع الدفعات المؤكدة (20% / 80%)': 'All confirmed payments (20% / 80%)',
@@ -928,4 +931,9 @@ export function initPreferences() {
   if (lang === 'en') {
     applyDomTranslations(document.body);
   }
+}
+
+// Static front-end demo (GitHub Pages has no API): reveal the notice written in each page.
+if (/\.github\.io$/.test(window.location.hostname)) {
+  document.querySelectorAll('.demo-notice').forEach((el) => { el.hidden = false; });
 }

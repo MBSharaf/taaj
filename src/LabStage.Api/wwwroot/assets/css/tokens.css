@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LabStage design tokens — single source of truth.
+   Taaj design tokens — single source of truth (mirrors brand/design-system/tokens.json).
    Palette "Lagoon": deep navy ground, cobalt primary, azure → aqua light.
    Material: frosted glass panels floating over a slow blue aurora.
    ========================================================================== */
@@ -9,7 +9,7 @@
     --g-950: #030817;
     --g-900: #0B1A45;
     --g-800: #1B47D6;
-    --g-700: #2F6BFF;
+    --g-700: #2A62F5;
     --g-500: #6E8FE0;
     --g-400: #A3B5DE;
     --g-300: #7CC4FF;
@@ -17,7 +17,7 @@
     --g-100: #E3ECFB;
     --white: #ffffff;
 
-    --cobalt: #2F6BFF;
+    --cobalt: #2A62F5;
     --azure: #4DA8FF;
     --aqua: #7FE3FF;
     --abyss: #050B24;
@@ -31,25 +31,32 @@
     --ink: #071233;
     --ink-1: #071233;
     --ink-2: #33416A;
-    --ink-3: #5A6B98;
+    --ink-3: #55668F;
     --ink-on-dark: #F3F7FF;
-    --line: rgb(11 26 69 / .10);
-    --line-strong: rgb(11 26 69 / .2);
+    --line: rgb(11 26 69 / .12);
+    --line-strong: rgb(11 26 69 / .28);
     --primary: var(--cobalt);
     --primary-hover: #1B47D6;
     --primary-ink: var(--white);
     --accent: var(--azure);
     --focus: var(--cobalt);
 
-    --success: #0130AA;
-    --warning: #A86A00;
-    --danger: #D2364B;
+    --success: #0F7A55;
+    --warning: #9A5B00;
+    --danger: #B8233A;
+    --success-soft: #D5F3E7;
+    --warning-soft: #FCEBCB;
+    --danger-soft: #FBDCE1;
+    --on-primary: #FFFFFF;
+    --night: #0B1A45;
+    --focus-ring: #2A62F5;
+    --shadow-pop: 0 24px 60px -24px rgb(27 71 214 / .45);
     --info: #1B47D6;
     --sponsored: #7A5B00;
 
     /* Gradients */
-    --grad-brand: linear-gradient(120deg, #2F6BFF 0%, #4DA8FF 55%, #7FE3FF 100%);
-    --grad-hero: linear-gradient(140deg, #0B1A45 0%, #1B47D6 60%, #2F6BFF 100%);
+    --grad-brand: linear-gradient(120deg, #2A62F5 0%, #4DA8FF 55%, #7FE3FF 100%);
+    --grad-hero: linear-gradient(140deg, #0B1A45 0%, #1B47D6 60%, #2A62F5 100%);
     --grad-mint: linear-gradient(135deg, #CFE2FF 0%, #7FE3FF 100%);
     --grad-ground:
       radial-gradient(900px 600px at 88% -8%, rgb(77 168 255 / .35), transparent 62%),
@@ -82,7 +89,7 @@
     --sp-6: 2rem; --sp-7: 3rem; --sp-8: 4.5rem; --sp-9: 7rem;
 
     /* Radii: small controls, medium panels, large hero glass */
-    --r-sm: 10px; --r-md: 14px; --r-lg: 22px; --r-xl: 32px; --r-pill: 999px;
+    --r-sm: 8px; --r-md: 14px; --r-lg: 22px; --r-xl: 32px; --r-pill: 999px;
 
     /* Shadows (navy-tinted) */
     --sh-1: 0 1px 2px rgb(11 26 69 / .06), 0 1px 1px rgb(11 26 69 / .04);
@@ -108,14 +115,22 @@
     --surface: rgb(255 255 255 / .06);
     --surface-glass: rgb(255 255 255 / .06);
     --surface-tint: rgb(77 168 255 / .12);
-    --ink: #EEF3FF;
-    --ink-1: #EEF3FF;
-    --ink-2: #B4C2E6;
-    --ink-3: #8696C4;
-    --line: rgb(160 190 255 / .13);
-    --line-strong: rgb(160 190 255 / .26);
-    --primary: #4D86FF;
-    --primary-hover: #7CA6FF;
+    --ink: #F3F7FF;
+    --ink-1: #F3F7FF;
+    --ink-2: #B8C6EA;
+    --ink-3: #8C9BC6;
+    --line: rgb(243 247 255 / .14);
+    --line-strong: rgb(243 247 255 / .32);
+    --primary: #4DA8FF;
+    --primary-hover: #7FE3FF;
+    --success: #4FD6A2;
+    --warning: #F5B94A;
+    --danger: #FF7A8A;
+    --success-soft: #0E3A2C;
+    --warning-soft: #3D2A07;
+    --danger-soft: #43141D;
+    --on-primary: #050B24;
+    --focus-ring: #7FE3FF;
     --primary-ink: #ffffff;
     --accent: var(--aqua);
     --focus: var(--aqua);

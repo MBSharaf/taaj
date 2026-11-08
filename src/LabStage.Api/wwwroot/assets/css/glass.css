@@ -250,3 +250,43 @@ html[data-theme="dark"] .page-dash .data-table .muted { color: var(--ink-3); }
   .page-dash .dash-nav a .nav-ic { inline-size: 26px; block-size: 26px; border-radius: 8px; }
   .page-dash .dash-nav a .nav-ic svg { inline-size: 15px; block-size: 15px; }
 }
+
+/* ==========================================================================
+   Taaj brand (brand/design-system): logo, focus ring, amounts, status badges
+   ========================================================================== */
+/* Wordmark: Arabic in AR, English in EN; navy ink on light grounds, ice ink on dark grounds. */
+.brand { gap: var(--sp-2); line-height: 0; }
+.brand-logo { display: none; block-size: 34px; inline-size: auto; }
+.brand-logo.logo-en { block-size: 26px; }
+html:not([lang="en"]) .brand .logo-ar.logo-light,
+html[lang="en"] .brand .logo-en.logo-light { display: block; }
+:is(html[data-theme="dark"] .brand, .page-home .site-header:not(.is-scrolled) .brand, .dash-sidebar .brand,
+    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand) .logo-light { display: none !important; }
+html:not([lang="en"]) :is(html[data-theme="dark"] .brand, .page-home .site-header:not(.is-scrolled) .brand, .dash-sidebar .brand,
+    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand) .logo-ar.logo-dark,
+html[lang="en"] :is(html[data-theme="dark"] .brand, .page-home .site-header:not(.is-scrolled) .brand, .dash-sidebar .brand,
+    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand) .logo-en.logo-dark { display: block; }
+.brand-suffix { font-family: var(--font-display); font-size: var(--fs-sm); font-weight: 600; line-height: 1; opacity: .8; }
+.page-dash .dash-sidebar .brand .brand-logo { block-size: 30px; }
+.page-dash .dash-sidebar .brand .brand-logo.logo-en { block-size: 24px; }
+@media (max-width: 600px) { .brand-logo { block-size: 30px; } .brand-logo.logo-en { block-size: 22px; } }
+
+/* Focus: 2px focus-ring, 2px offset on every interactive element */
+:focus-visible { outline: 2px solid var(--focus-ring, var(--focus)); outline-offset: 2px; }
+
+/* Amounts and case numbers in mono (design-system "amount" style) */
+.mono, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Status badges: status colours always sit on their -soft fill */
+.badge-success, .badge.is-success { background: var(--success-soft) !important; color: var(--success) !important; }
+.badge-warning, .badge.is-warning { background: var(--warning-soft) !important; color: var(--warning) !important; }
+.badge-danger, .badge.is-danger { background: var(--danger-soft) !important; color: var(--danger) !important; }
+
+/* Primary buttons: design-system hover lift */
+.btn-primary:hover { box-shadow: var(--shadow-pop); }
+
+/* Static demo notice (shown only on GitHub Pages by i18n.js) */
+.demo-notice { position: fixed; z-index: 1000; inset-block-end: 12px; inset-inline: 12px; margin: 0 auto; max-inline-size: 640px;
+  padding: 10px 16px; border-radius: var(--r-pill); text-align: center; font-size: var(--fs-sm); font-weight: 600;
+  background: var(--warning-soft); color: var(--warning); border: 1px solid rgb(154 91 0 / .25); box-shadow: var(--sh-2); }
+.demo-notice[hidden] { display: none; }
