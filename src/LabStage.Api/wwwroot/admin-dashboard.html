@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>لوحة إدارة المنصة والرقابة المالية | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="admin-dashboard">
+  <aside class="dash-sidebar">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج · الإدارة</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/admin-dashboard.html#overview" data-admin-nav="overview" aria-current="page">الرسوم البيانية والملخص</a>
+        <a href="/admin-dashboard.html#settings" data-admin-nav="settings">قواعد العمل والعمولة</a>
+        <a href="/admin-dashboard.html#labs" data-admin-nav="labs">توثيق المعامل والاشتراكات</a>
+        <a href="/admin-dashboard.html#settlements" data-admin-nav="settlements">التسويات البنكية للمعامل</a>
+        <a href="/admin-dashboard.html#audit" data-admin-nav="audit">سجل التدقيق الأمني</a>
+        <a href="/labs">دليل المعامل العام</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <strong>لوحة مدير المنصة — الإعدادات المالية، توثيق المعامل، التسويات، وسجل التدقيق</strong>
+      <div class="dash-user"><strong id="top-user-name">...</strong></div>
+    </header>
+
+    <div id="admin-alert" class="alert alert-success" hidden></div>
+
+    <section class="stats-grid" id="overview">
+      <article class="stat-card"><span class="stat-label">إجمالي المحصل عبر البوابة</span><strong class="stat-value num" id="ad-collected">0 ج.م</strong><span class="stat-sub">جميع الدفعات المؤكدة (20% / 80%)</span></article>
+      <article class="stat-card"><span class="stat-label">إيراد عمولة المنصة (2% معمل + 1% طبيب)</span><strong class="stat-value num" id="ad-comm">0 ج.م</strong><span class="stat-sub">صافي العمولة بعد أي استرداد</span></article>
+      <article class="stat-card"><span class="stat-label">إيراد اشتراكات المعامل</span><strong class="stat-value num" id="ad-subs">0 ج.م</strong><span class="stat-sub">2,000 ج.م / شهر بعد التجربة</span></article>
+      <article class="stat-card"><span class="stat-label">مصروف رسوم بوابة الدفع (تتحمله المنصة)</span><strong class="stat-value num" id="ad-gw-fee">0 ج.م</strong><span class="stat-sub">لا يُخصم من المعمل ولا الطبيب</span></article>
+    </section>
+
+    <!-- Admin Financial & Operational Charts -->
+    <div class="dash-grid-2">
+      <section class="card chart-card">
+        <div class="chart-card-head">
+          <div>
+            <h2>هيكل التدفقات المالية للمنصة (ج.م)</h2>
+            <p class="muted" style="font-size:var(--fs-xs)">مقارنة إجمالي التحصيل، صافي المعامل (98%)، عمولة المنصة (2%)، والاشتراكات</p>
+          </div>
+          <span class="badge badge-verified">دفتر الأستاذ المزدوج</span>
+        </div>
+        <div id="admin-revenue-chart" class="dash-chart-box"></div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="chart-card-head">
+          <div>
+            <h2>مؤشر توثيق المعامل والتسويات البنكية</h2>
+            <p class="muted" style="font-size:var(--fs-xs)">نسب المعامل الموثقة وحالة دفعات التسوية</p>
+          </div>
+        </div>
+        <div id="admin-ops-chart" class="dash-chart-box"></div>
+      </section>
+    </div>
+
+    <div class="dash-grid-2">
+      <section class="card" id="settings">
+        <h2>إعدادات قواعد العمل والعمولة والاشتراك</h2>
+        <form id="admin-settings-form" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-3)">
+          <div class="form-row-2">
+            <div class="field"><label for="set-comm">نسبة العمولة بنقاط الأساس (200 = 2%)</label><input class="input num" id="set-comm" name="commissionRateBps" type="number" value="200" required></div>
+            <div class="field"><label for="set-sub">قيمة الاشتراك الشهري للمعمل (ج.م)</label><input class="input num" id="set-sub" name="monthlySubscriptionEgp" type="number" value="2000" required></div>
+          </div>
+          <div class="form-row-2">
+            <div class="field"><label for="set-trial">مدة الفترة التجريبية المجانية (أيام)</label><input class="input num" id="set-trial" name="freeTrialDays" type="number" value="30" required></div>
+            <div class="field"><label for="set-gw">نسبة رسوم بوابة الدفع بنقاط الأساس (مصروف منصة)</label><input class="input num" id="set-gw" name="gatewayFeeBps" type="number" value="150" required></div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">حفظ إعدادات المنصة</button>
+        </form>
+      </section>
+
+      <section class="card" id="labs">
+        <h2>المعامل والتوثيق والتسويات</h2>
+        <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+          <table class="data-table">
+            <thead><tr><th>المعمل</th><th>المحافظة</th><th>التوثيق</th><th>الاشتراك</th><th>إجراء</th></tr></thead>
+            <tbody id="ad-labs-tbody"><tr><td colspan="5" class="muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="dash-grid-2">
+      <section class="card" id="settlements">
+        <h2>دفعات التسوية للمعامل (Settlement Batches)</h2>
+        <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+          <table class="data-table">
+            <thead><tr><th>إجمالي المدفوع</th><th>العمولة</th><th>صافي التسوية</th><th>الحالة</th><th>مرجع التحويل البنكي</th></tr></thead>
+            <tbody id="ad-settlements-tbody"><tr><td colspan="5" class="muted">لا توجد دفعات تسوية بعد.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="audit">
+        <h2>سجل التدقيق الأمني والمالي (Audit Logs)</h2>
+        <div id="ad-audit-list" style="display:grid;gap:var(--sp-2);margin-block-start:var(--sp-3);font-size:var(--fs-xs);max-block-size:280px;overflow-y:auto"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

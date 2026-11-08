@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>المدفوعات والفواتير للطبيب | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="doctor-finance">
+  <aside class="dash-sidebar">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/doctor-dashboard.html">لوحة المتابعة</a>
+        <a href="/doctor-orders.html">الطلبات وإنشاء حالة</a>
+        <a href="/doctor-finance.html" aria-current="page">المدفوعات والفواتير</a>
+        <a href="/labs">استكشاف المعامل</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <strong>الحساب المالي للطبيب وإيصالات الدفع (بالجنيه المصري EGP)</strong>
+      <div class="dash-user"><strong id="top-user-name">...</strong></div>
+    </header>
+
+    <div id="doc-fin-alert" class="alert alert-success" hidden></div>
+
+    <section class="stats-grid">
+      <article class="stat-card"><span class="stat-label">إجمالي قيمة الطلبات المؤكدة</span><strong class="stat-value num" id="df-confirmed">0 ج.م</strong><span class="stat-sub">عمولة الخدمة (1%): <b id="df-comm">0 ج.م</b></span></article>
+      <article class="stat-card"><span class="stat-label">إجمالي المدفوع</span><strong class="stat-value num" id="df-paid">0 ج.م</strong><span class="stat-sub">دفعات مؤكدة عبر الخادم</span></article>
+      <article class="stat-card"><span class="stat-label">دفعات مستحقة السداد الآن</span><strong class="stat-value num" id="df-due">0 ج.م</strong><span class="stat-sub">مرتبطة باعتماد المراحل (20% / 80%)</span></article>
+      <article class="stat-card"><span class="stat-label">الرصيد المتبقي</span><strong class="stat-value num" id="df-remaining">0 ج.م</strong><span class="stat-sub">يُستحق عند اكتمال المراحل</span></article>
+    </section>
+
+    <section class="card">
+      <h2>جدول الدفعات حسب الطلب (20% دفعة أولى / 80% دفعة نهائية + 1% عمولة)</h2>
+      <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>الخدمة والمعمل</th><th>إجمالي الطلب (+1% عمولة)</th><th>الدفعة الأولى (20%)</th><th>الدفعة النهائية (80%)</th><th>إجراء الدفع</th></tr></thead>
+          <tbody id="df-milestones-tbody"><tr><td colspan="6" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>سجل المعاملات والإيصالات</h2>
+      <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+        <table class="data-table">
+          <thead><tr><th>مرجع المعاملة</th><th>المبلغ</th><th>المسترد</th><th>الحالة</th><th>تاريخ التأكيد</th></tr></thead>
+          <tbody id="df-payments-tbody"><tr><td colspan="5" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+@import url("https://fonts.googleapis.com/css2?family=Alexandria:wght@600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap");
+body{margin:0;font-family:var(--font-sans);background:var(--bg);color:var(--ink)}
+.tj-row{display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:center;padding:var(--space-4)}
+.tj-stack{display:grid;gap:var(--space-3);padding:var(--space-4);max-width:360px}
+.tj-btn{font:600 15px/1 var(--font-sans);height:44px;padding:0 var(--space-5);border-radius:var(--radius-md);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:var(--space-2);transition:background .2s,box-shadow .2s,transform .2s}
+.tj-btn:hover{transform:translateY(-1px)}
+.tj-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tj-btn-primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.tj-btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover);box-shadow:var(--shadow-pop)}
+.tj-btn-glass{background:var(--surface-glass);border-color:var(--glass-border);backdrop-filter:blur(22px) saturate(170%)}
+.tj-btn-ghost{background:none;border-color:transparent;color:var(--primary)}
+.tj-btn-danger{background:var(--danger-soft);border-color:transparent;color:var(--danger)}
+.tj-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.tj-field{display:grid;gap:var(--space-1)}
+.tj-label{font:600 14px/20px var(--font-sans);color:var(--ink-2)}
+.tj-input{font:400 16px/24px var(--font-sans);height:46px;padding:0 var(--space-4);border-radius:var(--radius-md);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);box-sizing:border-box;width:100%}
+.tj-input::placeholder{color:var(--ink-3)}
+.tj-input:focus{outline:2px solid var(--focus-ring);outline-offset:1px;border-color:transparent}
+.tj-input[aria-invalid=true]{border-color:var(--danger)}
+.tj-hint{font:400 12px/18px var(--font-sans);color:var(--ink-3)}
+.tj-hint.err{color:var(--danger)}
+.tj-badge{display:inline-flex;align-items:center;gap:6px;font:600 12px/24px var(--font-sans);padding:0 10px;border-radius:var(--radius-pill);background:var(--surface-tint);color:var(--ink-2)}
+.tj-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.tj-badge-success{background:var(--success-soft);color:var(--success)}
+.tj-badge-warning{background:var(--warning-soft);color:var(--warning)}
+.tj-badge-danger{background:var(--danger-soft);color:var(--danger)}
+.tj-badge-primary{background:var(--primary);color:var(--on-primary)}
+.tj-glass{position:relative;background:var(--surface-glass);border:1px solid var(--glass-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-glass);backdrop-filter:blur(22px) saturate(170%);padding:var(--space-5)}
+.tj-aurora{padding:var(--space-5);background:radial-gradient(420px 260px at 85% 0%,rgba(77,168,255,.45),transparent 65%),radial-gradient(380px 260px at 0% 100%,rgba(127,227,255,.45),transparent 65%),var(--bg)}
+.tj-card-title{font:700 20px/28px var(--font-display);margin:0 0 var(--space-1)}
+.tj-meta{font:400 14px/22px var(--font-sans);color:var(--ink-3);margin:0}
+.tj-amount{font:500 16px/24px var(--font-mono);color:var(--ink)}
+.tj-stages{display:flex;align-items:flex-start;padding:var(--space-4);gap:0;list-style:none;margin:0}
+.tj-stage{flex:1;display:grid;justify-items:center;gap:var(--space-2);position:relative;font:600 13px/18px var(--font-sans);color:var(--ink-3);text-align:center}
+.tj-stage::before{content:"";position:absolute;top:13px;inset-inline-start:calc(-50% + 16px);inset-inline-end:calc(50% + 16px);height:3px;border-radius:3px;background:var(--surface-tint)}
+.tj-stage:first-child::before{display:none}
+.tj-dot{width:28px;height:28px;border-radius:var(--radius-pill);display:grid;place-items:center;background:var(--surface);border:2px solid var(--line-strong);color:var(--ink-3);font:700 12px/1 var(--font-sans);position:relative;z-index:1}
+.tj-stage.done{color:var(--ink-2)}.tj-stage.done .tj-dot{background:var(--success);border-color:var(--success);color:var(--on-primary)}.tj-stage.done::before{background:var(--success)}
+.tj-stage.now{color:var(--ink)}.tj-stage.now .tj-dot{background:var(--primary);border-color:var(--primary);color:var(--on-primary);box-shadow:0 0 0 6px var(--surface-tint)}.tj-stage.now::before{background:var(--primary)}

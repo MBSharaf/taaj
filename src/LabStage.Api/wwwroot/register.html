@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>إنشاء حساب جديد | لاب ستيج</title>
+  <meta name="description" content="أنشئ حساب طبيب أسنان أو سجّل معملك في منصة لاب ستيج في مصر. شهر مجاني للمعامل المؤهلة.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/auth.css?v=6">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-auth">
+  <main class="auth-frame" aria-labelledby="reg-title">
+    <section class="auth-pane">
+      <div class="auth-top">
+        <a class="brand" href="/">
+          <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#1B47D6"/><path d="M12.5 13.2c2.2-2 4.4-1.6 7.5-.4 3.1-1.2 5.3-1.6 7.5.4 2.4 2.2 1.8 6.4.6 9.7-.9 2.6-1.3 5.6-2.4 7.6-.8 1.4-2.3 1.3-2.8-.3l-1.3-4.6c-.4-1.4-2.8-1.4-3.2 0l-1.3 4.6c-.5 1.6-2 1.7-2.8.3-1.1-2-1.5-5-2.4-7.6-1.2-3.3-1.8-7.5.6-9.7Z" fill="#CFE2FF"/></svg>
+          <span>لاب ستيج</span>
+        </a>
+        <a class="btn btn-ghost btn-sm" href="/login.html">لديك حساب؟ دخول</a>
+      </div>
+
+      <div class="auth-body">
+        <div>
+          <h1 id="reg-title">إنشاء حساب جديد</h1>
+          <p class="auth-sub">اختر نوع الحساب للبدء كباحث عن معمل أو كمعمل أسنان.</p>
+        </div>
+
+        <div class="role-tabs" role="tablist" aria-label="نوع الحساب">
+          <button type="button" role="tab" id="tab-dentist" aria-selected="true" data-role-tab="Dentist">طبيب أسنان</button>
+          <button type="button" role="tab" id="tab-lab" aria-selected="false" data-role-tab="LaboratoryOwner">معمل أسنان</button>
+        </div>
+
+        <div id="auth-alert" class="alert alert-error" role="alert" hidden></div>
+
+        <form id="register-form" class="auth-form" novalidate>
+          <input type="hidden" name="role" id="role-input" value="Dentist">
+
+          <div class="form-row-2">
+            <div class="field">
+              <label for="fullName">الاسم الكامل</label>
+              <input class="input" id="fullName" name="fullName" type="text" autocomplete="name" placeholder="د. أحمد محمود" required>
+              <span class="error" data-err="fullName"></span>
+            </div>
+            <div class="field">
+              <label for="phone">رقم الهاتف</label>
+              <input class="input input-ltr" id="phone" name="phone" type="tel" autocomplete="tel" placeholder="01012345678" required>
+              <span class="error" data-err="phone"></span>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field">
+              <label for="entityName" id="entity-label">اسم العيادة</label>
+              <input class="input" id="entityName" name="entityName" type="text" placeholder="عيادة النور للأسنان" required>
+              <span class="error" data-err="entityName"></span>
+            </div>
+            <div class="field">
+              <label for="governorate">المحافظة</label>
+              <select class="select" id="governorate" name="governorate" required>
+                <option value="">اختر المحافظة</option>
+                <option value="القاهرة">القاهرة</option>
+                <option value="الجيزة">الجيزة</option>
+                <option value="الإسكندرية">الإسكندرية</option>
+                <option value="الدقهلية">الدقهلية</option>
+                <option value="الشرقية">الشرقية</option>
+                <option value="الغربية">الغربية</option>
+                <option value="القليوبية">القليوبية</option>
+                <option value="المنوفية">المنوفية</option>
+                <option value="أسيوط">أسيوط</option>
+                <option value="سوهاج">سوهاج</option>
+              </select>
+              <span class="error" data-err="governorate"></span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">البريد الإلكتروني</label>
+            <input class="input input-ltr" id="email" name="email" type="email" autocomplete="email" placeholder="name@example.com" required>
+            <span class="error" data-err="email"></span>
+          </div>
+
+          <div class="field">
+            <label for="password">كلمة المرور (8 أحرف على الأقل)</label>
+            <div class="pw-wrap">
+              <input class="input input-ltr" id="password" name="password" type="password" autocomplete="new-password" placeholder="••••••••" required minlength="8">
+              <button class="pw-toggle" type="button" data-pw-toggle="password" aria-label="إظهار أو إخفاء كلمة المرور">👁</button>
+            </div>
+            <span class="error" data-err="password"></span>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" name="acceptTerms" id="acceptTerms" required>
+            <span>أوافق على <a href="/legal/terms.html">الشروط والأحكام</a> و<a href="/legal/payments.html">سياسة الدفع والعمولة</a>.</span>
+          </label>
+          <span class="error" data-err="acceptTerms"></span>
+
+          <button class="btn btn-primary btn-lg" type="submit" id="register-submit">إنشاء الحساب</button>
+        </form>
+      </div>
+
+      <p class="auth-foot">لديك حساب بالفعل؟ <a href="/login.html">سجّل الدخول</a></p>
+    </section>
+
+    <aside class="auth-art" aria-label="مزايا التسجيل">
+      <div>
+        <span class="badge" id="art-badge">لأطباء الأسنان</span>
+        <h2 id="art-title">قارن المعامل واطلب حالتك الأولى خلال دقائق</h2>
+        <p id="art-desc">استعرض قوائم الأسعار الموحدة وتابع كل مرحلة من التصميم حتى التسليم.</p>
+      </div>
+
+      <div class="auth-scene" aria-hidden="true">
+        <div class="auth-scene-head">
+          <strong>جدول سداد مرن وآمن</strong>
+          <span>بالجنيه المصري (EGP)</span>
+        </div>
+        <div class="auth-scene-bars">
+          <div class="is-done"><b>20%</b><span>بعد التصميم</span></div>
+          <div class="is-done"><b>80%</b><span>عند الاكتمال</span></div>
+          <div><b>3D</b><span>مراجعة CAD</span></div>
+          <div><b>100%</b><span>خصوصية تامة</span></div>
+        </div>
+      </div>
+
+      <ul class="auth-points" role="list">
+        <li><span></span>ربط مباشر وموثّق بين العيادة والمعمل في جميع المحافظات</li>
+        <li><span></span>إدارة كاملة للمراحل والملفات ثلاثية الأبعاد والمحادثات</li>
+        <li><span></span>كشوف حساب وفواتير مستقلة بخصوصية كاملة لكل حساب</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script src="/assets/vendor/gsap/gsap.min.js?v=6" defer></script>
+<script src="/assets/vendor/gsap/ScrollTrigger.min.js?v=6" defer></script>
+<script type="module" src="/assets/js/core/site.js?v=7"></script>
+  <script type="module" src="/assets/js/pages/auth.js?v=7"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

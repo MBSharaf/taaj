@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>الأطباء، حساب المعاملات، المحفظة، والإعلانات الممولة | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="lab-finance">
+  <aside class="dash-sidebar">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/lab-dashboard.html#overview">لوحة المعمل والإحصائيات</a>
+        <a href="/lab-orders.html">الطلبات ومراحل الإنتاج</a>
+        <a href="/lab-finance.html#dentists" data-fin-tab="dentists" aria-current="page">الأطباء وكشف حساب كل طبيب</a>
+        <a href="/lab-finance.html#wallet" data-fin-tab="wallet">المحفظة وسحب الأرباح</a>
+        <a href="/lab-dashboard.html#pricelist">تعديل قائمة الأسعار (Pricelist)</a>
+        <a href="/lab-dashboard.html#storefront">إدارة متجر وبروفايل المعمل</a>
+        <a href="/lab-finance.html#campaigns" data-fin-tab="campaigns">الإعلانات الممولة وإحصائياتها</a>
+        <a href="/labs" id="my-public-profile-link">ملف المعمل العام (معاينة)</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <form class="dash-search" id="lab-fin-search-form">
+        <input class="input" id="lab-fin-q" placeholder="ابحث برقم الطلب أو اسم الطبيب أو اسم الحالة...">
+        <button class="btn btn-primary btn-sm" type="submit">تصفية الكشف</button>
+      </form>
+      <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" type="button" data-switch-fin-tab="dentists">الأطباء وكشوف الحساب</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-switch-fin-tab="wallet">المحفظة وسحب الفلوس</button>
+        <button class="btn btn-ghost btn-sm" type="button" data-switch-fin-tab="campaigns">إدارة الإعلانات</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="export-csv-btn">تصدير CSV</button>
+      </div>
+    </header>
+
+    <div id="lab-fin-alert" class="alert alert-success" hidden></div>
+
+    <section class="stats-grid">
+      <article class="stat-card"><span class="stat-label">إجمالي المحصل من الأطباء</span><strong class="stat-value num" id="lf-gross">0 ج.م</strong><span class="stat-sub">قيمة الدفعات المؤكدة</span></article>
+      <article class="stat-card"><span class="stat-label">عمولة المنصة (2% فقط)</span><strong class="stat-value num" id="lf-comm">0 ج.م</strong><span class="stat-sub">رسوم بوابة الدفع: 0 ج.م على المعمل</span></article>
+      <article class="stat-card"><span class="stat-label">صافي أرباح المعمل (98%)</span><strong class="stat-value num" id="lf-net">0 ج.م</strong><span class="stat-sub">تم تحويله سابقًا: <b id="lf-settled">0 ج.م</b></span></article>
+      <article class="stat-card"><span class="stat-label">رصيد المحفظة المتاح للسحب</span><strong class="stat-value num" id="lf-unsettled">0 ج.م</strong><span class="stat-sub">قيد التحويل حاليًا: <b id="lf-pending-wd">0 ج.م</b></span></article>
+    </section>
+
+    <!-- =====================================================
+         FINANCE TAB 1: DENTISTS DIRECTORY & PER-DENTIST LEDGER (#dentists)
+         ===================================================== -->
+    <div class="fin-tab-pane" id="fin-pane-dentists">
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);margin-block-end:var(--sp-3)">
+          <div>
+            <h2>كل الأطباء المتعاملين مع المعمل وحساب كل دكتور منفصل</h2>
+            <p class="muted" style="font-size:var(--fs-xs)">اضغط على <strong>"كشف حساب الطبيب التفصيلي"</strong> لأي دكتور لعرض جميع طلباته ومدفوعاته والمتبقي عليه بشكل منفصل.</p>
+          </div>
+          <span class="badge badge-verified" id="lf-dentists-count-badge">0 أطباء</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>الطبيب والعيادة</th>
+                <th>المحافظة</th>
+                <th>عدد الطلبات (نشط / مكتمل)</th>
+                <th>إجمالي قيمة الحالات</th>
+                <th>المدفوع للمعمل</th>
+                <th>المتبقي على الطبيب</th>
+                <th>صافي المعمل (98%)</th>
+                <th>حساب الطبيب المنفصل</th>
+              </tr>
+            </thead>
+            <tbody id="lf-dentists-tbody"><tr><td colspan="8" class="muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Per-Dentist Detailed Statement Card (Highlights selected doctor's individual ledger) -->
+      <section class="card" id="single-dentist-ledger-card" style="margin-block-start:var(--sp-5);border:2px solid var(--g-600)">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);margin-block-end:var(--sp-3)">
+          <div>
+            <span class="badge badge-verified">كشف حساب طبيب منفصل</span>
+            <h2 id="sdl-title" style="margin-block-start:4px">اختر طبيبًا من الجدول أعلاه لعرض معاملاته التفصيلية</h2>
+            <p class="muted" id="sdl-sub" style="font-size:var(--fs-xs)">يعرض كل طلبات الطبيب المختار، التواريخ، المبالغ المدفوعة، المتبقية، وصافي المعمل.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" type="button" onclick="window.print()">طباعة كشف حساب الطبيب</button>
+        </div>
+
+        <div class="stats-grid" id="sdl-metrics" style="margin-block-end:var(--sp-4)">
+          <article class="stat-card"><span class="stat-label">عدد حالات الطبيب</span><strong class="stat-value num" id="sdl-count">0</strong></article>
+          <article class="stat-card"><span class="stat-label">إجمالي حساب الطبيب</span><strong class="stat-value num" id="sdl-total">0 ج.م</strong></article>
+          <article class="stat-card"><span class="stat-label">المدفوع من الطبيب</span><strong class="stat-value num" id="sdl-paid">0 ج.م</strong></article>
+          <article class="stat-card"><span class="stat-label">المتبقي على الطبيب</span><strong class="stat-value num" id="sdl-rem">0 ج.م</strong></article>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>رقم الطلب</th>
+                <th>الحالة واللون</th>
+                <th>التاريخ</th>
+                <th>الحالة</th>
+                <th>إجمالي الطلب</th>
+                <th>المدفوع</th>
+                <th>المتبقي</th>
+                <th>عمولة 2%</th>
+                <th>صافي المعمل</th>
+              </tr>
+            </thead>
+            <tbody id="sdl-orders-tbody"><tr><td colspan="9" class="muted">اختر طبيبًا لعرض معاملاته...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- =====================================================
+         FINANCE TAB 2: WALLET, WITHDRAWAL & FULL LEDGER (#wallet)
+         ===================================================== -->
+    <div class="fin-tab-pane" id="fin-pane-wallet" hidden>
+      <div class="dash-grid-2">
+        <section class="card">
+          <span class="badge badge-verified">محفظة المعمل الرقمية</span>
+          <h2 style="margin-block-start:6px">تفاصيل المحفظة وسحب الأرباح (Payout &amp; Withdrawal)</h2>
+          <p class="muted" style="font-size:var(--fs-xs)">اسحب صافي أرباحك المحصلة (98% بعد عمولة الـ 2%) مباشرةً إلى حسابك البنكي أو InstaPay بدون أي رسوم بوابة دفع.</p>
+
+          <div style="display:grid;gap:var(--sp-2);margin-block:var(--sp-4);padding:var(--sp-4);border-radius:var(--r-md);background:linear-gradient(135deg,#0C1C44,#1B47D6);color:#fff">
+            <span style="font-size:var(--fs-xs);color:#CFE2FF">الرصيد المتاح للسحب الفوري الآن</span>
+            <strong class="num" id="wallet-available-big" style="font-size:var(--fs-2xl);color:#fff">0 ج.م</strong>
+            <div style="display:flex;gap:var(--sp-4);font-size:var(--fs-xs);color:rgba(242,247,240,.85)">
+              <span>قيد التحويل البنكي: <b class="num" id="wallet-pending-big">0 ج.م</b></span>
+              <span>تم تحويله لحسابك: <b class="num" id="wallet-paid-big">0 ج.م</b></span>
+            </div>
+          </div>
+
+          <form id="lab-withdraw-form" style="display:grid;gap:var(--sp-3)">
+            <div class="form-row-2">
+              <div class="field">
+                <label for="wd-method">وسيلة سحب الأرباح</label>
+                <select class="select" id="wd-method" name="payoutMethod" required>
+                  <option value="InstaPay">تحويل لحظي InstaPay</option>
+                  <option value="BankTransfer">تحويل بنكي (IBAN / رقم حساب)</option>
+                  <option value="VodafoneCash">محفظة شركات إلكترونية</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="wd-dest">عنوان InstaPay (IPA) أو رقم الحساب البنكي / IBAN</label>
+                <input class="input ltr" id="wd-dest" name="accountDestination" placeholder="cairo.lab@instapay أو EG89000..." required>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit" id="wd-submit-btn">طلب سحب الرصيد المتاح بالكامل الآن</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>سجل طلبات السحب والتسويات البنكية</h2>
+          <p class="muted" style="font-size:var(--fs-xs)">جميع دفعات السحب وحالتها ورقم مرجع التحويل البنكي المعتمد.</p>
+          <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+            <table class="data-table">
+              <thead><tr><th>إجمالي المحصل</th><th>عمولة 2%</th><th>صافي السحب</th><th>الحالة</th><th>بيانات التحويل / المرجع</th></tr></thead>
+              <tbody id="lf-settlements-tbody"><tr><td colspan="5" class="muted">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+
+          <hr style="border:0;border-block-start:1px solid var(--line);margin-block:var(--sp-4)">
+          <h3 style="font-size:var(--fs-md)">حالة الاشتراك الشهري للمعمل</h3>
+          <div id="lab-sub-box" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-2)"></div>
+          <div style="display:flex;gap:var(--sp-2);margin-block-top:var(--sp-3)">
+            <button class="btn btn-ghost btn-sm" type="button" id="renew-sub-btn">تجديد الاشتراك الشهري (2,000 ج.م)</button>
+          </div>
+        </section>
+      </div>
+
+      <section class="card" style="margin-block-start:var(--sp-5)">
+        <h2>التفصيل المالي الشامل لكل طلب</h2>
+        <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+          <table class="data-table" id="lf-orders-table">
+            <thead><tr><th>رقم الطلب</th><th>الطبيب</th><th>الحالة / الخدمة</th><th>إجمالي الطلب</th><th>المدفوع</th><th>المتبقي</th><th>عمولة 2%</th><th>صافي المعمل</th></tr></thead>
+            <tbody id="lf-orders-tbody"><tr><td colspan="8" class="muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- =====================================================
+         FINANCE TAB 3: SPONSORED ADS MANAGER & ANALYTICS (#campaigns)
+         ===================================================== -->
+    <div class="fin-tab-pane" id="fin-pane-campaigns" hidden>
+      <div class="dash-grid-2">
+        <section class="card">
+          <span class="badge badge-sponsored">مركز التحكم الكامل في الإعلانات</span>
+          <h2 style="margin-block-start:6px">إطلاق حملة إعلانية ممولة جديدة</h2>
+          <p class="muted" style="font-size:var(--fs-xs)">يظهر معملك في صدارة نتائج بحث الأطباء بشارة "مُموَّل" واضحة دون التأثير على مصداقية التقييم العضوي.</p>
+
+          <form id="create-campaign-form" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-4)">
+            <div class="field">
+              <label for="camp-title">عنوان الحملة الإعلانية</label>
+              <input class="input" id="camp-title" name="title" placeholder="مثال: عروض تركيبات الزركونيا والإيماكس الرقمية" required>
+            </div>
+            <div class="form-row-2">
+              <div class="field">
+                <label for="camp-budget">الميزانية المخصصة (ج.م)</label>
+                <input class="input num" id="camp-budget" name="budgetEgp" type="number" min="300" step="100" value="1500" required>
+              </div>
+              <div class="field">
+                <label for="camp-days">مدة الحملة (بالأيام)</label>
+                <input class="input num" id="camp-days" name="durationDays" type="number" min="3" max="90" value="14" required>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit" style="justify-self:start">إطلاق وتفعيل الإعلان الآن</button>
+          </form>
+        </section>
+
+        <section class="card chart-card">
+          <div class="chart-card-head">
+            <div>
+              <h2>مؤشر عائد الإعلانات (المشاهدات مقابل الزيارات والطلبات)</h2>
+              <p class="muted" style="font-size:var(--fs-xs)">إحصائيات حقيقية لعدد الأطباء الذين شاهدوا الإعلان ودخلوا البروفايل وطلبوا حالات</p>
+            </div>
+          </div>
+          <div id="lab-campaigns-chart" class="dash-chart-box"></div>
+        </section>
+      </div>
+
+      <section class="card" style="margin-block-start:var(--sp-5)">
+        <h2>حملاتك الإعلانية الحالية والسابقة (تحكم كامل: تعديل، إيقاف/تشغيل، تمديد، وإحصائيات)</h2>
+        <div id="lab-campaigns-list" style="display:grid;gap:var(--sp-4);margin-block-start:var(--sp-4)">
+          <p class="muted">جاري تحميل الحملات الإعلانية وإحصائياتها...</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

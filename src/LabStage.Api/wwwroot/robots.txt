@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /labs
+Allow: /how-it-works.html
+Allow: /about.html
+Allow: /contact.html
+Allow: /legal/
+Disallow: /api/
+Disallow: /doctor-
+Disallow: /lab-dashboard.html
+Disallow: /lab-orders.html
+Disallow: /lab-order-details.html
+Disallow: /lab-finance.html
+Disallow: /admin-
+Disallow: /login.html
+Disallow: /register.html
+
+Sitemap: /sitemap.xml

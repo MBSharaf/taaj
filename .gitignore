@@ -1,0 +1,34 @@
+# .NET build output
+bin/
+obj/
+publish/
+out/
+.vs/
+.vscode/
+*.user
+*.suo
+TestResults/
+*.log
+
+# Local databases
+*.mdf
+*.ldf
+
+# Local secrets / uploads — never commit
+appsettings.*.local.json
+.env
+.env.*
+secrets.json
+src/LabStage.Api/App_Data/
+storage/
+
+# Tooling
+node_modules/
+.claude/
+
+# Local-only working material (backups, screenshots, reference media, internal notes)
+backup/
+design/screenshots/
+design/reference/
+PROGRESS.md
+docs/BACKEND-PLAN.md

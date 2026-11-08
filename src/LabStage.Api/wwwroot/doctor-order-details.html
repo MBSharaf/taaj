@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>تفاصيل الحالة وتتبع المراحل | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="doctor-order-details">
+  <aside class="dash-sidebar">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/doctor-dashboard.html">لوحة المتابعة</a>
+        <a href="/doctor-orders.html" aria-current="page">الطلبات وإنشاء حالة</a>
+        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
+      
+        <a href="/labs">استكشاف المعامل</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <div><a href="/doctor-orders.html">← العودة لقائمة الطلبات</a></div>
+      <div class="dash-user"><strong id="top-user-name">...</strong></div>
+    </header>
+
+    <div id="order-action-alert" class="alert alert-info" hidden></div>
+
+    <section class="card" id="order-header-box">
+      <p class="muted">جاري تحميل تفاصيل الطلب...</p>
+    </section>
+
+    <section class="card">
+      <h2>الخط الزمني لمراحل التصنيع واعتماد الطبيب</h2>
+      <div class="stage-timeline" id="order-stages-timeline" style="margin-block-start:var(--sp-4)"></div>
+    </section>
+
+    <div class="dash-grid-2">
+      <section class="card">
+        <h2>محادثة الحالة الخاصة</h2>
+        <div class="chat-box" style="margin-block-start:var(--sp-3)">
+          <div class="chat-messages" id="order-chat-messages"></div>
+          <form class="chat-form" id="order-chat-form">
+            <input class="input" id="order-chat-input" placeholder="اكتب رسالة للمعمل بخصوص هذه الحالة..." required>
+            <button class="btn btn-primary btn-sm" type="submit">إرسال</button>
+          </form>
+        </div>
+      </section>
+
+      <div style="display:grid;gap:var(--sp-5)">
+        <section class="card">
+          <h2>ملفات الحالة المحمية (STL / PLY / OBJ / صور / PDF)</h2>
+          <form id="file-upload-form" style="display:flex;gap:var(--sp-2);margin-block-start:var(--sp-3);align-items:center">
+            <input class="input" type="file" id="case-file-input" name="file" accept=".stl,.ply,.obj,.png,.jpg,.jpeg,.pdf" required>
+            <button class="btn btn-primary btn-sm" type="submit">رفع ملف</button>
+          </form>
+          <div id="order-files-list" style="display:grid;gap:var(--sp-2);margin-block-start:var(--sp-3)"></div>
+        </section>
+
+        <section class="card">
+          <h2>دفعات الحالة (20% دفعة أولى / 80% دفعة نهائية)</h2>
+          <div id="order-milestones-box" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-3)"></div>
+        </section>
+
+        <section class="card">
+          <h2>سجل التدقيق غير القابل للتعديل</h2>
+          <div id="order-history-list" style="display:grid;gap:var(--sp-2);margin-block-start:var(--sp-3);font-size:var(--fs-xs)"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

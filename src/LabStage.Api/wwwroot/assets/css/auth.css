@@ -1,0 +1,268 @@
+/* ==========================================================================
+   Auth pages (login.html, register.html) — inspired by REERUI split-card reference
+   in the supplied green palette.
+   ========================================================================== */
+.page-auth {
+  min-block-size: 100svh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  position: relative;
+  overflow-x: hidden;
+  background:
+    radial-gradient(620px 440px at 8% 12%, rgb(124 196 255 / .65), transparent 65%),
+    radial-gradient(540px 420px at 92% 88%, rgb(110 143 224 / .45), transparent 65%),
+    var(--bg);
+}
+
+.auth-frame {
+  inline-size: min(100%, 1120px);
+  min-block-size: min(680px, 90svh);
+  background: var(--surface);
+  border: 2px solid var(--g-800);
+  border-radius: var(--r-xl);
+  box-shadow: var(--sh-3);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  overflow: hidden;
+}
+
+.auth-pane {
+  padding: clamp(1.75rem, 4vw, 3.25rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.auth-body {
+  max-inline-size: 26rem;
+  inline-size: 100%;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.auth-body h1 {
+  font-size: clamp(1.75rem, 1.3rem + 1.4vw, 2.35rem);
+  margin-block-end: var(--sp-1);
+}
+
+.auth-sub {
+  color: var(--ink-2);
+  font-size: var(--fs-sm);
+}
+
+/* Role switch tabs */
+.role-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 5px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.role-tabs button {
+  padding: 10px var(--sp-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-2);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  transition: background-color var(--dur-2), color var(--dur-2), box-shadow var(--dur-2);
+}
+
+.role-tabs button[aria-selected="true"] {
+  background: var(--g-800);
+  color: var(--white);
+  box-shadow: var(--sh-1);
+}
+
+.auth-form {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+@media (max-width: 560px) {
+  .form-row-2 { grid-template-columns: 1fr; }
+}
+
+.pw-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pw-wrap .input {
+  padding-inline-end: 46px;
+}
+
+.pw-toggle {
+  position: absolute;
+  inset-inline-end: 8px;
+  inline-size: 34px;
+  block-size: 34px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-3);
+  display: grid;
+  place-items: center;
+}
+
+.pw-toggle:hover {
+  background: var(--bg);
+  color: var(--g-900);
+}
+
+.auth-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+.auth-foot {
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+
+/* Visual showcase panel (right/left side of split card) */
+.auth-art {
+  position: relative;
+  background: linear-gradient(155deg, var(--g-900) 0%, var(--g-800) 58%, var(--g-700) 100%);
+  color: var(--ink-on-dark);
+  padding: clamp(2rem, 4vw, 3.25rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  overflow: hidden;
+}
+
+.auth-art::before,
+.auth-art::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-art::before {
+  inline-size: 380px;
+  block-size: 380px;
+  inset-block-start: -120px;
+  inset-inline-end: -100px;
+  background: radial-gradient(closest-side, rgb(124 196 255 / .28), transparent);
+}
+
+.auth-art::after {
+  inline-size: 320px;
+  block-size: 320px;
+  inset-block-end: -110px;
+  inset-inline-start: -90px;
+  background: radial-gradient(closest-side, rgb(207 226 255 / .22), transparent);
+}
+
+.auth-art h2 {
+  color: var(--ink-on-dark);
+  font-size: clamp(1.45rem, 1.1rem + 1.2vw, 2rem);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-art p {
+  color: rgb(243 247 255 / .84);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-scene {
+  position: relative;
+  z-index: 1;
+  background: rgb(255 255 255 / .1);
+  border: 1px solid rgb(255 255 255 / .2);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  backdrop-filter: blur(12px);
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.auth-scene-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+.auth-scene-bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+}
+
+.auth-scene-bars div {
+  padding: var(--sp-3);
+  border-radius: var(--r-sm);
+  background: rgb(255 255 255 / .1);
+  font-size: var(--fs-xs);
+  display: grid;
+  gap: 4px;
+}
+
+.auth-scene-bars div.is-done {
+  background: var(--g-300);
+  color: var(--g-950);
+  font-weight: 600;
+}
+
+.auth-points {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+}
+
+.auth-points li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.auth-points span {
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--g-300);
+}
+
+@media (max-width: 900px) {
+  .auth-frame {
+    grid-template-columns: 1fr;
+  }
+  .auth-art {
+    order: -1;
+    padding: var(--sp-5);
+  }
+}

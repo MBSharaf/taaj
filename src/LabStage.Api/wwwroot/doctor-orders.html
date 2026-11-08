@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>إدارة طلبات الطبيب وإنشاء حالة جديدة | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="doctor-orders">
+  <aside class="dash-sidebar">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/doctor-dashboard.html">لوحة المتابعة</a>
+        <a href="/doctor-orders.html" aria-current="page">الطلبات وإنشاء حالة</a>
+        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
+        <a href="/labs">استكشاف المعامل</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <form class="dash-search" id="order-search-form">
+        <input class="input" id="order-search-q" name="q" type="search" placeholder="ابحث باسم المريض أو رقم الطلب أو المعمل...">
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="dash-user"><strong id="top-user-name">...</strong></div>
+    </header>
+
+    <!-- =====================================================================
+         New case: a simple two-column order form (exocad-style project screen)
+         ===================================================================== -->
+    <form id="create-order-form" class="cad-workstation order-simple" aria-label="إنشاء طلب حالة جديدة" novalidate>
+      <!-- Start column: patient, lab, due date, notes, summary -->
+      <section class="cad-pane">
+        <header class="cad-header">
+          <h2>حالة جديدة</h2>
+          <span class="cad-created">تاريخ الإنشاء: <bdi class="ltr" id="cad-created-date"></bdi></span>
+        </header>
+        <div id="create-order-alert" class="alert alert-error" hidden></div>
+
+        <div class="cad-box">
+          <div class="cad-field">
+            <label for="co-patient">اسم المريض</label>
+            <input id="co-patient" name="patientName" type="text" placeholder="اكتب اسم المريض" autocomplete="off" maxlength="120" required>
+          </div>
+          <div class="cad-field">
+            <label for="co-lab">المعمل</label>
+            <select id="co-lab" name="laboratorySlug" required>
+              <option value="cairo-digital-dental-lab">معمل القاهرة الرقمي للتركيبات (القاهرة)</option>
+              <option value="nile-precision-lab">معمل النيل الدقيق CAD/CAM (الجيزة)</option>
+              <option value="alex-ceram-studio">أليكس سيرام ستوديو (الإسكندرية)</option>
+              <option value="delta-cadcam-mansoura">معمل الدلتا الرقمي (المنصورة)</option>
+            </select>
+          </div>
+          <div class="cad-field-row cad-field-row-even">
+            <div class="cad-field">
+              <label for="co-due-date">موعد التسليم</label>
+              <input type="date" id="co-due-date" name="dueDate" class="ltr">
+            </div>
+            <div class="cad-field">
+              <label for="co-delivery">الاستلام والتسليم</label>
+              <select id="co-delivery" name="deliveryMethod">
+                <option value="LabCourier">مندوب المعمل</option>
+                <option value="Pickup">من مقر المعمل</option>
+              </select>
+            </div>
+          </div>
+          <div class="cad-field" id="co-addr-field">
+            <label for="co-addr">عنوان العيادة للمندوب</label>
+            <input id="co-addr" name="pickupAddress" type="text" placeholder="مثال: مدينة نصر، القاهرة">
+          </div>
+        </div>
+
+        <div class="cad-box">
+          <div class="cad-field">
+            <label for="co-notes">ملاحظات للمعمل</label>
+            <textarea id="co-notes" name="instructions" placeholder="خط الحواف، نقاط التماس، الإطباق، أو أي تعليمات أخرى"></textarea>
+          </div>
+          <input type="file" id="co-initial-file" accept=".stl,.ply,.obj,.png,.jpg,.jpeg,.pdf" hidden>
+          <div class="cad-file-row">
+            <button class="cad-tool-btn" type="button" id="cad-btn-load">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              إرفاق ملف المسح
+            </button>
+            <span id="cad-file-label" class="cad-file-name">اختياري · STL / PLY / OBJ / صور / PDF</span>
+          </div>
+        </div>
+
+        <!-- Summary: updates live as teeth and restoration type change -->
+        <div class="cad-box order-summary" aria-live="polite">
+          <dl class="sum-grid">
+            <div><dt>اسم المريض</dt><dd id="sum-patient">—</dd></div>
+            <div><dt>عدد الأسنان</dt><dd><bdi class="num" id="sum-teeth">0</bdi></dd></div>
+            <div><dt>نوع التركيبة</dt><dd id="sum-type">—</dd></div>
+            <div class="sum-total"><dt>التكلفة الكلية</dt><dd><bdi class="num" id="sum-total">0</bdi> ج.م</dd></div>
+            <div class="sum-now"><dt>المطلوب دفعه (20%)</dt><dd><bdi class="num" id="sum-now">0</bdi> ج.م
+              <small id="sum-now-when-design">بعد اعتمادك للتصميم</small><small id="sum-now-when-confirm" hidden>عند تأكيد المعمل للطلب</small></dd></div>
+            <div><dt>المتبقي (80%)</dt><dd><bdi class="num" id="sum-rest">0</bdi> ج.م <small>عند اكتمال آخر مرحلة</small></dd></div>
+          </dl>
+          <p class="sum-note" id="sum-price-src-lab" hidden>السعر من قائمة أسعار المعمل المختار · المعمل يؤكد السعر النهائي</p>
+          <p class="sum-note" id="sum-price-src-guide">سعر استرشادي · المعمل يؤكد السعر النهائي</p>
+          <input id="co-price" name="estimatedPriceEgp" type="hidden" value="0">
+        </div>
+
+        <fieldset class="cad-stages">
+          <legend>مراحل التصنيع المطلوبة</legend>
+          <div class="cad-stage-chips">
+            <label class="cad-stage-chip"><input type="checkbox" name="stage" value="Design" checked>التصميم</label>
+            <label class="cad-stage-chip"><input type="checkbox" name="stage" value="Milling" checked>التفريز</label>
+            <label class="cad-stage-chip"><input type="checkbox" name="stage" value="Layering" checked>الطبقات</label>
+            <label class="cad-stage-chip"><input type="checkbox" name="stage" value="Glazing" checked>الجليز</label>
+          </div>
+        </fieldset>
+
+        <button class="btn btn-primary btn-lg order-submit" type="submit" id="cad-btn-save">إرسال الطلب للمعمل</button>
+      </section>
+
+      <!-- End column: restoration type, tooth chart, shade, impression -->
+      <section class="cad-pane">
+        <header class="cad-header">
+          <h2>الأسنان والتركيبة</h2>
+        </header>
+
+        <div class="cad-field">
+          <label for="co-service">نوع التركيبة</label>
+          <select id="co-service" name="serviceName" required>
+            <option value="تاج زركونيا متعدد الطبقات" data-match="زركونيا متعدد" data-unit-price="1800">تاج زركونيا متعدد الطبقات</option>
+            <option value="تاج إيماكس" data-match="تاج إيماكس" data-unit-price="2200">تاج إيماكس</option>
+            <option value="فينير إيماكس" data-match="فينير" data-unit-price="2500">فينير إيماكس</option>
+            <option value="جسر زركونيا" data-match="جسر" data-unit-price="1750">جسر زركونيا (للوحدة)</option>
+            <option value="دعامة زرعة مخصصة" data-match="دعامة" data-unit-price="2700">دعامة زرعة مخصصة</option>
+            <option value="واقي ليلي رقمي" data-match="واقي" data-unit-price="950">واقي ليلي رقمي</option>
+            <option value="تاج PMMA مؤقت" data-match="PMMA" data-unit-price="650">تاج PMMA مؤقت</option>
+          </select>
+        </div>
+
+        <div class="odontogram-stage">
+          <p class="odontogram-hint">اضغط على الأسنان المطلوبة · المحدد: <bdi class="ltr" id="cad-teeth-list">—</bdi></p>
+          <svg id="odontogram-svg" class="odontogram-svg" viewBox="0 0 380 500" role="group" aria-label="مخطط الأسنان">
+            <g id="odontogram-teeth-group"></g>
+          </svg>
+          <input id="co-teeth" name="toothNumbers" type="hidden" value="">
+          <div class="odontogram-quick">
+            <button type="button" class="cad-tool-btn" data-quick-teeth="11,21">القواطع العلوية</button>
+            <button type="button" class="cad-tool-btn" data-quick-teeth="13,12,11,21,22,23">الأمامية العلوية</button>
+            <button type="button" class="cad-tool-btn" data-quick-teeth="">مسح التحديد</button>
+          </div>
+        </div>
+
+        <div class="cad-field-row cad-field-row-even">
+          <div class="cad-field">
+            <label for="co-shade">لون الأسنان</label>
+            <select id="co-shade" name="shade" required>
+              <option value="A1">A1</option>
+              <option value="A2" selected>A2</option>
+              <option value="A3">A3</option>
+              <option value="A3.5">A3.5</option>
+              <option value="B1">B1</option>
+              <option value="B2">B2</option>
+              <option value="C1">C1</option>
+              <option value="D2">D2</option>
+              <option value="BL1">BL1</option>
+              <option value="BL2">BL2</option>
+              <option value="BL3">BL3</option>
+            </select>
+          </div>
+          <div class="cad-field">
+            <label for="co-scan-mode">طريقة الطبعة</label>
+            <select id="co-scan-mode" name="scanMode">
+              <option value="مسح فموي رقمي">مسح فموي رقمي</option>
+              <option value="موديل جبس">موديل جبس</option>
+              <option value="فكين مع تسجيل العضة">فكين مع تسجيل العضة</option>
+              <option value="طبعة سيليكون">طبعة سيليكون</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </form>
+
+    <section class="card">
+      <h2>سجل طلبات الحالات السابقة والجارية</h2>
+      <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>اسم المريض</th><th>الخدمة والأسنان</th><th>المعمل</th><th>المراحل</th><th>السعر المؤكد</th><th>الحالة</th><th></th></tr></thead>
+          <tbody id="doc-orders-tbody"><tr><td colspan="8" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

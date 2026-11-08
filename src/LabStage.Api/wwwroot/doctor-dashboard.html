@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>لوحة طبيب الأسنان | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="doctor-dashboard">
+  <aside class="dash-sidebar" aria-label="قائمة لوحة الطبيب">
+    <div>
+      <a class="brand" href="/"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#2F6BFF"/><path d="M12.5 13.2c2.2-2 4.4-1.6 7.5-.4 3.1-1.2 5.3-1.6 7.5.4 2.4 2.2 1.8 6.4.6 9.7-.9 2.6-1.3 5.6-2.4 7.6-.8 1.4-2.3 1.3-2.8-.3l-1.3-4.6c-.4-1.4-2.8-1.4-3.2 0l-1.3 4.6c-.5 1.6-2 1.7-2.8.3-1.1-2-1.5-5-2.4-7.6-1.2-3.3-1.8-7.5.6-9.7Z" fill="#CFE2FF"/></svg><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/doctor-dashboard.html" aria-current="page">لوحة المتابعة</a>
+        <a href="/doctor-orders.html">الطلبات وإنشاء حالة</a>
+        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
+        <a href="/labs">استكشاف المعامل</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">جاري التحميل...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <form class="dash-search" action="/doctor-orders.html" method="get">
+        <input class="input" name="q" type="search" placeholder="ابحث برقم الطلب (مثال: LS-000187) أو اسم الحالة...">
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="dash-user">
+        <span class="notif-pill">🔔 <span id="notif-count" class="num">0</span> إشعارات</span>
+        <strong id="top-user-name">د. ...</strong>
+      </div>
+    </header>
+
+    <section class="greeting-banner">
+      <div>
+        <h1 id="greeting-title">مرحبًا دكتور</h1>
+        <p id="greeting-sub">تابع مراحل حالاتك الحالية واعتمد التصميمات المرفوعة من المعامل.</p>
+      </div>
+      <a class="btn btn-mint btn-lg" href="/doctor-orders.html#new-order-card">+ إنشاء طلب حالة جديد</a>
+    </section>
+
+    <section class="stats-grid" aria-label="ملخص الحالات">
+      <article class="stat-card"><span class="stat-label">إجمالي الطلبات</span><strong class="stat-value num" id="st-total-orders">0</strong><span class="stat-sub">جميع الحالات المسجلة</span></article>
+      <article class="stat-card"><span class="stat-label">قيد التصنيع أو المراجعة</span><strong class="stat-value num" id="st-active-orders">0</strong><span class="stat-sub">تتبع مباشر للمراحل</span></article>
+      <article class="stat-card"><span class="stat-label">المدفوع حتى الآن</span><strong class="stat-value num" id="st-paid-egp">0 ج.م</strong><span class="stat-sub">عمولة الخدمة (1%): <b id="st-doc-comm">0 ج.م</b></span></article>
+      <article class="stat-card"><span class="stat-label">دفعات مستحقة حاليًا</span><strong class="stat-value num" id="st-due-egp">0 ج.م</strong><span class="stat-sub">مرتبطة باعتماد المراحل (20% / 80%)</span></article>
+    </section>
+
+    <!-- Doctor Dashboard Interactive Charts -->
+    <div class="dash-grid-2">
+      <section class="card chart-card">
+        <div class="chart-card-head">
+          <div>
+            <h2>مؤشر المدفوعات والدفعات المستحقة للعيادة (ج.م)</h2>
+            <p class="muted" style="font-size:var(--fs-xs)">متابعة الدفعات المسددة (20% دفعة أولى بعد التصميم + 80% عند الإتمام) وعمولة الخدمة (1%)</p>
+          </div>
+          <span class="badge badge-verified">دفعة أولى 20%</span>
+        </div>
+        <div id="doc-finance-chart" class="dash-chart-box"></div>
+      </section>
+
+      <section class="card chart-card">
+        <div class="chart-card-head">
+          <div>
+            <h2>توزيع حالات العيادة حسب مرحلة الإنتاج</h2>
+            <p class="muted" style="font-size:var(--fs-xs)">نسب الحالات في التصميم، التفريز، الطبقات، والجليز</p>
+          </div>
+          <a class="btn btn-ghost btn-sm" href="/doctor-orders.html">تتبع الحالات</a>
+        </div>
+        <div id="doc-stages-chart" class="dash-chart-box"></div>
+      </section>
+    </div>
+
+    <div class="dash-grid-2">
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-block-end:var(--sp-3)">
+          <h2>أحدث الطلبات ومراحل الإنتاج</h2>
+          <a class="btn btn-ghost btn-sm" href="/doctor-orders.html">كل الطلبات</a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>رقم الطلب</th><th>الحالة / الخدمة</th><th>المعمل</th><th>الحالة</th><th>المدفوع / المستحق</th><th></th></tr></thead>
+            <tbody id="doc-recent-orders"><tr><td colspan="6" class="muted">جاري تحميل الطلبات...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>الإشعارات والتنبيهات</h2>
+        <div id="notif-list" style="display:grid;gap:var(--sp-2);margin-block-start:var(--sp-3)">
+          <p class="muted">جاري تحميل الإشعارات...</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

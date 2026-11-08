@@ -1,0 +1,1027 @@
+<title>Labstage App</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root,[data-theme="light"]{--bg:#f4f5f2;--sheet:#ffffff;--raise:#eceee9;--line:#e2e4df;--control:#8a9199;--ink:#14171a;--ink-2:#545c64;--ink-3:#656d75;--primary:#14171a;--on-primary:#ffffff;--accent:#00788c;--design:#2f5bd3;--milling:#6b7684;--layering:#b0601a;--glaze:#0b7a55;--design-tint:#e3e9fb;--design-text:#1f3d99;--milling-tint:#e8eaed;--milling-text:#3d4652;--layering-tint:#f8e7d6;--layering-text:#7a3f0d;--glaze-tint:#dbf0e7;--glaze-text:#0b5c40;--field-design:#1f45b8;--field-milling:#2b3138;--field-layering:#d08a48;--field-glaze:#0f3d30;--field-ink-light:#f2f4f1;--field-ink-dark:#14171a;--success:#1d7a46;--success-tint:#ddf1e4;--warn:#8a5200;--warn-tint:#fbeed6;--danger:#b3261e;--danger-tint:#fbe2df;--float:0 8px 24px rgba(20, 23, 26, 0.16); color-scheme:light}[data-theme="dark"]{--bg:#111213;--sheet:#18191b;--raise:#202224;--line:#26282b;--control:#6c737a;--ink:#eceeef;--ink-2:#a5abb1;--ink-3:#8f969c;--primary:#eceeef;--on-primary:#111213;--accent:#22d3ee;--design:#7c9dff;--milling:#a7b2bf;--layering:#f2a65a;--glaze:#3fd69a;--design-tint:#1c2540;--design-text:#b9caff;--milling-tint:#25292e;--milling-text:#c9d1da;--layering-tint:#3a2716;--layering-text:#f8c58f;--glaze-tint:#123326;--glaze-text:#8fe8c0;--success:#4ade80;--success-tint:#14301f;--warn:#f5c060;--warn-tint:#3a2e14;--danger:#ff8a7d;--danger-tint:#3d1d1a;--float:0 8px 24px rgba(0, 0, 0, 0.5); color-scheme:dark}:root{--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;--space-6:24px;--space-8:32px;--radius-sm:4px;--radius-md:6px;--radius-lg:10px;--radius-xl:12px;--radius-pill:11px;--sidebar-width:232px;--rail-width:340px;--row-height:44px;--control-height:36px;--font-title:"Sora", "IBM Plex Sans Arabic", system-ui, sans-serif;--font-text:"IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;--font-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;}
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@600;700&display=swap");
+
+/* Labstage system components. Every value comes from tokens.css. */
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--font-text); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+.ls-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ls-icon { flex: none; display: block; }
+.ls-mono { font-family: var(--font-mono); font-size: 13px; }
+:where(.ls-btn, .ls-tooth, .ls-rowlink, .ls-note, .ls-side a, .ls-input):focus-visible, .ls-shade input:focus-visible + span, .ls-chat input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ls-panel { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); min-width: 0; }
+.ls-panel > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 16px var(--space-5) 10px; }
+.ls-panel > header h2 { margin: 0; font: 600 15px/20px var(--font-text); }
+.ls-panel > header span { font-size: 13px; color: var(--ink-2); }
+
+/* AppShell */
+.ls-app { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); min-height: 100vh; background: var(--bg); color: var(--ink); }
+.ls-side { position: sticky; top: 0; height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px; padding: 18px 12px; border-inline-end: 1px solid var(--line); }
+.ls-brand { display: flex; flex-direction: column; gap: 2px; padding: 4px 10px; }
+.ls-brand b { font: 700 19px/1 var(--font-title); letter-spacing: -0.03em; }
+.ls-brand span { font-size: 12px; color: var(--ink-2); }
+.ls-side nav { display: flex; flex-direction: column; gap: 2px; }
+.ls-grp { font-size: 12px; color: var(--ink-3); padding: 0 10px 6px; }
+.ls-side nav a { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: var(--radius-md); text-decoration: none; color: var(--ink-2); }
+.ls-side nav a:hover { color: var(--ink); background: var(--raise); }
+.ls-side nav a[aria-current="page"] { color: var(--ink); background: var(--raise); font-weight: 500; }
+.ls-count { margin-inline-start: auto; font-size: 12px; color: var(--ink); }
+.ls-side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.ls-me { display: flex; align-items: center; gap: 10px; padding: 6px; }
+.ls-me i { width: 30px; height: 30px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font: 600 12px/1 var(--font-text); font-style: normal; }
+.ls-me small { display: block; font-size: 12px; color: var(--ink-2); }
+.ls-main { min-width: 0; padding: 28px var(--space-8) 64px; }
+@media (max-width: 760px) {
+  .ls-app { grid-template-columns: 1fr; }
+  .ls-side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; border-inline-end: 0; border-bottom: 1px solid var(--line); padding: 12px var(--space-4); }
+  .ls-side nav { flex-direction: row; flex-wrap: wrap; width: 100%; order: 3; }
+  .ls-grp, .ls-me { display: none; }
+  .ls-side-foot { margin: 0; margin-inline-start: auto; }
+  .ls-main { padding: 20px var(--space-4) 48px; }
+}
+
+/* Button */
+.ls-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--control-height); padding: 0 14px; border-radius: var(--radius-md); border: 1px solid var(--control); background: var(--sheet); color: var(--ink); font: 500 14px/1 var(--font-text); text-decoration: none; cursor: pointer; white-space: nowrap; transition: transform .12s, background-color .15s, opacity .15s; }
+.ls-btn:hover { background: var(--raise); }
+.ls-btn:active { transform: scale(.98); }
+.ls-btn--primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+.ls-btn--primary:hover { background: var(--primary); opacity: .88; }
+.ls-btn--ghost { background: transparent; border-color: transparent; color: var(--ink-2); }
+.ls-btn--ghost:hover { color: var(--ink); background: var(--raise); }
+.ls-btn--danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.ls-btn--sm { height: 30px; padding: 0 10px; font-size: 13px; }
+.ls-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Field */
+.ls-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ls-field label { font-size: 13px; font-weight: 500; color: var(--ink-2); }
+.ls-input { height: var(--control-height); box-sizing: border-box; padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--control); background: var(--sheet); color: var(--ink); font: 400 14px/1.4 var(--font-text); min-width: 0; }
+textarea.ls-input { height: auto; padding: 10px 12px; resize: vertical; }
+.ls-input::placeholder { color: var(--ink-3); }
+.ls-field-msg { font-size: 13px; color: var(--ink-2); }
+.ls-field.is-error .ls-input { border-color: var(--danger); }
+.ls-field.is-error .ls-field-msg { color: var(--danger); }
+
+/* Pills, strip */
+.ls-pill { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--raise); color: var(--ink-2); }
+.ls-pill--design { background: var(--design-tint); color: var(--design-text); }
+.ls-pill--milling { background: var(--milling-tint); color: var(--milling-text); }
+.ls-pill--layering { background: var(--layering-tint); color: var(--layering-text); }
+.ls-pill--glaze { background: var(--glaze-tint); color: var(--glaze-text); }
+.ls-pill--success { background: var(--success-tint); color: var(--success); }
+.ls-pill--warn { background: var(--warn-tint); color: var(--warn); }
+.ls-pill--danger { background: var(--danger-tint); color: var(--danger); }
+.ls-strip { display: inline-grid; grid-template-columns: repeat(4, 18px); gap: 3px; vertical-align: middle; }
+.ls-strip i { height: 6px; border-radius: 1px; background: var(--line); }
+.ls-strip i.skip { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.ls-c-design { background: var(--design) !important; } .ls-c-milling { background: var(--milling) !important; } .ls-c-layering { background: var(--layering) !important; } .ls-c-glaze { background: var(--glaze) !important; }
+.ls-stagecell { display: inline-flex; align-items: center; gap: 10px; }
+
+/* StageTracker */
+.ls-tracker { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.ls-tracker li { display: flex; flex-direction: column; gap: 6px; font-size: 13px; min-width: 0; }
+.ls-tracker .bar { height: 6px; border-radius: 2px; background: currentColor; opacity: .25; }
+.ls-tracker .is-done .bar, .ls-tracker .is-now .bar { opacity: 1; }
+.ls-tracker .is-now .bar { box-shadow: 0 0 0 2px var(--fld, var(--sheet)), 0 0 0 4px currentColor; }
+.ls-tracker b { font-weight: 600; }
+.ls-tracker small { opacity: .82; font-size: 12px; }
+
+/* CrownStage */
+.ls-crown { position: relative; width: 100%; aspect-ratio: 1 / 1; display: grid; place-items: center; color: currentColor; }
+.ls-crown canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
+.ls-crown-fb { width: 50%; height: 50%; }
+.ls-crown.is-3d .ls-crown-fb { display: none; }
+
+/* CaseHeader */
+.ls-case-head { --fld: var(--field-design); display: grid; grid-template-columns: minmax(0, 1fr) 300px; border-radius: var(--radius-xl); overflow: hidden; background: var(--fld); color: var(--field-ink-light); }
+.ls-case-head.ls-field-milling { --fld: var(--field-milling); }
+.ls-case-head.ls-field-layering { --fld: var(--field-layering); color: var(--field-ink-dark); }
+.ls-case-head.ls-field-glaze { --fld: var(--field-glaze); }
+.ls-case-head .info { padding: var(--space-6); display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ls-case-head .top { opacity: .82; }
+.ls-case-head h1 { margin: 0; font: 600 30px/34px var(--font-title); letter-spacing: -0.02em; }
+.ls-case-head .meta { font-size: 14px; opacity: .88; margin-top: 4px; }
+.ls-case-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.ls-case-head .acts .ls-btn { background: transparent; color: inherit; border-color: currentColor; }
+.ls-case-head .acts .ls-btn:hover { background: rgba(255, 255, 255, .14); }
+.ls-case-head .crown { aspect-ratio: auto; min-height: 260px; }
+@media (max-width: 900px) { .ls-case-head { grid-template-columns: 1fr; } }
+
+/* KpiStrip */
+.ls-kpis { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.ls-kpis > div { padding: 14px var(--space-5); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ls-kpis > div + div { border-inline-start: 1px solid var(--line); }
+.ls-kpis span { font-size: 13px; color: var(--ink-2); }
+.ls-kpis b { font: 500 24px/28px var(--font-text); }
+.ls-kpis b.lead { font-size: 32px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em; }
+.ls-kpis small { font-size: 12px; color: var(--ink-3); }
+@media (max-width: 760px) { .ls-kpis { grid-template-columns: 1fr 1fr; } .ls-kpis > div + div { border-inline-start: 0; } .ls-kpis > div:nth-child(n+3) { border-top: 1px solid var(--line); } .ls-kpis > div:nth-child(even) { border-inline-start: 1px solid var(--line); } }
+
+/* Tables */
+.ls-table-wrap { overflow-x: auto; }
+.ls-table { width: 100%; border-collapse: collapse; }
+.ls-table th { font-size: 12px; font-weight: 500; color: var(--ink-3); text-align: start; padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ls-table td { padding: 11px 12px; height: var(--row-height); border-bottom: 1px solid var(--line); vertical-align: middle; }
+.ls-table tr:last-child td { border-bottom: 0; }
+.ls-table th:first-child, .ls-table td:first-child { padding-inline-start: var(--space-5); }
+.ls-table th:last-child, .ls-table td:last-child { padding-inline-end: var(--space-5); }
+.ls-table .num { text-align: end; }
+.ls-table .sub { display: block; font-size: 12px; color: var(--ink-2); }
+.ls-table tr.link { cursor: pointer; }
+.ls-table tr.link:hover td { background: var(--raise); }
+.ls-table tfoot td { font-weight: 600; border-top: 1px solid var(--control); border-bottom: 0; }
+.ls-rowlink { border: 0; padding: 0; background: none; color: var(--ink); font: 500 14px/1.4 var(--font-text); cursor: pointer; text-align: start; }
+
+/* ActionQueue */
+.ls-queue { display: flex; flex-direction: column; }
+.ls-qrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px var(--space-5); min-height: var(--row-height); border-top: 1px solid var(--line); }
+.ls-qrow .what { flex: 1 1 260px; min-width: 0; }
+.ls-qrow .what b { font-weight: 500; }
+.ls-qrow .what span { display: block; font-size: 13px; color: var(--ink-2); }
+.ls-qrow .amt { font-weight: 600; }
+.ls-empty { margin: 0; padding: 12px var(--space-5); font-size: 13px; color: var(--ink-2); }
+
+/* KanbanBoard */
+.ls-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; min-width: 920px; }
+.ls-lane { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ls-lane h2 { display: flex; align-items: center; gap: 8px; margin: 0; padding: 2px 4px 6px; font: 600 14px/20px var(--font-text); }
+.ls-lane h2 i { width: 10px; height: 10px; border-radius: 50%; }
+.ls-lane h2 span { margin-inline-start: auto; color: var(--ink-3); font-weight: 400; }
+.ls-lane .ls-empty { padding: 8px 4px; }
+.ls-kcard { background: var(--raise); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; border-inline-start: 3px solid var(--design); }
+.ls-edge-milling { border-inline-start-color: var(--milling); } .ls-edge-layering { border-inline-start-color: var(--layering); } .ls-edge-glaze { border-inline-start-color: var(--glaze); }
+.ls-kcard b { font-weight: 500; }
+.ls-kcard .sub { font-size: 12px; color: var(--ink-2); }
+.ls-kcard .act { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
+
+/* ToothChart */
+.ls-teeth { display: flex; flex-direction: column; align-items: center; gap: 6px; overflow-x: auto; padding: 6px 0; }
+.ls-teeth .trow { display: flex; gap: 4px; }
+.ls-teeth .mid { width: 100%; max-width: 640px; height: 1px; background: var(--line); }
+.ls-tooth { height: 40px; padding: 0; border-radius: 4px 4px 9px 9px; border: 1px solid var(--control); background: var(--bg); color: var(--ink); font: 500 12px/1 var(--font-mono); cursor: pointer; transition: transform .12s, background-color .12s; }
+.ls-tooth.lower { border-radius: 9px 9px 4px 4px; }
+.ls-tooth:hover { transform: translateY(-2px); }
+.ls-tooth[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ls-tooth:disabled { cursor: default; transform: none; }
+.ls-teeth .sum { display: flex; gap: 12px; align-items: baseline; align-self: stretch; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--line); }
+.ls-teeth .sum .ls-mono { color: var(--ink-2); }
+
+/* ShadePicker */
+.ls-shades { display: flex; flex-wrap: wrap; gap: 6px; }
+.ls-shade { position: relative; }
+.ls-shade input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.ls-shade span { display: grid; align-items: end; justify-items: center; width: 40px; height: 56px; padding-bottom: 6px; box-sizing: border-box; border-radius: 4px 4px 16px 16px; background: var(--c); color: #2a241b; font: 600 11px/1 var(--font-text); cursor: pointer; transition: transform .12s; }
+.ls-shade input:checked + span { transform: translateY(-5px); box-shadow: 0 0 0 2px var(--sheet), 0 0 0 4px var(--ink); }
+
+/* OrderSummary */
+.ls-summary { display: flex; flex-direction: column; gap: 14px; }
+.ls-summary dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; }
+.ls-summary dt { color: var(--ink-2); }
+.ls-summary dd { margin: 0; text-align: end; }
+.ls-summary .tot { color: var(--ink); font-weight: 600; padding-top: 10px; border-top: 1px solid var(--line); }
+.ls-summary .halves { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border-radius: 8px; overflow: hidden; }
+.ls-summary .halves div { background: var(--raise); padding: 12px; display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--ink-2); }
+.ls-summary .halves b { font-size: 18px; font-weight: 600; color: var(--ink); }
+
+/* CaseChat */
+.ls-chat { display: flex; flex-direction: column; height: 100%; min-height: 360px; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.ls-chat header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 16px var(--space-5) 10px; }
+.ls-chat header h2 { margin: 0; font: 600 15px/20px var(--font-text); }
+.ls-chat header .sub { font-size: 13px; color: var(--ink-2); }
+.ls-chat .log { flex: 1; min-height: 0; overflow-y: auto; padding: 4px var(--space-5) 14px; display: flex; flex-direction: column; gap: 12px; }
+.ls-chat .msg { max-width: 86%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.ls-chat .msg.mine { align-self: flex-end; align-items: flex-end; }
+.ls-chat .bub { padding: 9px 12px; border-radius: 10px; background: var(--raise); }
+.ls-chat .mine .bub { background: var(--ink); color: var(--bg); }
+.ls-chat small { font-size: 11px; color: var(--ink-3); }
+.ls-chat .file { display: flex; gap: 8px; align-items: center; margin-top: 6px; padding: 7px 9px; border-radius: 6px; background: var(--sheet); color: var(--ink); }
+.ls-chat .ev { align-self: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center; font-size: 12px; color: var(--ink-2); }
+.ls-chat .composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+.ls-chat .composer input { flex: 1; min-width: 0; height: var(--control-height); padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--control); background: var(--bg); color: var(--ink); font: inherit; }
+[dir="rtl"] .ls-chat .composer .ls-icon { transform: scaleX(-1); }
+
+/* LabRow */
+.ls-labrow { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 14px var(--space-5); border-top: 1px solid var(--line); }
+.ls-labrow .mk { width: 44px; height: 44px; border-radius: 8px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font: 600 15px/1 var(--font-title); }
+.ls-labrow b { font-weight: 500; margin-inline-end: 8px; }
+.ls-labrow .sub { display: block; font-size: 13px; color: var(--ink-2); }
+.ls-labrow .rate { text-align: end; }
+.ls-labrow .rate b { font-size: 16px; font-weight: 600; margin: 0; }
+.ls-labrow .rate small { display: block; font-size: 12px; color: var(--ink-2); }
+@media (max-width: 600px) { .ls-labrow { grid-template-columns: 44px minmax(0, 1fr) auto; } .ls-labrow .ls-btn { grid-column: 2 / -1; justify-self: start; } }
+
+/* Notification */
+.ls-note { display: flex; gap: 12px; align-items: flex-start; width: 100%; box-sizing: border-box; padding: 12px var(--space-5); border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); text-align: start; font: inherit; }
+button.ls-note { cursor: pointer; }
+button.ls-note:hover { background: var(--raise); }
+.ls-note .ls-icon { margin-top: 3px; color: var(--ink-2); }
+.ls-note .what { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ls-note .what b { font-weight: 400; }
+.ls-note.is-unread .what b { font-weight: 600; }
+.ls-note .what span { font-size: 13px; color: var(--ink-2); }
+.ls-note .side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; color: var(--ink-3); }
+.ls-note .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) { .ls-btn, .ls-tooth, .ls-shade span { transition: none; } }
+
+/* Page layout for the Labstage prototype. Values come from the design system tokens. */
+.pg-top { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+.pg-search { position: relative; flex: 1 1 auto; max-width: 560px; display: flex; align-items: center; gap: 8px; height: var(--control-height); padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--control); background: var(--sheet); color: var(--ink-2); }
+.pg-search:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pg-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: 400 14px/1 var(--font-text); }
+.pg-search input::placeholder { color: var(--ink-3); }
+.pg-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--float); overflow: hidden; }
+.pg-results button { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center; width: 100%; padding: 10px 14px; border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--ink); text-align: start; cursor: pointer; font: inherit; }
+.pg-results button:first-child { border-top: 0; }
+.pg-results button:hover, .pg-results button:focus-visible { background: var(--raise); }
+.pg-results .ls-mono { grid-row: 1 / 3; color: var(--ink-2); }
+.pg-results b { font-weight: 500; }
+.pg-results .sub { grid-column: 2; font-size: 12px; color: var(--ink-2); }
+.pg-results .ls-pill { grid-column: 3; grid-row: 1 / 3; }
+
+.pg-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; margin-bottom: 24px; }
+.pg-head > div:first-child { flex: 1 1 320px; min-width: 0; }
+.pg-head h1 { margin: 0; font: 600 26px/30px var(--font-title); letter-spacing: -0.02em; }
+.pg-head p { margin: 6px 0 0; font-size: 15px; line-height: 22px; color: var(--ink-2); }
+.pg-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.pg-grid { display: grid; grid-template-columns: minmax(0, 1fr) var(--rail-width); gap: var(--space-5); align-items: start; }
+.pg-col { display: flex; flex-direction: column; gap: var(--space-5); min-width: 0; }
+@media (max-width: 1100px) { .pg-grid { grid-template-columns: 1fr; } }
+.pg-pad { padding: 0 var(--space-5) var(--space-5); }
+.pg-stack { display: flex; flex-direction: column; gap: 14px; }
+.pg-hint { margin: 0; font-size: 13px; line-height: 18px; color: var(--ink-2); }
+.pg-err { margin: 0; font-size: 13px; color: var(--danger); }
+.pg-back { margin-bottom: 12px; }
+.pg-note { margin: 12px 0; font-size: 13px; color: var(--ink-2); }
+.pg-note b { color: var(--ink); font-weight: 500; font-size: 14px; }
+
+.pg-crown { border-radius: var(--radius-lg); overflow: hidden; color: var(--field-ink-light); }
+.pg-crown.ls-field-design { background: var(--field-design); }
+.pg-crown.ls-field-milling { background: var(--field-milling); }
+.pg-crown.ls-field-layering { background: var(--field-layering); color: var(--field-ink-dark); }
+.pg-crown.ls-field-glaze { background: var(--field-glaze); }
+
+.pg-form fieldset { border: 0; border-top: 1px solid var(--line); margin: 0; padding: 18px var(--space-5); display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.pg-form fieldset:first-child { border-top: 0; }
+.pg-form legend { float: left; width: 100%; padding: 0; margin-bottom: 14px; font: 600 15px/20px var(--font-text); }
+.pg-form fieldset > legend + * { clear: both; }
+.pg-form .ls-labrow { padding: 0; border-top: 0; }
+.pg-row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.pg-row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.pg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pg-chip { position: relative; display: inline-flex; }
+.pg-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.pg-chip > span { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--control); background: var(--sheet); cursor: pointer; }
+.pg-chip small { color: var(--ink-2); font-size: 12px; }
+.pg-chip input:checked + span { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 500; }
+.pg-chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pg-drop { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px; border: 1.5px dashed var(--control); border-radius: 8px; text-align: center; cursor: pointer; color: var(--ink); }
+.pg-drop b { font-weight: 500; }
+.pg-drop span { font-size: 13px; color: var(--ink-2); }
+.pg-files { display: flex; flex-direction: column; }
+.pg-files > div { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.pg-files > div:last-child { border-bottom: 0; }
+.pg-dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px; }
+.pg-dl dt { color: var(--ink-2); }
+.pg-dl dd { margin: 0; }
+.pg-chat { height: 720px; }
+.pg-filters { padding-top: var(--space-5); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.pg-labwrap { position: relative; }
+.pg-labwrap .pg-profile-btn { position: absolute; inset-inline-end: 96px; top: 50%; transform: translateY(-50%); }
+@media (max-width: 760px) { .pg-labwrap .pg-profile-btn { position: static; transform: none; margin: 0 var(--space-5) 12px 78px; } }
+.pg-map { height: 240px; border-radius: var(--radius-lg); overflow: hidden; background: var(--raise); }
+.pg-map svg { width: 100%; height: 100%; display: block; }
+.pg-portfolio { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.pg-portfolio figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.pg-portfolio .ph { aspect-ratio: 4 / 3; border-radius: 8px; display: grid; place-items: center; color: var(--field-ink-light); font-size: 12px; opacity: .9; }
+.pg-portfolio .ph.ls-field-design { background: var(--field-design); } .pg-portfolio .ph.ls-field-milling { background: var(--field-milling); }
+.pg-portfolio .ph.ls-field-layering { background: var(--field-layering); color: var(--field-ink-dark); } .pg-portfolio .ph.ls-field-glaze { background: var(--field-glaze); }
+.pg-portfolio figcaption { font-size: 13px; color: var(--ink-2); }
+.pg-portfolio .pg-drop { aspect-ratio: 4 / 3; padding: 12px; justify-content: center; }
+.pg-price { width: 110px; height: 30px; text-align: end; }
+.pg-tabs { display: flex; gap: 4px; flex-wrap: wrap; padding: 3px; margin-bottom: 14px; background: var(--raise); border-radius: 8px; width: max-content; max-width: 100%; }
+.pg-tabs button { border: 0; background: transparent; color: var(--ink-2); padding: 6px 12px; border-radius: 6px; font: 500 13px/1 var(--font-text); cursor: pointer; min-height: 30px; }
+.pg-tabs button[aria-selected="true"] { background: var(--sheet); color: var(--ink); }
+.pg-tabs button:focus-visible, .pg-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pg-boardbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 20px 0 12px; }
+.pg-inline { min-width: min(360px, 100%); }
+.pg-switch { display: flex; padding: 3px; background: var(--raise); border-radius: 8px; }
+.pg-switch button { flex: 1; border: 0; background: transparent; color: var(--ink-2); padding: 7px 4px; border-radius: 6px; font: 500 13px/1 var(--font-text); cursor: pointer; }
+.pg-switch button[aria-pressed="true"] { background: var(--sheet); color: var(--ink); }
+.pg-toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 16px); opacity: 0; max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 8px; background: var(--ink); color: var(--bg); box-shadow: var(--float); pointer-events: none; transition: opacity .2s, transform .2s; z-index: 40; }
+.pg-toast.on { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .pg-toast { transition: none; } }
+
+</style>
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* @ds-bundle: {"format":4,"namespace":"Labstage","components":[{"name":"AppShell"},{"name":"Button"},{"name":"Field"},{"name":"StagePill"},{"name":"StageStrip"},{"name":"StageTracker"},{"name":"CaseHeader"},{"name":"CrownStage"},{"name":"KpiStrip"},{"name":"CasesTable"},{"name":"ActionQueue"},{"name":"KanbanBoard"},{"name":"ToothChart"},{"name":"ShadePicker"},{"name":"OrderSummary"},{"name":"CaseChat"},{"name":"LabRow"},{"name":"Notification"}]} */
+(function () {
+  "use strict";
+  var React = window.React, h = React.createElement;
+  var useState = React.useState, useEffect = React.useEffect, useRef = React.useRef;
+  function cx() { return Array.prototype.filter.call(arguments, Boolean).join(" "); }
+  function omit(o, keys) { var r = {}; for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k) && keys.indexOf(k) < 0) r[k] = o[k]; return r; }
+  var seq = 0;
+
+  var ORDER = ["design", "milling", "layering", "glaze"];
+  var NAMES = { design: ["Design", "تصميم"], milling: ["Milling", "ميلينج"], layering: ["Layering", "ليرينج"], glaze: ["Glaze", "جليس"] };
+  function sname(s, lang) { var n = NAMES[s] || NAMES.design; return lang === "ar" ? n[1] : n[0]; }
+  function egp(n, lang) { var v = Math.round(n || 0); return lang === "ar" ? v.toLocaleString("ar-EG") + " ج.م" : "EGP " + v.toLocaleString("en-US"); }
+
+  var PATHS = {
+    cases: "M3 6h14v10H3zM7 6V4h6v2", plus: "M10 4v12M4 10h12", labs: "M10 17s5-4.6 5-8.5a5 5 0 00-10 0C5 12.4 10 17 10 17zm0-6.5a2 2 0 100-4 2 2 0 000 4z",
+    money: "M3 5h14v10H3zM10 7.5a2.5 2.5 0 110 5 2.5 2.5 0 010-5z", board: "M3 4h4v12H3zM8 4h4v8H8zM13 4h4v10h-4z", bell: "M6 8a4 4 0 018 0v3l1.5 2.5h-11L6 11V8zm2.5 7.5a1.5 1.5 0 003 0",
+    file: "M6 3h5.5L15 6.5V17H6V3zm5 0v4h4", attach: "M14.5 9.5l-5 5a3 3 0 01-4.2-4.2l5.6-5.6a2 2 0 012.8 2.8l-5.5 5.5a1 1 0 01-1.4-1.4l4.8-4.8",
+    send: "M3.5 10L16.5 4l-4 12.5-2.7-5.3L3.5 10z", search: "M9 15a6 6 0 100-12 6 6 0 000 12zm4.5-1.5L17 17", truck: "M2.5 5.5h9v8h-9zm9 3h3.5l2.5 2.5v2.5h-6",
+    check: "M5 10.5l3.2 3.2L15 7", arrow: "M5 10h10M11 6l4 4-4 4", profile: "M10 10a3 3 0 100-6 3 3 0 000 6zM4 17a6 6 0 0112 0", megaphone: "M4 8h3l7-4v12l-7-4H4zM7 12l1 4"
+  };
+  function Icon(p) {
+    return h("svg", { className: cx("ls-icon", p.className), width: p.size || 16, height: p.size || 16, viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true }, h("path", { d: PATHS[p.name] || "" }));
+  }
+
+  /* AppShell */
+  function AppShell(p) {
+    var role = p.role || "doctor";
+    return h("div", { className: "ls-app", "data-theme": role === "lab" ? "dark" : "light", dir: p.lang === "ar" ? "rtl" : undefined },
+      h("aside", { className: "ls-side" },
+        h("div", { className: "ls-brand" }, h("b", null, "Labstage"), h("span", null, p.scope)),
+        h("nav", { "aria-label": p.lang === "ar" ? "الشاشات" : "Screens" },
+          p.groupLabel ? h("div", { className: "ls-grp" }, p.groupLabel) : null,
+          (p.nav || []).map(function (n) {
+            return h("a", { key: n.id, href: n.href || "#", "aria-current": n.id === p.current ? "page" : undefined, onClick: n.onClick },
+              h(Icon, { name: n.icon }), n.label, n.count ? h("span", { className: "ls-count" }, n.count) : null);
+          })),
+        h("div", { className: "ls-side-foot" },
+          p.footer || null,
+          p.user ? h("div", { className: "ls-me" }, h("i", null, p.user.initials), h("div", null, p.user.name, h("small", null, p.user.role))) : null)),
+      h("main", { className: "ls-main" }, p.children));
+  }
+
+  /* Button */
+  function Button(p) {
+    var rest = omit(p, ["variant", "size", "icon", "className", "children", "href"]);
+    var cls = cx("ls-btn", "ls-btn--" + (p.variant || "secondary"), p.size === "sm" && "ls-btn--sm", p.className);
+    var kids = [p.icon ? h(Icon, { key: "i", name: p.icon }) : null, p.children];
+    if (p.href) return h("a", Object.assign({ href: p.href, className: cls }, rest), kids);
+    return h("button", Object.assign({ type: "button", className: cls }, rest), kids);
+  }
+
+  /* Field */
+  function Field(p) {
+    var idr = useRef(null); if (!idr.current) { seq += 1; idr.current = p.id || "ls-f" + seq; }
+    var id = idr.current, msg = id + "-msg";
+    var rest = omit(p, ["label", "hint", "error", "mono", "className", "id", "as", "options"]);
+    var ctrlProps = Object.assign({ id: id, className: cx("ls-input", p.mono && "ls-mono"), "aria-invalid": p.error ? true : undefined, "aria-describedby": (p.error || p.hint) ? msg : undefined }, rest);
+    var ctrl = p.as === "select" ? h("select", ctrlProps, (p.options || []).map(function (o) { return h("option", { key: o }, o); }))
+      : p.as === "textarea" ? h("textarea", Object.assign({ rows: 3 }, ctrlProps)) : h("input", ctrlProps);
+    return h("div", { className: cx("ls-field", p.error && "is-error", p.className) },
+      h("label", { htmlFor: id }, p.label), ctrl,
+      (p.error || p.hint) ? h("span", { id: msg, className: "ls-field-msg" }, p.error || p.hint) : null);
+  }
+
+  /* StagePill */
+  function StagePill(p) { return h("span", { className: cx("ls-pill", "ls-pill--" + (p.stage || "design"), p.className) }, p.children || sname(p.stage, p.lang)); }
+  function Pill(p) { return h("span", { className: cx("ls-pill", "ls-pill--" + (p.tone || "neutral")) }, p.children); }
+
+  /* StageStrip */
+  function StageStrip(p) {
+    var stages = p.stages || ORDER, cur = p.complete ? stages.length : stages.indexOf(p.stage);
+    return h("span", { className: "ls-strip", role: "img", "aria-label": sname(p.stage, p.lang) + ", " + (cur + 1) + " / " + stages.length },
+      ORDER.map(function (s) {
+        var k = stages.indexOf(s);
+        return h("i", { key: s, className: k < 0 ? "skip" : k <= cur ? "on ls-c-" + s : "" });
+      }));
+  }
+
+  /* StageTracker: bars on a stage field */
+  function StageTracker(p) {
+    var stages = p.stages || ORDER, cur = p.complete ? stages.length : stages.indexOf(p.current), ar = p.lang === "ar";
+    return h("ol", { className: "ls-tracker", "aria-label": ar ? "المراحل" : "Stages" }, stages.map(function (s, i) {
+      var st = i < cur ? "done" : i === cur ? "now" : "next";
+      var line = (p.dates && p.dates[s]) || (st === "next" ? (i === stages.length - 1 ? (ar ? "النصف التاني مستحق" : "Second half due") : (ar ? "التالي" : "Next")) : "");
+      return h("li", { key: s, className: "is-" + st, "aria-current": st === "now" ? "step" : undefined },
+        h("span", { className: "bar" }), h("b", null, sname(s, p.lang), h("span", { className: "ls-sr" }, st === "done" ? (ar ? " تمت" : " done") : st === "now" ? (ar ? " الحالية" : " in progress") : "")), h("small", null, line));
+    }));
+  }
+
+  /* CrownStage: three.js r128 if loaded, outline otherwise */
+  function crownGeo(T, seg) {
+    var prof = [[0.56,-1.05],[0.66,-0.96],[0.8,-0.7],[0.93,-0.32],[1.0,0.02],[1.0,0.3],[0.93,0.52],[0.8,0.68],[0.62,0.78],[0.42,0.76],[0.24,0.66],[0.08,0.6],[0.0,0.59]];
+    var g = new T.LatheGeometry(prof.map(function (q) { return new T.Vector2(q[0], q[1]); }), seg), pos = g.attributes.position;
+    for (var i = 0; i < pos.count; i++) {
+      var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), r = Math.sqrt(x * x + z * z), th = Math.atan2(z, x);
+      if (y > 0.2) { var rim = Math.min(1, r / 0.65); y += 0.24 * Math.pow((Math.cos(4 * th + Math.PI / 4) + 1) / 2, 2.2) * rim * Math.min(1, (y - 0.2) / 0.4); y -= Math.exp(-Math.pow(Math.sin(2 * th), 2) * 18) * 0.05 * rim; }
+      var b = 1 + 0.04 * Math.cos(2 * th); pos.setXYZ(i, x * 1.1 * b, y, z * 0.95 * b);
+    }
+    g.computeVertexNormals(); return g;
+  }
+  function tint(T, g, hex) {
+    var pos = g.attributes.position, col = [], c = new T.Color(), neck = new T.Color(hex).offsetHSL(0, 0.3, -0.3), tip = new T.Color(hex).lerp(new T.Color("#f6f6f2"), 0.5), mid = new T.Color(hex);
+    for (var i = 0; i < pos.count; i++) { var t = Math.min(1, Math.max(0, (pos.getY(i) + 1.05) / 1.9)); if (t < 0.6) c.copy(neck).lerp(mid, t / 0.6); else c.copy(mid).lerp(tip, (t - 0.6) / 0.4); col.push(c.r, c.g, c.b); }
+    g.setAttribute("color", new T.Float32BufferAttribute(col, 3));
+  }
+  var SHADE_HEX = { A1: "#efe3cd", A2: "#e9d8b8", A3: "#e0c79c", "A3.5": "#d6b886", A4: "#c9a674", B1: "#f1e8d3", B2: "#e9dcb9", B3: "#dcc593", B4: "#d2b97f", C1: "#e1d9c6", C2: "#d5c9ad", C3: "#c8b997", C4: "#b4a07a", D2: "#e2d6c0", D3: "#d6c7aa", D4: "#d2c09c" };
+  function CrownStage(p) {
+    var ref = useRef(null), api = useRef(null);
+    var stage = NAMES[p.stage] ? p.stage : "glaze", hex = SHADE_HEX[p.shade] || "#e9d8b8", spin = p.spin !== false;
+    useEffect(function () {
+      var host = ref.current, T = window.THREE; if (!host || !T) return undefined;
+      var R; try { R = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return undefined; }
+      if (!R.getContext()) return undefined;
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); R.outputEncoding = T.sRGBEncoding; R.toneMapping = T.ACESFilmicToneMapping;
+      host.appendChild(R.domElement); host.classList.add("is-3d");
+      var S = new T.Scene(), cam = new T.PerspectiveCamera(30, 1, 0.1, 100); cam.position.set(0, 1.9, 6.6); cam.lookAt(0, 0, 0);
+      S.add(new T.HemisphereLight(0xffffff, 0x2a3440, 0.8));
+      var k = new T.DirectionalLight(0xffffff, 1.5); k.position.set(3, 5, 4); S.add(k);
+      var f = new T.DirectionalLight(0xbfd4ff, 0.5); f.position.set(-4, 1, 2); S.add(f);
+      var rl = new T.DirectionalLight(0xffffff, 0.9); rl.position.set(-2, 3, -5); S.add(rl);
+      var G = new T.Group(); G.rotation.x = 0.42; G.rotation.y = 0.7; S.add(G);
+      var hi = crownGeo(T, 140), lo = crownGeo(T, 26), lg = crownGeo(T, 140); tint(T, lg, hex);
+      var M = {
+        design: new T.Mesh(hi, new T.MeshBasicMaterial({ color: 0xdbe5ff, wireframe: true, transparent: true, opacity: 0.95 })),
+        milling: new T.Mesh(lo, new T.MeshStandardMaterial({ color: 0xe9e7e1, roughness: 1, flatShading: true })),
+        layering: new T.Mesh(lg, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.62 })),
+        glaze: new T.Mesh(hi, new T.MeshPhysicalMaterial({ color: new T.Color(hex), roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05, reflectivity: 0.7 }))
+      };
+      Object.keys(M).forEach(function (s) { M[s].visible = s === stage; G.add(M[s]); });
+      var alive = true;
+      function draw() { R.render(S, cam); }
+      function size() { var w = host.clientWidth, hh = host.clientHeight; if (!w || !hh) return; R.setSize(w, hh, false); cam.aspect = w / hh; cam.updateProjectionMatrix(); draw(); }
+      var ro = window.ResizeObserver ? new ResizeObserver(size) : null; if (ro) ro.observe(host); size();
+      (function loop() { if (!alive) return; if (spin && !reduce) { G.rotation.y += 0.005; draw(); requestAnimationFrame(loop); } else draw(); })();
+      api.current = { shade: function (x) { M.glaze.material.color.set(x); tint(T, lg, x); lg.attributes.color.needsUpdate = true; draw(); } };
+      return function () { alive = false; if (ro) ro.disconnect(); R.dispose(); hi.dispose(); lo.dispose(); lg.dispose(); if (R.domElement.parentNode === host) host.removeChild(R.domElement); host.classList.remove("is-3d"); api.current = null; };
+    }, [stage, spin]);
+    useEffect(function () { if (api.current) api.current.shade(hex); }, [hex]);
+    return h("div", { ref: ref, className: cx("ls-crown", p.className), style: p.size ? { width: p.size, height: p.size } : undefined, role: "img", "aria-label": (p.lang === "ar" ? "التاج في مرحلة " : "Crown at ") + sname(stage, p.lang) },
+      h("svg", { className: "ls-crown-fb", viewBox: "0 0 100 100", "aria-hidden": true }, h("path", { d: "M24 80C19 64 16 48 19 36c3-12 12-15 19-9 4-8 13-9 18-2 6-7 16-6 20 3 7-4 11 7 9 19-1 13-4 24-8 33-12 6-41 6-53 0z", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeDasharray: stage === "design" ? "4 3" : undefined })));
+  }
+
+  /* CaseHeader: the case's stage as a field, with the crown */
+  function CaseHeader(p) {
+    var c = p.case || {}, ar = p.lang === "ar";
+    return h("section", { className: cx("ls-case-head", "ls-field-" + c.stage), "aria-labelledby": "ls-ch-" + c.id },
+      h("div", { className: "info" },
+        h("div", { className: "ls-mono top" }, c.id + " · " + (p.view === "lab" ? c.doctor : c.lab)),
+        h("div", null, h("h1", { id: "ls-ch-" + c.id }, c.patient), h("div", { className: "meta" }, [c.work, (ar ? "سنان " : "teeth ") + c.teeth, (ar ? "لون " : "shade ") + c.shade, (ar ? "التسليم " : "due ") + c.due].join(" · "))),
+        h(StageTracker, { stages: c.stages, current: c.stage, dates: c.dates, lang: p.lang }),
+        p.actions ? h("div", { className: "acts" }, p.actions) : null),
+      h(CrownStage, { stage: c.stage, shade: c.shade, lang: p.lang, className: "crown" }));
+  }
+
+  /* KpiStrip */
+  function KpiStrip(p) {
+    var items = p.items || [];
+    return h("div", { className: "ls-kpis", style: { "--n": items.length } }, items.map(function (it, i) {
+      return h("div", { key: i }, h("span", null, it.label), h("b", { className: it.lead ? "lead" : undefined }, it.value), it.note ? h("small", null, it.note) : null);
+    }));
+  }
+
+  /* CasesTable */
+  function CasesTable(p) {
+    var ar = p.lang === "ar", rows = p.cases || [];
+    return h("div", { className: "ls-table-wrap" }, h("table", { className: "ls-table" },
+      h("thead", null, h("tr", null, h("th", null, ar ? "الحالة" : "Case"), h("th", null, p.view === "lab" ? (ar ? "الدكتور" : "Doctor") : (ar ? "المعمل" : "Lab")), h("th", null, ar ? "المرحلة" : "Stage"), h("th", null, ar ? "التسليم" : "Due"), h("th", { className: "num" }, ar ? "المدفوع" : "Paid"))),
+      h("tbody", null, rows.map(function (c) {
+        return h("tr", { key: c.id, className: p.onOpen ? "link" : undefined, onClick: p.onOpen ? function () { p.onOpen(c); } : undefined },
+          h("td", null, p.onOpen ? h("button", { type: "button", className: "ls-rowlink", onClick: function (e) { e.stopPropagation(); p.onOpen(c); } }, c.patient) : h("b", null, c.patient), h("span", { className: "sub" }, h("span", { className: "ls-mono" }, c.id), " · " + c.work + " · " + c.teeth)),
+          h("td", null, p.view === "lab" ? c.doctor : c.lab),
+          h("td", null, h("span", { className: "ls-stagecell" }, h(StageStrip, { stage: c.stage, stages: c.stages, lang: p.lang }), h(StagePill, { stage: c.stage, lang: p.lang }))),
+          h("td", null, c.overdue ? h(Pill, { tone: "danger" }, (ar ? "متأخر · " : "Overdue · ") + c.due) : c.due),
+          h("td", { className: "num" }, egp(c.paid, p.lang), h("span", { className: "sub" }, (ar ? "من " : "of ") + egp(c.total, p.lang))));
+      }))));
+  }
+
+  /* ActionQueue: rows that need a decision */
+  function ActionQueue(p) {
+    return h("div", { className: "ls-queue" }, (p.items || []).length ? p.items.map(function (it) {
+      return h("div", { key: it.id, className: "ls-qrow" },
+        h("div", { className: "what" }, h("b", null, it.title), h("span", null, it.detail)),
+        it.amount != null ? h("span", { className: "amt" }, egp(it.amount, p.lang)) : null,
+        (it.actions || []).map(function (a, i) { return h(Button, { key: i, size: "sm", variant: a.variant || (i === it.actions.length - 1 ? "primary" : "secondary"), onClick: a.onClick }, a.label); }));
+    }) : h("p", { className: "ls-empty" }, p.empty || "Nothing waiting."));
+  }
+
+  /* KanbanBoard */
+  function KanbanBoard(p) {
+    var ar = p.lang === "ar", cards = p.cards || [];
+    return h("div", { className: "ls-table-wrap" }, h("div", { className: "ls-board" }, ORDER.map(function (s, si) {
+      var list = cards.filter(function (c) { return c.stage === s; }), next = ORDER[si + 1];
+      return h("section", { key: s, className: "ls-lane", "aria-label": sname(s, p.lang) },
+        h("h2", null, h("i", { className: "ls-c-" + s }), sname(s, p.lang), h("span", null, list.length)),
+        list.length ? list.map(function (c) {
+          return h("article", { key: c.id, className: "ls-kcard ls-edge-" + s },
+            h("span", { className: "ls-mono sub" }, c.id), h("b", null, c.patient), h("span", { className: "sub" }, c.doctor + " · " + c.work),
+            h("div", { className: "act" }, h("span", { className: "sub" }, c.note),
+              p.onMove ? h(Button, { size: "sm", variant: "ghost", onClick: function () { p.onMove(c, next); } }, next ? (ar ? "إلى " : "To ") + sname(next, p.lang) : (ar ? "اتسلّم" : "Delivered")) : null));
+        }) : h("p", { className: "ls-empty" }, ar ? "مفيش حالات في المرحلة دي." : "No cases in " + sname(s) + "."));
+    })));
+  }
+
+  /* ToothChart (FDI) */
+  var UP = [18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28], LO = [48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+  function tw(n) { var d = n % 10; return d >= 6 ? 34 : d >= 4 ? 28 : d === 3 ? 26 : 24; }
+  function ToothChart(p) {
+    var ctl = Array.isArray(p.value), st = useState(p.defaultValue || []), sel = ctl ? p.value : st[0], ar = p.lang === "ar";
+    function toggle(n) { if (p.readOnly) return; var nx = sel.indexOf(n) >= 0 ? sel.filter(function (x) { return x !== n; }) : sel.concat([n]).sort(function (a, b) { return a - b; }); if (!ctl) st[1](nx); if (p.onChange) p.onChange(nx); }
+    function row(list, lower) {
+      return h("div", { className: "trow" }, list.map(function (n, i) {
+        var d = i < 8 ? 7 - i : i - 8, off = d * d * 0.4;
+        return h("button", { key: n, type: "button", className: cx("ls-tooth", lower && "lower"), "aria-pressed": sel.indexOf(n) >= 0, "aria-label": (ar ? "سنة " : "Tooth ") + n, disabled: p.readOnly,
+          style: { width: tw(n), marginTop: lower ? 0 : off, marginBottom: lower ? off : 0 }, onClick: function () { toggle(n); } }, n);
+      }));
+    }
+    return h("div", { className: "ls-teeth", role: "group", "aria-label": ar ? "السنان (FDI)" : "Teeth, FDI numbering" },
+      row(UP, false), h("div", { className: "mid" }), row(LO, true),
+      h("div", { className: "sum" }, h("b", null, sel.length + (ar ? " وحدة" : sel.length === 1 ? " unit" : " units")), h("span", { className: "ls-mono" }, sel.length ? sel.join(", ") : (ar ? "اختار سنة واحدة على الأقل" : "Pick at least one tooth"))));
+  }
+
+  /* ShadePicker (VITA classical) */
+  var SHADES = ["A1","A2","A3","A3.5","A4","B1","B2","B3","B4","C1","C2","C3","C4","D2","D3","D4"];
+  function ShadePicker(p) {
+    var ctl = p.value !== undefined, st = useState(p.defaultValue || "A2"), val = ctl ? p.value : st[0];
+    var nm = useRef(null); if (!nm.current) { seq += 1; nm.current = "ls-shade-" + seq; }
+    return h("div", { className: "ls-shades", role: "radiogroup", "aria-label": p.lang === "ar" ? "اللون (VITA)" : "Shade, VITA classical" }, SHADES.map(function (s) {
+      return h("label", { key: s, className: "ls-shade", style: { "--c": SHADE_HEX[s] } },
+        h("input", { type: "radio", name: nm.current, value: s, checked: val === s, onChange: function () { if (!ctl) st[1](s); if (p.onChange) p.onChange(s); }, "aria-label": (p.lang === "ar" ? "لون " : "Shade ") + s }),
+        h("span", null, s));
+    }));
+  }
+
+  /* OrderSummary: the money, computed */
+  function OrderSummary(p) {
+    var ar = p.lang === "ar", sub = (p.unitPrice || 0) * (p.units || 0), fee = sub * (p.feeRate == null ? 0.05 : p.feeRate), tot = sub + fee;
+    return h("div", { className: "ls-summary" },
+      h("dl", null,
+        h("dt", null, (p.units || 0) + " × " + p.work), h("dd", null, egp(sub, p.lang)),
+        h("dt", null, ar ? "رسوم Labstage ‏5٪" : "Labstage fee, 5%"), h("dd", null, egp(fee, p.lang)),
+        h("dt", { className: "tot" }, ar ? "الإجمالي" : "Total"), h("dd", { className: "tot" }, egp(tot, p.lang))),
+      h("div", { className: "halves" },
+        h("div", null, ar ? "بعد التصميم" : "After Design", h("b", null, egp(tot / 2, p.lang))),
+        h("div", null, ar ? "بعد الجليس" : "After Glaze", h("b", null, egp(tot / 2, p.lang)))));
+  }
+
+  /* CaseChat */
+  function CaseChat(p) {
+    var st = useState(p.messages || []), msgs = st[0], setMsgs = st[1], dr = useState(""), draft = dr[0], setDraft = dr[1];
+    var ar = p.lang === "ar", viewer = p.viewer || "doctor", log = useRef(null);
+    useEffect(function () { if (log.current) log.current.scrollTop = log.current.scrollHeight; }, [msgs.length]);
+    function send(e) { e.preventDefault(); var t = draft.trim(); if (!t) return; var m = { from: viewer, text: t, time: ar ? "الآن" : "now" }; setMsgs(msgs.concat([m])); setDraft(""); if (p.onSend) p.onSend(m); }
+    return h("section", { className: "ls-chat", "aria-label": (ar ? "شات " : "Chat on ") + p.caseId },
+      h("header", null, h("h2", null, (ar ? "شات " : "Chat on ") + p.caseId), p.with ? h("span", { className: "sub" }, p.with) : null),
+      h("div", { className: "log", role: "log", ref: log }, msgs.map(function (m, i) {
+        if (m.from === "system") return h("div", { key: i, className: "ev" }, m.stage ? h(StagePill, { stage: m.stage, lang: p.lang }) : null, h("span", null, m.text), h("span", { className: "ls-mono" }, m.time));
+        var mine = m.from === viewer;
+        return h("div", { key: i, className: cx("msg", mine && "mine") }, !mine && m.name ? h("small", null, m.name) : null,
+          h("div", { className: "bub" }, m.text, m.file ? h("div", { className: "file" }, h(Icon, { name: "file" }), h("span", { className: "ls-mono" }, m.file)) : null), h("small", null, m.time));
+      })),
+      h("form", { className: "composer", onSubmit: send },
+        h(Button, { variant: "ghost", size: "sm", icon: "attach", "aria-label": ar ? "إرفاق ملف" : "Attach a file", onClick: p.onAttach }),
+        h("label", { className: "ls-sr", htmlFor: "ls-msg-" + p.caseId }, ar ? "رسالة" : "Message"),
+        h("input", { id: "ls-msg-" + p.caseId, value: draft, onChange: function (e) { setDraft(e.target.value); }, placeholder: ar ? "اكتب على الحالة دي" : "Message about this case", autoComplete: "off" }),
+        h("button", { type: "submit", className: "ls-btn ls-btn--primary ls-btn--sm", "aria-label": ar ? "إرسال" : "Send", disabled: !draft.trim() }, h(Icon, { name: "send" }))));
+  }
+
+  /* LabRow */
+  function LabRow(p) {
+    var l = p.lab || {}, ar = p.lang === "ar";
+    return h("div", { className: "ls-labrow" },
+      h("span", { className: "mk", "aria-hidden": true }, (l.name || "").split(" ").slice(0, 2).map(function (w) { return w[0]; }).join("")),
+      h("div", null, h("b", null, l.name), l.sponsored ? h(Pill, { tone: "warn" }, ar ? "مُموَّل" : "Sponsored") : null,
+        h("span", { className: "sub" }, [l.area, l.km != null ? l.km + " km" : null, l.kit].filter(Boolean).join(" · ")),
+        h("span", { className: "sub" }, (ar ? "تبدأ من " : "From ") + egp(l.from, p.lang) + " · " + l.days + (ar ? " أيام تسليم" : "-day turnaround"))),
+      h("div", { className: "rate" }, h("b", null, Number(l.rating || 0).toFixed(1)), h("small", null, l.reviews + (ar ? " تقييم" : " reviews"))),
+      h(Button, { size: "sm", onClick: p.onOrder }, ar ? "اطلب" : "Order"));
+  }
+
+  /* Notification */
+  var KIND = { stage: "check", chat: "file", payment: "money", order: "cases", pickup: "truck" };
+  function Notification(p) {
+    var Tag = p.onOpen ? "button" : "div";
+    return h(Tag, { type: p.onOpen ? "button" : undefined, onClick: p.onOpen, className: cx("ls-note", p.unread && "is-unread") },
+      h(Icon, { name: KIND[p.kind] || "bell" }),
+      h("span", { className: "what" }, h("b", null, p.title), p.text ? h("span", null, p.text) : null),
+      h("span", { className: "side" }, p.time ? h("span", { className: "ls-mono" }, p.time) : null, p.unread ? h("i", { className: "dot" }, h("span", { className: "ls-sr" }, p.lang === "ar" ? "غير مقروء" : "Unread")) : null));
+  }
+
+  window.Labstage = {
+    AppShell: AppShell, Button: Button, Field: Field, StagePill: StagePill, Pill: Pill, StageStrip: StageStrip, StageTracker: StageTracker,
+    CaseHeader: CaseHeader, CrownStage: CrownStage, KpiStrip: KpiStrip, CasesTable: CasesTable, ActionQueue: ActionQueue, KanbanBoard: KanbanBoard,
+    ToothChart: ToothChart, ShadePicker: ShadePicker, OrderSummary: OrderSummary, CaseChat: CaseChat, LabRow: LabRow, Notification: Notification,
+    Icon: Icon, STAGES: ORDER, SHADES: SHADE_HEX, egp: egp
+  };
+})();
+
+</script>
+<script>
+/* Labstage prototype, built only from the Labstage design system v2 (window.Labstage). Sample data is fictional. */
+(function () {
+  "use strict";
+  var h = React.createElement, useState = React.useState, useEffect = React.useEffect, useRef = React.useRef;
+  var L = window.Labstage, egp = L.egp, ORDER = L.STAGES;
+  var NAME = { design: "Design", milling: "Milling", layering: "Layering", glaze: "Glaze" };
+  var PRICE = { "Zirconia crown": 1800, "E.max veneer": 2100, "PFM crown": 1500, "Implant crown": 3600, "Zirconia bridge unit": 1800 };
+  var ME_DOCTOR = "Dr. Karim Adel", ME_LAB = "Nile Precision Lab";
+
+  /* ---------- data ---------- */
+  function C(id, patient, doctor, lab, work, units, teeth, shade, stage, due, o) {
+    var c = Object.assign({ id: id, patient: patient, doctor: doctor, lab: lab, workType: work, units: units, work: units + " × " + work, teeth: teeth, shade: shade, stage: stage, stages: ORDER, due: due, paidHalves: 0 }, o || {});
+    c.total = Math.round(PRICE[work] * units * 1.05);
+    return c;
+  }
+  var CASES0 = [
+    C("LS-24817", "Mona Hassan", ME_DOCTOR, ME_LAB, "Zirconia crown", 2, "16, 26", "A2", "layering", "Thu 30 Oct", { paidHalves: 1, dates: { design: "Tue 21 Oct", milling: "Sat 25 Oct", layering: "Since 11:40" } }),
+    C("LS-24790", "Youssef Samir", ME_DOCTOR, ME_LAB, "E.max veneer", 2, "11, 21", "B1", "design", "Mon 27 Oct", { waiting: "approve", dates: { design: "File sent 09:40" } }),
+    C("LS-24802", "Salma Nabil", ME_DOCTOR, "Delta Smile Lab", "Implant crown", 1, "36", "A3", "design", "Wed 29 Oct", { waiting: "pay", dates: { design: "Approved 08:30" } }),
+    C("LS-24811", "Omar Fathy", ME_DOCTOR, "Cairo Ceramic Studio", "Zirconia bridge unit", 3, "44–46", "A3", "glaze", "Today", { stages: ["design", "milling", "glaze"], paidHalves: 1, dates: { design: "Thu 16 Oct", milling: "Mon 20 Oct", glaze: "Ready 07:55" } }),
+    C("LS-24795", "Hana Ezzat", ME_DOCTOR, "Delta Smile Lab", "PFM crown", 1, "24", "A3.5", "milling", "Tue 28 Oct", { paidHalves: 1, dates: { design: "Fri 24 Oct", milling: "Since 10:00" } }),
+    C("LS-24768", "Ahmed Lotfy", ME_DOCTOR, "Cairo Ceramic Studio", "Zirconia crown", 1, "47", "A2", "milling", "Sat 25 Oct", { overdue: true, stages: ["design", "milling", "glaze"], paidHalves: 1, dates: { design: "Mon 20 Oct", milling: "Since Thu" } }),
+    C("LS-24826", "Laila Sabry", "Dr. Nadia Fouad", ME_LAB, "Implant crown", 1, "46", "A2", "design", "Wed 29 Oct", { dates: { design: "Due Mon" } }),
+    C("LS-24828", "Kareem Hosny", "Dr. Omar Rashed", ME_LAB, "Zirconia bridge unit", 3, "14–16", "A3", "milling", "Fri 31 Oct", { paidHalves: 1, dates: { design: "Thu 23 Oct", milling: "Sintering, out 18:00" } }),
+    C("LS-24821", "Nour Galal", "Dr. Laila Mahmoud", ME_LAB, "PFM crown", 1, "25", "A3.5", "layering", "Thu 30 Oct", { paidHalves: 1, dates: { design: "Wed 22 Oct", milling: "Fri 24 Oct", layering: "Since 09:15" } }),
+    C("LS-24812", "Sherif Anwar", "Dr. Omar Rashed", ME_LAB, "Zirconia crown", 1, "36", "A2", "glaze", "Today", { paidHalves: 1, dates: { design: "Sat 18 Oct", milling: "Tue 21 Oct", layering: "Thu 23 Oct", glaze: "Courier 14:00" } })
+  ];
+  var INCOMING0 = [
+    C("LS-24833", "Rana Mostafa", ME_DOCTOR, ME_LAB, "Zirconia crown", 2, "16, 26", "A2", "design", "Tue 4 Nov", { pickup: "Pickup today 12:00–2:00 pm" }),
+    C("LS-24834", "Tarek Ibrahim", "Dr. Nadia Fouad", ME_LAB, "E.max veneer", 4, "12–22", "B1", "design", "Wed 5 Nov", { stages: ["design", "milling", "glaze"], pickup: "Scan uploaded, no pickup" })
+  ];
+  var LABS = [
+    { name: "Nile Precision Lab", area: "Dokki, Giza", km: 3.2, kit: "5-axis mill, intraoral scanner", rating: 4.8, reviews: 126, from: 1200, days: 3, sponsored: true },
+    { name: "Delta Smile Lab", area: "Mohandessin, Giza", km: 4.1, kit: "Press furnace, 4-axis mill", rating: 4.7, reviews: 84, from: 950, days: 4 },
+    { name: "Cairo Ceramic Studio", area: "Agouza, Giza", km: 5.6, kit: "Layering ceramics, implant work", rating: 4.6, reviews: 61, from: 1400, days: 5 },
+    { name: "October Zircon Lab", area: "6th of October, Giza", km: 18.4, kit: "5-axis mill, sintering furnace", rating: 4.5, reviews: 40, from: 900, days: 4 }
+  ];
+  var INVOICES = [
+    { doctor: "Dr. Karim Adel", clinic: "Dokki Dental Clinic", orders: 9, billed: 21600, paid: 16200 },
+    { doctor: "Dr. Nadia Fouad", clinic: "Zamalek Smile Centre", orders: 6, billed: 15300, paid: 15300 },
+    { doctor: "Dr. Omar Rashed", clinic: "Rashed Dental, Mohandessin", orders: 5, billed: 12600, paid: 6300 },
+    { doctor: "Dr. Laila Mahmoud", clinic: "Agouza Family Dentistry", orders: 4, billed: 7200, paid: 7200 },
+    { doctor: "Dr. Hesham Saleh", clinic: "Saleh Clinic, 6th of October", orders: 2, billed: 3600, paid: 1800 }
+  ];
+  var NOTES0 = {
+    doctor: [
+      { id: 1, kind: "stage", title: "LS-24817 moved to Layering", text: "Nile Precision Lab", time: "11:40", unread: true, go: "case/LS-24817", cat: "Stages" },
+      { id: 2, kind: "payment", title: "First half due on LS-24802", text: "EGP 1,890 after the design was approved", time: "09:05", unread: true, go: "case/LS-24802", cat: "Payments" },
+      { id: 3, kind: "chat", title: "New file on LS-24790", text: "LS-24790_design.stl · Nile Precision Lab", time: "09:40", unread: true, go: "case/LS-24790", cat: "Chat" },
+      { id: 4, kind: "stage", title: "LS-24811 is ready", text: "Cairo Ceramic Studio · courier at 2:00 pm", time: "07:55", go: "case/LS-24811", cat: "Stages" },
+      { id: 5, kind: "pickup", title: "Courier collected LS-24795", text: "Delta Smile Lab · Fri 24 Oct", time: "Fri", go: "case/LS-24795", cat: "Stages" }
+    ],
+    lab: [
+      { id: 1, kind: "order", title: "New order LS-24833", text: "Dr. Karim Adel · 2 × Zirconia crown", time: "12:01", unread: true, go: "board", cat: "Orders" },
+      { id: 2, kind: "order", title: "New order LS-24834", text: "Dr. Nadia Fouad · 4 × E.max veneer", time: "11:20", unread: true, go: "board", cat: "Orders" },
+      { id: 3, kind: "chat", title: "Dr. Karim Adel wrote on LS-24817", text: "Please open the contact on 26 slightly.", time: "10:31", go: "case/LS-24817", cat: "Chat" },
+      { id: 4, kind: "payment", title: "Dr. Omar Rashed paid the first half of LS-24828", text: "EGP 2,835", time: "Thu", go: "invoices", cat: "Payments" }
+    ]
+  };
+  function messagesFor(c, role) {
+    var other = role === "doctor" ? c.lab : c.doctor, m = [];
+    var i = c.stages.indexOf(c.stage);
+    m.push({ from: "system", stage: "design", text: "Order placed with " + c.lab, time: "Mon 09:14" });
+    if (i > 0 || c.waiting) m.push({ from: "lab", name: c.lab, text: "Design is ready for review.", time: "Tue 10:14", file: c.id + "_design.stl · 4.2 MB" });
+    if (i > 0) { m.push({ from: "doctor", name: c.doctor, text: "Approved. Please open the contact slightly.", time: "Tue 10:31" }); m.push({ from: "system", stage: c.stages[1], text: "Moved to " + NAME[c.stages[1]], time: "Tue 11:05" }); }
+    if (i > 1) m.push({ from: "system", stage: c.stages[2], text: "Moved to " + NAME[c.stages[2]], time: "11:40" });
+    if (i > 2) m.push({ from: "system", stage: "glaze", text: "Moved to Glaze. Second half due on delivery.", time: "07:55" });
+    m.forEach(function (x) { if (x.from === "lab" && role === "lab") x.from = "lab"; });
+    return m;
+  }
+  function paid(c) { return c.total / 2 * c.paidHalves; }
+
+  /* ---------- small shared pieces (layout only; all controls are design-system components) ---------- */
+  function Panel(p) {
+    return h("section", { className: "ls-panel", "aria-labelledby": p.id, style: p.style },
+      p.title ? h("header", null, h("h2", { id: p.id }, p.title), p.meta ? h("span", null, p.meta) : null) : null, p.children);
+  }
+  function Head(p) {
+    return h("div", { className: "pg-head" }, h("div", null, h("h1", null, p.title), p.lead ? h("p", null, p.lead) : null), p.actions ? h("div", { className: "pg-acts" }, p.actions) : null);
+  }
+  function Grid(p) { return h("div", { className: "pg-grid" }, h("div", { className: "pg-col" }, p.main), h("div", { className: "pg-col" }, p.rail)); }
+
+  /* ---------- order-number search (both roles) ---------- */
+  function Search(p) {
+    var st = useState(""), q = st[0], setQ = st[1], op = useState(false), open = op[0], setOpen = op[1];
+    var pool = p.cases.concat(p.role === "lab" ? p.incoming : []);
+    var t = q.trim().toLowerCase();
+    var hits = t ? pool.filter(function (c) { return (c.id + " " + c.patient + " " + c.doctor + " " + c.lab).toLowerCase().indexOf(t) >= 0; }).slice(0, 6) : [];
+    function submit(e) {
+      e.preventDefault();
+      var exact = pool.filter(function (c) { return c.id.toLowerCase() === t || c.id.toLowerCase() === "ls-" + t; })[0];
+      var pick = exact || (hits.length === 1 ? hits[0] : null);
+      if (pick) { p.go("case/" + pick.id); setQ(""); setOpen(false); }
+      else setOpen(true);
+    }
+    return h("form", { className: "pg-search", role: "search", onSubmit: submit },
+      h("label", { htmlFor: "q", className: "ls-sr" }, "Search cases"),
+      h(L.Icon, { name: "search" }),
+      h("input", { id: "q", value: q, autoComplete: "off", placeholder: p.role === "lab" ? "Order number, doctor or patient" : "Order number or patient, e.g. LS-24817", onChange: function (e) { setQ(e.target.value); setOpen(true); }, onFocus: function () { setOpen(true); }, onBlur: function () { setTimeout(function () { setOpen(false); }, 150); }, "aria-describedby": "q-res" }),
+      open && t ? h("div", { id: "q-res", className: "pg-results", role: "listbox" },
+        hits.length ? hits.map(function (c) {
+          return h("button", { key: c.id, type: "button", role: "option", onMouseDown: function (e) { e.preventDefault(); p.go("case/" + c.id); setQ(""); setOpen(false); } },
+            h("span", { className: "ls-mono" }, c.id), h("b", null, c.patient), h("span", { className: "sub" }, (p.role === "lab" ? c.doctor : c.lab) + " · " + c.work), h(L.StagePill, { stage: c.stage }));
+        }) : h("p", { className: "ls-empty" }, "No case matches “" + q.trim() + "”. Order numbers look like LS-24817.")) : null);
+  }
+
+  /* ---------- doctor screens ---------- */
+  function DoctorCases(p) {
+    var mine = p.cases.filter(function (c) { return c.doctor === ME_DOCTOR; });
+    var waiting = mine.filter(function (c) { return c.waiting; });
+    var moving = mine.filter(function (c) { return c.id === "LS-24817"; })[0] || mine[0];
+    var due = waiting.filter(function (c) { return c.waiting === "pay"; }).reduce(function (a, c) { return a + c.total / 2; }, 0);
+    var labs = {}; mine.forEach(function (c) { labs[c.lab] = 1; });
+    return h(React.Fragment, null,
+      h(Head, { title: "Cases", lead: mine.length + " active with " + Object.keys(labs).length + " labs · " + waiting.length + " waiting for you", actions: h(L.Button, { variant: "primary", icon: "plus", onClick: function () { p.go("new"); } }, "New order") }),
+      h(Grid, {
+        main: [
+          h(Panel, { key: "w", id: "wq", title: "Waiting for you", meta: due ? egp(due) + " due" : null },
+            h(L.ActionQueue, { empty: "Nothing waiting for you.", items: waiting.map(function (c) {
+              var pay = c.waiting === "pay";
+              return { id: c.id, title: (pay ? "Pay the first half of " : "Approve the design of ") + c.id, detail: c.patient + " · " + c.work + " · " + c.lab, amount: pay ? c.total / 2 : undefined,
+                actions: [{ label: pay ? "Open case" : "Open file", variant: "ghost", onClick: function () { p.go("case/" + c.id); } }, { label: pay ? "Pay" : "Approve", onClick: function () { p.act(pay ? "pay" : "approve", c.id); } }] };
+            }) })),
+          h(Panel, { key: "a", id: "ac", title: "All cases", meta: "Overdue first, then by due date" },
+            h(L.CasesTable, { cases: mine.slice().sort(function (a, b) { return (b.overdue ? 1 : 0) - (a.overdue ? 1 : 0); }).map(function (c) { return Object.assign({}, c, { paid: paid(c) }); }), onOpen: function (c) { p.go("case/" + c.id); } }))
+        ],
+        rail: [
+          h(Panel, { key: "m", id: "mv", title: "Moving now", meta: moving.id },
+            h("div", { className: "pg-pad" },
+              h("div", { className: "pg-crown ls-field-" + moving.stage }, h(L.CrownStage, { stage: moving.stage, shade: moving.shade })),
+              h("p", { className: "pg-note" }, h("b", null, moving.patient + " is in " + NAME[moving.stage]), h("br"), moving.lab + " · " + (moving.dates && moving.dates[moving.stage] || "")),
+              h(L.Button, { onClick: function () { p.go("case/" + moving.id); } }, "Open case"))),
+          h(Panel, { key: "u", id: "up", title: "Updates", meta: h("a", { href: "#", onClick: function (e) { e.preventDefault(); p.go("notifications"); } }, "View all") },
+            p.notes.slice(0, 3).map(function (n) { return h(L.Notification, Object.assign({ key: n.id }, n, { onOpen: function () { p.readNote(n); } })); }))
+        ]
+      }));
+  }
+
+  var UNIT = PRICE;
+  function DoctorNew(p) {
+    var t = useState([16, 26]), teeth = t[0], setTeeth = t[1];
+    var w = useState("Zirconia crown"), work = w[0], setWork = w[1];
+    var s = useState("A2"), shade = s[0], setShade = s[1];
+    var g = useState({ design: true, milling: true, layering: true, glaze: true }), stages = g[0], setStages = g[1];
+    var lab = p.orderLab || LABS[0];
+    var err = teeth.length ? null : "Pick at least one tooth";
+    return h(React.Fragment, null,
+      h(Head, { title: "New order", lead: "Goes to " + lab.name + " · draft saved 12:04", actions: h(L.Button, { variant: "ghost", onClick: function () { p.go("cases"); } }, "Cancel") }),
+      h(Grid, {
+        main: h("form", { className: "ls-panel pg-form", onSubmit: function (e) { e.preventDefault(); } },
+          h("fieldset", null, h("legend", null, "Lab"), h(L.LabRow, { lab: lab, onOrder: function () { p.go("labs"); } }), h("p", { className: "pg-hint" }, "Use Order on another lab in Find a lab to change it.")),
+          h("fieldset", null, h("legend", null, "Case"),
+            h("div", { className: "pg-row2" }, h(L.Field, { label: "Patient or case name", defaultValue: "Rana Mostafa" }), h(L.Field, { label: "Your reference", placeholder: "File no. 1182", hint: "Only you see it" })),
+            h("div", { className: "pg-chips", role: "radiogroup", "aria-label": "Type of work" }, Object.keys(UNIT).map(function (k) {
+              return h("label", { key: k, className: "pg-chip" }, h("input", { type: "radio", name: "work", checked: work === k, onChange: function () { setWork(k); } }), h("span", null, k, h("small", null, egp(UNIT[k]))));
+            }))),
+          h("fieldset", null, h("legend", null, "Teeth"), h(L.ToothChart, { value: teeth, onChange: setTeeth }), err ? h("p", { className: "pg-err", role: "alert" }, err) : null),
+          h("fieldset", null, h("legend", null, "Shade"), h(L.ShadePicker, { value: shade, onChange: setShade })),
+          h("fieldset", null, h("legend", null, "Stages"), h("div", { className: "pg-chips" }, ORDER.map(function (k) {
+            return h("label", { key: k, className: "pg-chip" }, h("input", { type: "checkbox", checked: stages[k], onChange: function () { var n = Object.assign({}, stages); n[k] = !n[k]; setStages(n); } }), h("span", null, h(L.StagePill, { stage: k })));
+          }))),
+          h("fieldset", null, h("legend", null, "Files"),
+            h("label", { className: "pg-drop", htmlFor: "up" }, h(L.Icon, { name: "attach" }), h("b", null, "Drop scans and photos, or browse"), h("span", null, "STL, PLY, JPG or PDF, up to 200 MB each"), h("input", { id: "up", type: "file", multiple: true, className: "ls-sr" })),
+            h("div", { className: "pg-files" }, ["mostafa_upper_scan.stl · 18.4 MB", "shade_photo.jpg · 2.1 MB"].map(function (f) { return h("div", { key: f }, h(L.Icon, { name: "file" }), h("span", { className: "ls-mono" }, f)); })),
+            h(L.Field, { as: "textarea", label: "Notes for the lab", defaultValue: "Full contour, light contact on 26. Send the design for approval before milling." })),
+          h("fieldset", null, h("legend", null, "Pickup"),
+            h("label", { className: "pg-chip", style: { alignSelf: "flex-start" } }, h("input", { type: "checkbox", defaultChecked: true }), h("span", null, h(L.Icon, { name: "truck" }), "Send a courier for the impression")),
+            h("div", { className: "pg-row3" }, h(L.Field, { label: "Day", type: "date", defaultValue: "2026-10-27" }), h(L.Field, { label: "Time", as: "select", options: ["12:00 – 2:00 pm", "2:00 – 4:00 pm", "6:00 – 8:00 pm"] }), h(L.Field, { label: "Clinic address", defaultValue: "14 Mossadak St, Dokki, Giza" })))),
+        rail: [
+          h(Panel, { key: "pv", id: "pv", title: "Preview", meta: "Shade " + shade }, h("div", { className: "pg-pad" }, h("div", { className: "pg-crown ls-field-glaze" }, h(L.CrownStage, { stage: "glaze", shade: shade })))),
+          h(Panel, { key: "sm", id: "sm", title: "Summary" }, h("div", { className: "pg-pad pg-stack" },
+            h(L.OrderSummary, { work: work, units: teeth.length, unitPrice: UNIT[work] }),
+            h("p", { className: "pg-hint" }, "The lab accepts or declines within 2 hours. Nothing is charged until the design is uploaded."),
+            h(L.Button, { variant: "primary", disabled: !!err, onClick: function () { p.toast("Order sent to " + lab.name + ". You'll hear back within 2 hours."); p.go("cases"); } }, "Send order to lab")))
+        ]
+      }));
+  }
+
+  function CasePage(p) {
+    var c = p.cases.concat(p.incoming).filter(function (x) { return x.id === p.id; })[0];
+    if (!c) return h(React.Fragment, null, h(Head, { title: "Case not found", lead: "There is no case " + p.id + ". Check the order number." }), h(L.Button, { onClick: function () { p.go(p.role === "lab" ? "board" : "cases"); } }, "Back"));
+    var lab = p.role === "lab", i = c.stages.indexOf(c.stage), next = c.stages[i + 1];
+    var actions = lab
+      ? [next ? h(L.Button, { key: "m", size: "sm", onClick: function () { p.act("move", c.id); } }, "Move to " + NAME[next]) : h(L.Button, { key: "d", size: "sm", onClick: function () { p.act("deliver", c.id); } }, "Mark delivered"),
+         c.stage === "design" ? h(L.Button, { key: "u", size: "sm", icon: "attach", onClick: function () { p.toast("Choose the design file in the live app."); } }, "Upload design") : null]
+      : [h(L.Button, { key: "p", size: "sm", icon: "truck", onClick: function () { p.toast("Pickup requested. " + c.lab + " will confirm the time."); } }, "Request pickup"),
+         h(L.Button, { key: "i", size: "sm", onClick: function () { p.toast("The invoice PDF is generated in the live app."); } }, "Invoice PDF")];
+    var half = c.total / 2, labHalf = half / 1.05 * 0.95;
+    return h(React.Fragment, null,
+      h("div", { className: "pg-back" }, h(L.Button, { variant: "ghost", size: "sm", onClick: function () { p.go(lab ? "board" : "cases"); } }, "← " + (lab ? "Board" : "Cases"))),
+      h(L.CaseHeader, { case: c, view: lab ? "lab" : "doctor", actions: actions }),
+      h("div", { style: { height: 20 } }),
+      h(Grid, {
+        main: [
+          h(Panel, { key: "py", id: "py", title: "Payments", meta: lab ? "After the 5% Labstage fee" : "Includes the 5% Labstage fee" },
+            h("div", { className: "ls-table-wrap" }, h("table", { className: "ls-table" }, h("tbody", null,
+              ["First half", "Second half"].map(function (label, k) {
+                var done = c.paidHalves > k, dueNow = !done && (k === 0 ? (c.waiting === "pay") : c.stage === "glaze");
+                return h("tr", { key: label }, h("td", null, h("b", null, label), h("span", { className: "sub" }, k === 0 ? "After Design" : "After Glaze")),
+                  h("td", null, done ? h(L.Pill, { tone: "success" }, "Paid") : dueNow ? h(L.Pill, { tone: "warn" }, "Due now") : h(L.Pill, null, "Not due yet")),
+                  h("td", { className: "num" }, egp(lab ? labHalf : half)),
+                  h("td", { className: "num" }, done ? h(L.Button, { variant: "ghost", size: "sm", onClick: function () { p.toast("The receipt PDF is generated in the live app."); } }, "Receipt PDF") : !lab && dueNow ? h(L.Button, { variant: "primary", size: "sm", onClick: function () { p.act("pay", c.id); } }, "Pay") : null));
+              })),
+              h("tfoot", null, h("tr", null, h("td", null, "Total"), h("td"), h("td", { className: "num" }, egp(lab ? labHalf * 2 : c.total)), h("td")))))),
+          h(Panel, { key: "fl", id: "fl", title: "Files", meta: "Scans, photos and designs" }, h("div", { className: "pg-pad pg-files" },
+            [c.patient.split(" ")[1].toLowerCase() + "_upper_scan.stl · Doctor · 18.4 MB", "shade_photo_" + c.shade + ".jpg · Doctor · 2.1 MB"].concat(i > 0 || c.waiting ? [c.id + "_design.stl · Lab · 4.2 MB"] : []).map(function (f) { return h("div", { key: f }, h(L.Icon, { name: "file" }), h("span", { className: "ls-mono" }, f)); }))),
+          h(Panel, { key: "od", id: "od", title: "Order" }, h("div", { className: "pg-pad" }, h("dl", { className: "pg-dl" },
+            h("dt", null, "Doctor"), h("dd", null, c.doctor), h("dt", null, "Lab"), h("dd", null, c.lab), h("dt", null, "Work"), h("dd", null, c.work), h("dt", null, "Teeth"), h("dd", { className: "ls-mono" }, c.teeth),
+            h("dt", null, "Shade"), h("dd", { className: "ls-mono" }, c.shade), h("dt", null, "Stages"), h("dd", null, c.stages.map(function (s) { return NAME[s]; }).join(", ")), h("dt", null, "Due"), h("dd", null, c.due))))
+        ],
+        rail: h("div", { className: "pg-chat" }, h(L.CaseChat, { key: c.id, caseId: c.id, with: lab ? c.doctor : c.lab, viewer: lab ? "lab" : "doctor", messages: messagesFor(c, p.role), onAttach: function () { p.toast("Choose a scan, photo or PDF in the live app."); }, onSend: function () { p.toast((lab ? c.doctor : c.lab) + " has been told about your message."); } }))
+      }));
+  }
+
+  function DoctorLabs(p) {
+    var gv = useState("Giza"), gov = gv[0], setGov = gv[1], ar = useState("All areas"), area = ar[0], setArea = ar[1], so = useState("Highest rated"), sort = so[0], setSort = so[1];
+    var list = LABS.filter(function (l) { return gov === "Giza" && (area === "All areas" || l.area.indexOf(area) === 0); });
+    list.sort(function (a, b) { return (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0) || (sort === "Nearest to my clinic" ? a.km - b.km : sort === "Lowest starting price" ? a.from - b.from : b.rating - a.rating); });
+    return h(React.Fragment, null,
+      h(Head, { title: "Find a lab", lead: list.length + " labs in " + gov + (area !== "All areas" ? ", " + area : "") + " · ranked by doctors' ratings, sponsored labs first and marked" }),
+      h("div", { className: "ls-panel pg-pad pg-filters" },
+        h(L.Field, { label: "Governorate", as: "select", options: ["Giza", "Cairo", "Alexandria", "Qalyubia"], value: gov, onChange: function (e) { setGov(e.target.value); } }),
+        h(L.Field, { label: "Area", as: "select", options: ["All areas", "Dokki", "Mohandessin", "Agouza", "6th of October"], value: area, onChange: function (e) { setArea(e.target.value); } }),
+        h(L.Field, { label: "Sort", as: "select", options: ["Highest rated", "Nearest to my clinic", "Lowest starting price"], value: sort, onChange: function (e) { setSort(e.target.value); } })),
+      h("div", { style: { height: 20 } }),
+      h(Grid, {
+        main: h(Panel, { id: "lr", title: "Labs", meta: list.length ? null : "No labs here yet" },
+          list.length ? list.map(function (l) { return h("div", { key: l.name, className: "pg-labwrap" }, h(L.LabRow, { lab: l, onOrder: function () { p.setOrderLab(l); p.go("new"); } }), h(L.Button, { variant: "ghost", size: "sm", className: "pg-profile-btn", onClick: function () { p.go("lab/" + encodeURIComponent(l.name)); } }, "View profile")); })
+            : h("p", { className: "ls-empty" }, "No labs in " + gov + " yet. Try another governorate.")),
+        rail: h(Panel, { id: "mp", title: "Map", meta: "Google Maps in the live app" }, h("div", { className: "pg-pad" }, h("div", { className: "pg-map", role: "img", "aria-label": "Map of labs around Dokki" },
+          h("svg", { viewBox: "0 0 100 80", preserveAspectRatio: "none" }, h("path", { d: "M58 0 C54 20 60 40 52 60 C48 70 50 80 50 80", stroke: "var(--line)", strokeWidth: 5, fill: "none" }),
+            [[52, 46, "NP"], [40, 38, "DS"], [61, 31, "CC"], [16, 64, "OZ"]].map(function (q) { return h("g", { key: q[2] }, h("circle", { cx: q[0], cy: q[1], r: 2.6, fill: "var(--ink)" }), h("text", { x: q[0] + 4, y: q[1] + 1.5, fontSize: 4, fill: "var(--ink)" }, q[2])); }),
+            h("circle", { cx: 47, cy: 44, r: 2, fill: "var(--accent)" }), h("text", { x: 30, y: 52, fontSize: 3.6, fill: "var(--ink-2)" }, "Your clinic")))))
+      }));
+  }
+
+  /* lab profile: read-only for doctors, editable for the lab */
+  var PORTFOLIO = ["Zirconia bridge 44–46", "E.max veneers 12–22", "Implant crown 36", "Layered zirconia 11, 21", "Full-arch PMMA temporary", "PFM crown 24"];
+  var DEVICES = [["5-axis mill", "Zirconia, PMMA, wax"], ["Intraoral scanner", "Accepts STL and PLY"], ["Sintering furnace", "Up to 1,530 °C"], ["Press furnace", "E.max press"]];
+  var REVIEWS = [["Dr. Nadia Fouad", 5, "Veneers came back on time and matched B1 well."], ["Dr. Omar Rashed", 5, "Clear design files, quick to answer in the chat."], ["Dr. Hesham Saleh", 4, "Good fit. One case took a day longer than planned."]];
+  function LabProfile(p) {
+    var lab = LABS.filter(function (l) { return l.name === p.name; })[0] || LABS[0], own = p.role === "lab";
+    return h(React.Fragment, null,
+      own ? null : h("div", { className: "pg-back" }, h(L.Button, { variant: "ghost", size: "sm", onClick: function () { p.go("labs"); } }, "← Find a lab")),
+      h(Head, { title: own ? "Profile" : lab.name, lead: lab.area + " · rated " + lab.rating.toFixed(1) + " from " + lab.reviews + " cases · " + lab.days + "-day turnaround",
+        actions: own ? [h(L.Button, { key: "pv", onClick: function () { p.toast("This is how doctors see your profile."); } }, "Preview as a doctor"), h(L.Button, { key: "ed", variant: "primary", onClick: function () { p.toast("Profile saved. Doctors see the changes now."); } }, "Save changes")]
+          : h(L.Button, { variant: "primary", onClick: function () { p.setOrderLab(lab); p.go("new"); } }, "Order from this lab") }),
+      h(Grid, {
+        main: [
+          h(Panel, { key: "wk", id: "wk", title: "Work", meta: own ? "Add photos of finished cases" : PORTFOLIO.length + " cases" },
+            h("div", { className: "pg-pad pg-portfolio" }, PORTFOLIO.map(function (t, k) { return h("figure", { key: t }, h("div", { className: "ph ls-field-" + ORDER[k % 4] }, h("span", null, "Photo")), h("figcaption", null, t)); }),
+              own ? h("label", { className: "pg-drop", htmlFor: "pf" }, h(L.Icon, { name: "plus" }), h("b", null, "Add photos"), h("span", null, "JPG or PNG"), h("input", { id: "pf", type: "file", multiple: true, className: "ls-sr" })) : null)),
+          h(Panel, { key: "pr", id: "pr", title: "Prices", meta: "Per unit, before the 5% Labstage fee" },
+            h("div", { className: "ls-table-wrap" }, h("table", { className: "ls-table" }, h("thead", null, h("tr", null, h("th", null, "Work"), h("th", { className: "num" }, "Price"), h("th", { className: "num" }, "Turnaround"))),
+              h("tbody", null, Object.keys(PRICE).map(function (k) { return h("tr", { key: k }, h("td", null, k), h("td", { className: "num" }, own ? h("input", { className: "ls-input pg-price", defaultValue: PRICE[k], "aria-label": k + " price in EGP", inputMode: "numeric" }) : egp(PRICE[k])), h("td", { className: "num" }, k === "Implant crown" ? "5 days" : "3 days")); }))))),
+          h(Panel, { key: "rv", id: "rv", title: "Reviews", meta: lab.rating.toFixed(1) + " from " + lab.reviews + " rated cases" },
+            REVIEWS.map(function (r) { return h("div", { key: r[0], className: "ls-qrow" }, h("div", { className: "what" }, h("b", null, r[0] + " · " + r[1] + " / 5"), h("span", null, r[2]))); }))
+        ],
+        rail: [
+          h(Panel, { key: "dv", id: "dv", title: "Equipment" }, DEVICES.map(function (d) { return h("div", { key: d[0], className: "ls-qrow" }, h("div", { className: "what" }, h("b", null, d[0]), h("span", null, d[1]))); })),
+          own ? h(Panel, { key: "pl", id: "pl", title: "Plan" }, h("div", { className: "pg-pad pg-stack" },
+            h(L.KpiStrip, { items: [{ label: "Free month", value: "16 days left", note: "Ends Wed 12 Nov" }] }),
+            h("p", { className: "pg-hint" }, "Then EGP 2,000 a month for the whole lab. Labstage keeps 5% of each order from your payout."),
+            h(L.Button, { onClick: function () { p.toast("Payment method saved. Simulated."); } }, "Add payment method"))) :
+          h(Panel, { key: "ct", id: "ct", title: "Contact" }, h("div", { className: "pg-pad pg-stack" }, h("p", { className: "pg-hint" }, "Every order has its own chat with the lab. Open a case to write to them."), h(L.Button, { onClick: function () { p.setOrderLab(lab); p.go("new"); } }, "Start an order")))
+        ]
+      }));
+  }
+
+  function DoctorPayments(p) {
+    var mine = p.cases.filter(function (c) { return c.doctor === ME_DOCTOR; });
+    var tot = mine.reduce(function (a, c) { return a + c.total; }, 0), pd = mine.reduce(function (a, c) { return a + paid(c); }, 0);
+    return h(React.Fragment, null,
+      h(Head, { title: "Payments", lead: "October 2026 · every payment has a PDF receipt", actions: h(L.Button, { onClick: function () { p.toast("The Excel file, with a dashboard sheet, is generated in the live app."); } }, "Export to Excel") }),
+      h(L.KpiStrip, { items: [{ label: "Still to pay", value: egp(tot - pd), note: "Across " + mine.length + " cases", lead: true }, { label: "Paid", value: egp(pd) }, { label: "Labstage fees included", value: egp(tot - tot / 1.05) }] }),
+      h("div", { style: { height: 20 } }),
+      h(Panel, { id: "pt", title: "By case" }, h("div", { className: "ls-table-wrap" }, h("table", { className: "ls-table" },
+        h("thead", null, h("tr", null, h("th", null, "Case"), h("th", null, "Lab"), h("th", { className: "num" }, "Total"), h("th", { className: "num" }, "Paid"), h("th", { className: "num" }, "Left"), h("th"))),
+        h("tbody", null, mine.map(function (c) { return h("tr", { key: c.id }, h("td", null, h("button", { type: "button", className: "ls-rowlink", onClick: function () { p.go("case/" + c.id); } }, c.patient), h("span", { className: "sub ls-mono" }, c.id)), h("td", null, c.lab), h("td", { className: "num" }, egp(c.total)), h("td", { className: "num" }, egp(paid(c))), h("td", { className: "num" }, egp(c.total - paid(c))), h("td", { className: "num" }, h(L.Button, { variant: "ghost", size: "sm", onClick: function () { p.toast("The PDF is generated in the live app."); } }, "PDF"))); })),
+        h("tfoot", null, h("tr", null, h("td", null, "Total"), h("td"), h("td", { className: "num" }, egp(tot)), h("td", { className: "num" }, egp(pd)), h("td", { className: "num" }, egp(tot - pd)), h("td")))))));
+  }
+
+  function Notifications(p) {
+    var f = useState("All"), filter = f[0], setFilter = f[1];
+    var cats = ["All", "Unread"].concat(p.role === "lab" ? ["Orders", "Chat", "Payments"] : ["Stages", "Payments", "Chat"]);
+    var list = p.notes.filter(function (n) { return filter === "All" || (filter === "Unread" ? n.unread : n.cat === filter); });
+    var unread = p.notes.filter(function (n) { return n.unread; }).length;
+    return h(React.Fragment, null,
+      h(Head, { title: "Notifications", lead: unread + " unread · every action between you and " + (p.role === "lab" ? "your doctors" : "your labs") + " lands here", actions: h(L.Button, { disabled: !unread, onClick: p.readAll }, "Mark all as read") }),
+      h("div", { className: "pg-tabs", role: "tablist", "aria-label": "Filter notifications" }, cats.map(function (c) { return h("button", { key: c, type: "button", role: "tab", "aria-selected": filter === c, onClick: function () { setFilter(c); } }, c); })),
+      h(Panel, { id: "nl", title: null }, list.length ? list.map(function (n) { return h(L.Notification, Object.assign({ key: n.id }, n, { onOpen: function () { p.readNote(n); } })); }) : h("p", { className: "ls-empty" }, "No " + filter.toLowerCase() + " notifications.")));
+  }
+
+  /* ---------- lab screens ---------- */
+  function LabBoard(p) {
+    var st = useState(""), q = st[0], setQ = st[1];
+    var mine = p.cases.filter(function (c) { return c.lab === ME_LAB; });
+    var t = q.trim().toLowerCase();
+    var shown = mine.filter(function (c) { return !t || (c.id + c.patient + c.doctor).toLowerCase().indexOf(t) >= 0; });
+    return h(React.Fragment, null,
+      h(Head, { title: "Board", lead: mine.length + " cases in progress · " + p.incoming.length + " new orders waiting" }),
+      h(Panel, { id: "inc", title: "New orders", meta: "Reply within 2 hours" },
+        h(L.ActionQueue, { empty: "No new orders right now.", items: p.incoming.map(function (o) {
+          return { id: o.id, title: "New order " + o.id + " · " + o.doctor, detail: o.patient + " · " + o.work + " · teeth " + o.teeth + " · shade " + o.shade + " · " + o.pickup, amount: PRICE[o.workType] * o.units,
+            actions: [{ label: "Decline", variant: "danger", onClick: function () { p.act("decline", o.id); } }, { label: "Accept", onClick: function () { p.act("accept", o.id); } }] };
+        }) })),
+      h("div", { className: "pg-boardbar" },
+        h("div", { className: "pg-inline" }, h(L.Field, { label: "Filter the board", placeholder: "Order number, doctor or patient", value: q, onChange: function (e) { setQ(e.target.value); } })),
+        h("span", { className: "pg-hint" }, shown.length + " of " + mine.length + " shown")),
+      h(L.KanbanBoard, { cards: shown.map(function (c) { return { id: c.id, patient: c.patient, doctor: c.doctor, work: c.work, stage: c.stage, note: c.dates && c.dates[c.stage] || "Due " + c.due }; }),
+        onMove: function (card) { p.act(card.stage === "glaze" ? "deliver" : "move", card.id); } }),
+      h("p", { className: "pg-hint", style: { marginTop: 10 } }, "Open a case from the search above to see its chat and files."));
+  }
+
+  function LabInvoices(p) {
+    var mo = useState("October 2026"), month = mo[0], setMonth = mo[1];
+    var t = INVOICES.reduce(function (a, r) { a.o += r.orders; a.b += r.billed; a.p += r.paid; return a; }, { o: 0, b: 0, p: 0 }), fee = t.b * 0.05;
+    return h(React.Fragment, null,
+      h(Head, { title: "Invoices", lead: month + " · " + INVOICES.length + " doctors · " + t.o + " orders", actions: [h("div", { key: "m", className: "pg-inline" }, h(L.Field, { label: "Month", as: "select", options: ["October 2026", "September 2026"], value: month, onChange: function (e) { setMonth(e.target.value); } })), h(L.Button, { key: "x", onClick: function () { p.toast("The Excel file, with a dashboard sheet, is generated in the live app."); } }, "Export to Excel")] }),
+      h(L.KpiStrip, { items: [{ label: "Your payout", value: egp(t.b - fee), note: "Billed less the 5% fee", lead: true }, { label: "Billed", value: egp(t.b) }, { label: "Still owed by doctors", value: egp(t.b - t.p) }, { label: "Labstage fee, 5%", value: egp(fee) }] }),
+      h("div", { style: { height: 20 } }),
+      h(Panel, { id: "iv", title: "By doctor" }, h("div", { className: "ls-table-wrap" }, h("table", { className: "ls-table" },
+        h("thead", null, h("tr", null, ["Doctor", "Orders", "Billed", "Paid", "Owed", "Fee 5%", "Payout", ""].map(function (x, k) { return h("th", { key: k, className: k ? "num" : undefined }, x); }))),
+        h("tbody", null, INVOICES.map(function (r) { var owed = r.billed - r.paid; return h("tr", { key: r.doctor }, h("td", null, h("b", null, r.doctor), h("span", { className: "sub" }, r.clinic)), h("td", { className: "num" }, r.orders), h("td", { className: "num" }, egp(r.billed)), h("td", { className: "num" }, egp(r.paid)), h("td", { className: "num" }, owed ? h(L.Pill, { tone: "warn" }, egp(owed)) : h("span", { className: "sub" }, "Settled")), h("td", { className: "num" }, egp(r.billed * 0.05)), h("td", { className: "num" }, egp(r.billed * 0.95)), h("td", { className: "num" }, h(L.Button, { variant: "ghost", size: "sm", onClick: function () { p.toast("The PDF is generated in the live app."); } }, "PDF"))); })),
+        h("tfoot", null, h("tr", null, h("td", null, "Total"), h("td", { className: "num" }, t.o), h("td", { className: "num" }, egp(t.b)), h("td", { className: "num" }, egp(t.p)), h("td", { className: "num" }, egp(t.b - t.p)), h("td", { className: "num" }, egp(fee)), h("td", { className: "num" }, egp(t.b - fee)), h("td")))))));
+  }
+
+  function LabAds(p) {
+    var a = useState("Giza · Dokki"), area = a[0], setArea = a[1], d = useState("14 days"), dur = d[0], setDur = d[1];
+    var lab = LABS[0];
+    return h(React.Fragment, null,
+      h(Head, { title: "Ads", lead: "Show your lab first when doctors search an area. Ads are always marked Sponsored." }),
+      h(Grid, {
+        main: [
+          h(Panel, { key: "nw", id: "nw", title: "New ad" }, h("div", { className: "pg-pad pg-stack" },
+            h("div", { className: "pg-row2" },
+              h(L.Field, { label: "Where", as: "select", options: ["Giza · Dokki", "Giza · Mohandessin", "Giza · all areas", "Cairo · Nasr City"], value: area, onChange: function (e) { setArea(e.target.value); } }),
+              h(L.Field, { label: "How long", as: "select", options: ["7 days", "14 days", "30 days"], value: dur, onChange: function (e) { setDur(e.target.value); } })),
+            h("dl", { className: "pg-dl" }, h("dt", null, "Placement"), h("dd", null, "First in Find a lab, " + area), h("dt", null, "Price"), h("dd", null, "[Ad price, to be set by Labstage]")),
+            h(L.Button, { variant: "primary", onClick: function () { p.toast("Ad request sent for " + area + ", " + dur + ". Payment is simulated."); } }, "Start ad"))),
+          h(Panel, { key: "cu", id: "cu", title: "Your ads" }, h("div", { className: "ls-table-wrap" }, h("table", { className: "ls-table" },
+            h("thead", null, h("tr", null, h("th", null, "Placement"), h("th", null, "Status"), h("th", null, "Ends"), h("th", { className: "num" }, "Profile opens"))),
+            h("tbody", null, h("tr", null, h("td", null, "Find a lab · Giza · Dokki"), h("td", null, h(L.Pill, { tone: "success" }, "Running")), h("td", null, "Mon 3 Nov"), h("td", { className: "num" }, "37")),
+              h("tr", null, h("td", null, "Find a lab · Giza · all areas"), h("td", null, h(L.Pill, null, "Ended")), h("td", null, "Sun 12 Oct"), h("td", { className: "num" }, "52"))))))
+        ],
+        rail: h(Panel, { id: "ap", title: "How doctors see it", meta: area }, h(L.LabRow, { lab: lab }))
+      }));
+  }
+
+  /* ---------- app ---------- */
+  function parse() { var m = /^#\/(doctor|lab)\/(.+)$/.exec(location.hash || ""); return m ? { role: m[1], path: m[2] } : { role: "doctor", path: "cases" }; }
+  function App() {
+    var r = useState(parse), route = r[0], setRoute = r[1];
+    var cs = useState(CASES0), cases = cs[0], setCases = cs[1];
+    var ic = useState(INCOMING0), incoming = ic[0], setIncoming = ic[1];
+    var ns = useState(NOTES0), notes = ns[0], setNotes = ns[1];
+    var ol = useState(LABS[0]), orderLab = ol[0], setOrderLab = ol[1];
+    var ts = useState(""), toast = ts[0], setToast = ts[1];
+    var mainRef = useRef(null);
+    var role = route.role;
+    function go(path, rl) { setRoute({ role: rl || role, path: path }); window.scrollTo(0, 0); }
+    function say(t) { setToast(t); clearTimeout(say.t); say.t = setTimeout(function () { setToast(""); }, 2600); }
+    function upd(id, fn) { setCases(cases.map(function (c) { return c.id === id ? fn(Object.assign({}, c)) : c; })); }
+    function act(a, id) {
+      if (a === "approve") { upd(id, function (c) { c.waiting = "pay"; return c; }); say("Design approved. The first half is now due."); }
+      else if (a === "pay") { upd(id, function (c) { c.paidHalves += 1; c.waiting = null; return c; }); say("Payment simulated. Receipt PDF added to " + id + "."); }
+      else if (a === "move") { var nx; upd(id, function (c) { nx = c.stages[c.stages.indexOf(c.stage) + 1]; c.stage = nx; c.dates = Object.assign({}, c.dates); c.dates[nx] = "Since just now"; return c; }); say(id + " moved on. The doctor has been told."); }
+      else if (a === "deliver") { setCases(cases.filter(function (c) { return c.id !== id; })); say(id + " delivered. The second half was requested from the doctor."); if (route.path.indexOf("case/") === 0) go("board"); }
+      else if (a === "accept" || a === "decline") {
+        var o = incoming.filter(function (x) { return x.id === id; })[0]; setIncoming(incoming.filter(function (x) { return x.id !== id; }));
+        if (a === "accept") { setCases([Object.assign({}, o, { dates: { design: "Accepted just now" } })].concat(cases)); say("Order " + id + " accepted. " + o.doctor + " has been told."); }
+        else say("Order " + id + " declined. " + o.doctor + " has been told and nothing was charged.");
+      }
+    }
+    function readNote(n) { var nn = Object.assign({}, notes); nn[role] = notes[role].map(function (x) { return x.id === n.id ? Object.assign({}, x, { unread: false }) : x; }); setNotes(nn); go(n.go); }
+    function readAll() { var nn = Object.assign({}, notes); nn[role] = notes[role].map(function (x) { return Object.assign({}, x, { unread: false }); }); setNotes(nn); say("All notifications marked as read."); }
+    var unread = notes[role].filter(function (n) { return n.unread; }).length;
+    var waitingCount = cases.filter(function (c) { return c.doctor === ME_DOCTOR && c.waiting; }).length;
+    var NAV = role === "doctor"
+      ? [["cases", "Cases", "cases", waitingCount], ["new", "New order", "plus"], ["labs", "Find a lab", "labs"], ["payments", "Payments", "money"], ["notifications", "Notifications", "bell", unread]]
+      : [["board", "Board", "board", incoming.length], ["invoices", "Invoices", "money"], ["profile", "Profile", "profile"], ["ads", "Ads", "megaphone"], ["notifications", "Notifications", "bell", unread]];
+    var base = route.path.split("/")[0];
+    var current = base === "case" ? (role === "lab" ? "board" : "cases") : base === "lab" ? "labs" : base;
+    var P = { role: role, cases: cases, incoming: incoming, notes: notes[role], go: go, act: act, toast: say, readNote: readNote, readAll: readAll, orderLab: orderLab, setOrderLab: setOrderLab };
+    var page;
+    if (base === "case") page = h(CasePage, Object.assign({ id: route.path.split("/")[1] }, P));
+    else if (role === "doctor") page = base === "new" ? h(DoctorNew, P) : base === "labs" ? h(DoctorLabs, P) : base === "lab" ? h(LabProfile, Object.assign({ name: decodeURIComponent(route.path.split("/")[1]) }, P)) : base === "payments" ? h(DoctorPayments, P) : base === "notifications" ? h(Notifications, P) : h(DoctorCases, P);
+    else page = base === "invoices" ? h(LabInvoices, P) : base === "profile" ? h(LabProfile, Object.assign({ name: ME_LAB }, P)) : base === "ads" ? h(LabAds, P) : base === "notifications" ? h(Notifications, P) : h(LabBoard, P);
+    return h(L.AppShell, {
+      role: role, scope: role === "doctor" ? "Dokki Dental Clinic" : "Nile Precision Lab · Dokki", groupLabel: role === "doctor" ? "Clinic" : "Lab", current: current,
+      user: role === "doctor" ? { initials: "KA", name: ME_DOCTOR, role: "Doctor" } : { initials: "NP", name: "Hany Farouk", role: "Lab owner" },
+      nav: NAV.map(function (n) { return { id: n[0], label: n[1], icon: n[2], count: n[3] || undefined, href: "#/" + role + "/" + n[0], onClick: function (e) { e.preventDefault(); go(n[0]); } }; }),
+      footer: h("div", { className: "pg-switch", role: "group", "aria-label": "Demo: switch role" },
+        h("button", { type: "button", "aria-pressed": role === "doctor", onClick: function () { go("cases", "doctor"); } }, "Doctor"),
+        h("button", { type: "button", "aria-pressed": role === "lab", onClick: function () { go("board", "lab"); } }, "Lab"))
+    },
+      h("div", { className: "pg-top" }, h(Search, { key: role + route.path, role: role, cases: role === "doctor" ? cases.filter(function (c) { return c.doctor === ME_DOCTOR; }) : cases.filter(function (c) { return c.lab === ME_LAB; }), incoming: incoming, go: go }),
+        h(L.Button, { variant: "ghost", icon: "bell", "aria-label": unread + " unread notifications", onClick: function () { go("notifications"); } }, unread ? String(unread) : null)),
+      h("div", { ref: mainRef, key: role + route.path }, page),
+      h("div", { className: "pg-toast" + (toast ? " on" : ""), role: "status", "aria-live": "polite" }, toast));
+  }
+  ReactDOM.createRoot(document.getElementById("app")).render(h(App));
+})();
+
+</script>

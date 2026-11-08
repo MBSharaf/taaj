@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>إدارة طلبات المعمل والبحث | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="lab-orders">
+  <aside class="dash-sidebar">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/lab-dashboard.html#overview">لوحة المعمل والإحصائيات</a>
+        <a href="/lab-orders.html" aria-current="page">الطلبات ومراحل الإنتاج</a>
+        <a href="/lab-finance.html#dentists">الأطباء وكشف حساب كل طبيب</a>
+        <a href="/lab-finance.html#wallet">المحفظة وسحب الأرباح</a>
+        <a href="/lab-dashboard.html#pricelist">تعديل قائمة الأسعار (Pricelist)</a>
+        <a href="/lab-dashboard.html#storefront">إدارة متجر وبروفايل المعمل</a>
+        <a href="/lab-finance.html#campaigns">الإعلانات الممولة وإحصائياتها</a>
+        <a href="/labs" id="my-public-profile-link">ملف المعمل العام (معاينة)</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <form class="dash-search" id="order-search-form">
+        <input class="input" id="order-search-q" name="q" type="search" placeholder="ابحث برقم الطلب أو اسم الطبيب أو مرجع الحالة...">
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="dash-user"><strong id="top-user-name">...</strong></div>
+    </header>
+
+    <section class="card">
+      <h2>جميع الطلبات الواردة للمعمل</h2>
+      <div class="table-wrap" style="margin-block-start:var(--sp-3)">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>الطبيب</th><th>مرجع الحالة</th><th>الخدمة والأسنان</th><th>المراحل</th><th>السعر</th><th>الحالة</th><th></th></tr></thead>
+          <tbody id="lab-orders-tbody"><tr><td colspan="8" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

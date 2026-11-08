@@ -1,0 +1,92 @@
+{
+ "v": 3,
+ "layout": "files",
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-08T00:55:00Z"
+ },
+ "title": "Taaj",
+ "namespace": "Taaj",
+ "libraries": [],
+ "sections": {},
+ "groups": [
+  "Logos"
+ ],
+ "assetGroups": {
+  "Logos": {
+   "name": "Logos",
+   "tile": "l",
+   "order": [
+    "taaj-lockup-light.svg",
+    "taaj-lockup-dark.svg",
+    "taaj-wordmark-en-light.svg",
+    "taaj-wordmark-en-dark.svg",
+    "taaj-wordmark-ar-light.svg",
+    "taaj-wordmark-ar-dark.svg",
+    "taaj-icon.svg",
+    "taaj-mark.svg"
+   ],
+   "files": {
+    "taaj-lockup-light.svg": {
+     "name": "taaj-lockup-light.svg",
+     "blob": "efe78675f6441dbf6d50cec910883cdb",
+     "size": 3743,
+     "type": "image/svg+xml"
+    },
+    "taaj-lockup-dark.svg": {
+     "name": "taaj-lockup-dark.svg",
+     "blob": "d18d4ffbffb14b4e35fa21c4aa2fd55c",
+     "size": 3751,
+     "type": "image/svg+xml"
+    },
+    "taaj-wordmark-en-light.svg": {
+     "name": "taaj-wordmark-en-light.svg",
+     "blob": "d5ca5fad31f376b5e6ec6d3add418eab",
+     "size": 2237,
+     "type": "image/svg+xml"
+    },
+    "taaj-wordmark-en-dark.svg": {
+     "name": "taaj-wordmark-en-dark.svg",
+     "blob": "1a4d54fd127185a82cb82c20c75526b1",
+     "size": 2241,
+     "type": "image/svg+xml"
+    },
+    "taaj-wordmark-ar-light.svg": {
+     "name": "taaj-wordmark-ar-light.svg",
+     "blob": "6e06b3a1e41bf23ec1713b12aed86a1d",
+     "size": 1785,
+     "type": "image/svg+xml"
+    },
+    "taaj-wordmark-ar-dark.svg": {
+     "name": "taaj-wordmark-ar-dark.svg",
+     "blob": "333dd896476094416f3c805e467103b4",
+     "size": 1789,
+     "type": "image/svg+xml"
+    },
+    "taaj-icon.svg": {
+     "name": "taaj-icon.svg",
+     "blob": "ff9bfedc9515229486d2acb728e51ddc",
+     "size": 842,
+     "type": "image/svg+xml"
+    },
+    "taaj-mark.svg": {
+     "name": "taaj-mark.svg",
+     "blob": "22babeebeb8e56d387c2f1fe2276b348",
+     "size": 727,
+     "type": "image/svg+xml"
+    }
+   }
+  }
+ },
+ "blobs": {},
+ "docs": {
+  "readme": "project/README.md",
+  "sections": []
+ },
+ "lastChange": {
+  "by": "Sharaf",
+  "at": "2026-11-08T00:55:00Z",
+  "via": "Claude Code (cloud)",
+  "note": "First Taaj brand system: logo set, Lagoon colour tokens (light/dark), type, spacing, radius, glass components."
+ }
+}

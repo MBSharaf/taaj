@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>لوحة إدارة المعمل | لاب ستيج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=6">
+  <link rel="stylesheet" href="/assets/css/base.css?v=6">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=9">
+</head>
+<body class="page-dash" data-dash-page="lab-dashboard">
+  <aside class="dash-sidebar" aria-label="قائمة المعمل">
+    <div>
+      <a class="brand" href="/"><span>لاب ستيج</span></a>
+      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+        <a href="/lab-dashboard.html#overview" data-dash-tab="overview" aria-current="page">لوحة المعمل والإحصائيات</a>
+        <a href="/lab-orders.html">الطلبات ومراحل الإنتاج</a>
+        <a href="/lab-finance.html#dentists">الأطباء وكشف حساب كل طبيب</a>
+        <a href="/lab-finance.html#wallet">المحفظة وسحب الأرباح</a>
+        <a href="/lab-dashboard.html#pricelist" data-dash-tab="pricelist">تعديل قائمة الأسعار (Pricelist)</a>
+        <a href="/lab-dashboard.html#storefront" data-dash-tab="storefront">إدارة متجر وبروفايل المعمل</a>
+        <a href="/lab-finance.html#campaigns">الإعلانات الممولة وإحصائياتها</a>
+        <a href="/labs" id="my-public-profile-link">ملف المعمل العام (معاينة)</a>
+      </nav>
+    </div>
+    <div class="dash-sidebar-foot">
+      <div id="sidebar-user-name">...</div>
+      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <form class="dash-search" action="/lab-orders.html" method="get">
+        <input class="input" name="q" type="search" placeholder="ابحث برقم الطلب أو اسم الطبيب أو اسم الحالة...">
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="dash-user">
+        <span class="notif-pill">🔔 <span id="notif-count" class="num">0</span> إشعارات</span>
+        <strong id="top-user-name">...</strong>
+      </div>
+    </header>
+
+    <!-- =====================================================
+         VIEW 1: OVERVIEW + CHARTS + RECENT ORDERS (#overview)
+         ===================================================== -->
+    <div class="dash-tab-pane" id="tab-pane-overview">
+      <section class="greeting-banner">
+        <div>
+          <h1 id="greeting-title">لوحة إدارة المعمل</h1>
+          <p>تحليلات الأداء المالي والإنتاجي، متابعة المراحل، والأطباء المتعاملين مع المعمل.</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2)">
+          <a class="btn btn-mint btn-lg" href="/lab-orders.html">إدارة الطلبات الواردة</a>
+          <a class="btn btn-on-dark btn-lg" href="#storefront" data-switch-tab="storefront">تعديل متجر المعمل</a>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card"><span class="stat-label">إجمالي الطلبات</span><strong class="stat-value num" id="lab-st-orders">0</strong><span class="stat-sub">الواردة للمعمل</span></article>
+        <article class="stat-card"><span class="stat-label">الأطباء المتعاملون</span><strong class="stat-value num" id="lab-st-dentists">0</strong><span class="stat-sub"><a href="/lab-finance.html#dentists" style="color:inherit;text-decoration:underline">عرض كشف حساب كل طبيب</a></span></article>
+        <article class="stat-card"><span class="stat-label">إجمالي المدفوعات المحصلة</span><strong class="stat-value num" id="lab-st-gross">0 ج.م</strong><span class="stat-sub">عمولة المنصة 2% فقط: <b id="lab-st-comm">0 ج.م</b></span></article>
+        <article class="stat-card"><span class="stat-label">رصيد المحفظة المتاح للسحب</span><strong class="stat-value num" id="lab-st-net">0 ج.م</strong><span class="stat-sub"><a href="/lab-finance.html#wallet" style="color:inherit;text-decoration:underline">طلب سحب الأرباح ←</a></span></article>
+      </section>
+
+      <!-- Interactive Dashboard Charts Section -->
+      <div class="dash-grid-2">
+        <section class="card chart-card">
+          <div class="chart-card-head">
+            <div>
+              <h2>تحليل الإيرادات وصافي أرباح المعمل (ج.م)</h2>
+              <p class="muted" style="font-size:var(--fs-xs)">مقارنة إجمالي المحصل من الأطباء بصافي المعمل (98%) بعد عمولة المنصة (2%)</p>
+            </div>
+            <span class="badge badge-verified">مباشر · EGP</span>
+          </div>
+          <div id="lab-revenue-chart" class="dash-chart-box"></div>
+        </section>
+
+        <section class="card chart-card">
+          <div class="chart-card-head">
+            <div>
+              <h2>توزيع الحالات ومراحل الإنتاج والأطباء</h2>
+              <p class="muted" style="font-size:var(--fs-xs)">نسب الحالات حسب المرحلة الحالية وحجم تعاملات الأطباء</p>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="/lab-finance.html#dentists">سجل الأطباء</a>
+          </div>
+          <div id="lab-stages-chart" class="dash-chart-box"></div>
+        </section>
+      </div>
+
+      <!-- Quick Dentists Bar on Main Overview -->
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);margin-block-end:var(--sp-3)">
+          <div>
+            <h2>الأطباء المتعاملون مع المعمل حالياً</h2>
+            <p class="muted" style="font-size:var(--fs-xs)">اضغط على أي طبيب لفتح كشف حسابه التفصيلي ومعاملاته المنفصلة.</p>
+          </div>
+          <a class="btn btn-primary btn-sm" href="/lab-finance.html#dentists">فتح حسابات الأطباء والمحفظة</a>
+        </div>
+        <div id="lab-overview-dentists" class="dentists-mini-grid">
+          <p class="muted">جاري تحميل قائمة الأطباء...</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-block-end:var(--sp-3)">
+          <h2>أحدث الطلبات ومراحل التنفيذ</h2>
+          <a class="btn btn-ghost btn-sm" href="/lab-orders.html">عرض الكل</a>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>رقم الطلب</th><th>الطبيب والعيادة</th><th>الحالة / الخدمة</th><th>المراحل</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="lab-recent-orders"><tr><td colspan="6" class="muted">جاري التحميل...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- =====================================================
+         VIEW 2: DEDICATED PRICE LIST EDITOR (#pricelist)
+         ===================================================== -->
+    <div class="dash-tab-pane" id="tab-pane-pricelist" hidden>
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);margin-block-end:var(--sp-4)">
+          <div>
+            <span class="badge badge-verified">قالب الأسعار الموحد لجميع المعامل</span>
+            <h1 style="font-size:var(--fs-xl);margin-block-start:6px">إدارة وتعديل الـ Price List الخاصة بالمعمل</h1>
+            <p class="muted" style="font-size:var(--fs-xs)">التصميم العام لقائمة الأسعار ثابت وموحّد في المنصة؛ يمكنك تعديل اسم الخدمة أو السعر مباشرةً داخل القالب أو إضافة بند جديد.</p>
+          </div>
+          <div style="display:flex;gap:var(--sp-2)">
+            <a class="btn btn-ghost btn-sm" href="#overview" data-switch-tab="overview">← العودة للإحصائيات</a>
+            <a class="btn btn-primary btn-sm" id="pricelist-preview-link" href="/labs">معاينة في البروفايل العام</a>
+          </div>
+        </div>
+
+        <div id="add-srv-alert" class="alert alert-success" hidden style="margin-block-end:var(--sp-3)"></div>
+
+        <div class="price-sheet">
+          <div class="price-sheet-spine" aria-hidden="true">
+            <span class="price-sheet-spine-word">PRICING LIST</span>
+          </div>
+          <div class="price-sheet-body">
+            <div class="price-sheet-groups" id="lab-editable-price-groups">
+              <p class="muted" style="font-size:var(--fs-sm)">جاري تحميل قائمة أسعار المعمل...</p>
+            </div>
+            <div class="price-sheet-foot">
+              <span id="lab-edit-hours">السبت – الخميس · 9:00 ص – 9:00 م</span>
+              <span class="ltr" id="lab-edit-handle">@laboratory · EGP</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="add-service-form" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-5);padding-block-start:var(--sp-4);border-block-start:1px solid var(--line)">
+          <strong style="font-size:var(--fs-md);color:var(--g-900)">+ إضافة خدمة جديدة داخل القالب الموحد</strong>
+          <div class="form-row-2">
+            <div class="field"><label for="srv-name">اسم الخدمة</label><input class="input" id="srv-name" name="name" placeholder="مثال: تاج زركونيا متجانس" required></div>
+            <div class="field">
+              <label for="srv-cat">التصنيف في القالب</label>
+              <select class="select" id="srv-cat" name="category" required>
+                <option value="تركيبات الزركونيا والبورسلين">تركيبات الزركونيا والبورسلين (CROWN &amp; BRIDGE)</option>
+                <option value="التركيبات التجميلية والإيماكس">التركيبات التجميلية والإيماكس (AESTHETIC &amp; E.MAX)</option>
+                <option value="دعامات الزرعات والطباعة الرقمية">دعامات الزرعات والطباعة الرقمية (IMPLANTS &amp; DIGITAL)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="field"><label for="srv-price">السعر للوحدة (ج.م)</label><input class="input num" id="srv-price" name="priceEgp" type="number" min="100" step="50" value="1600" required></div>
+            <div class="field"><label for="srv-days">مدة التنفيذ التقديرية (أيام)</label><input class="input num" id="srv-days" name="estimatedDays" type="number" min="1" max="30" value="3" required></div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">إضافة البند لقائمة الأسعار</button>
+        </form>
+      </section>
+    </div>
+
+    <!-- =====================================================
+         VIEW 3: LAB STOREFRONT & PROFILE CUSTOMIZER (#storefront)
+         ===================================================== -->
+    <div class="dash-tab-pane" id="tab-pane-storefront" hidden>
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);margin-block-end:var(--sp-4)">
+          <div>
+            <span class="badge badge-verified">إدارة متجر المعمل الرقمي</span>
+            <h1 style="font-size:var(--fs-xl);margin-block-start:6px">تخصيص ملف ومتجر المعمل (الشعار، Bio، الغلاف، الأجهزة، أعمال الشغل، والمواعيد)</h1>
+            <p class="muted" style="font-size:var(--fs-xs)">تحكم في متجرك بالكامل كما يظهر للأطباء في الدليل العام.</p>
+          </div>
+          <div style="display:flex;gap:var(--sp-2)">
+            <a class="btn btn-ghost btn-sm" href="#overview" data-switch-tab="overview">← العودة للإحصائيات</a>
+            <a class="btn btn-primary btn-sm" id="storefront-preview-link" href="/labs">معاينة المتجر العام ↗</a>
+          </div>
+        </div>
+
+        <div id="storefront-alert" class="alert alert-success" hidden style="margin-block-end:var(--sp-4)"></div>
+
+        <!-- Live Storefront Identity & Cover Preview -->
+        <div class="storefront-preview-banner" id="storefront-live-banner">
+          <div class="storefront-preview-id">
+            <div class="lab-avatar lab-avatar-3d" id="sf-preview-monogram" style="inline-size:68px;block-size:68px;font-size:var(--fs-xl)">كد</div>
+            <div>
+              <span class="badge badge-verified">معاينة حية لواجهة المتجر</span>
+              <h2 id="sf-preview-name" style="color:#fff;margin-block-top:4px">معمل القاهرة الرقمي للتركيبات</h2>
+              <p id="sf-preview-bio" style="color:rgba(242,247,240,.84);font-size:var(--fs-xs);max-inline-size:42rem">معمل أسنان رقمي متخصص في تركيبات الزركونيا والإيماكس...</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="lab-profile-form" style="display:grid;gap:var(--sp-4);margin-block-start:var(--sp-5)">
+          <h3 style="font-size:var(--fs-md);color:var(--g-900)">1. الهوية الأساسية، الـ Bio، ومواعيد العمل والتوصيل</h3>
+          <div class="form-row-2">
+            <div class="field">
+              <label for="sf-name">اسم المعمل التجاري (يحدد أحرف الشعار تلقائيًا)</label>
+              <input class="input" id="sf-name" name="name" required>
+            </div>
+            <div class="field">
+              <label for="sf-hours">مواعيد العمل الرسمية</label>
+              <input class="input" id="sf-hours" name="workingHours" placeholder="السبت – الخميس · 9:00 ص – 9:00 م" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sf-bio">نبذة تعريفية عن المعمل وتخصصاته (Bio)</label>
+            <textarea class="textarea" id="sf-bio" name="description" rows="3" required></textarea>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field">
+              <label for="sf-gov">المحافظة</label>
+              <input class="input" id="sf-gov" name="governorate" required>
+            </div>
+            <div class="field">
+              <label for="sf-city">المدينة / المنطقة</label>
+              <input class="input" id="sf-city" name="city" required>
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="field">
+              <label for="sf-address">العنوان التفصيلي للمعمل</label>
+              <input class="input" id="sf-address" name="address" placeholder="مثال: 14 شارع عباس العقاد، مدينة نصر">
+            </div>
+            <div class="field">
+              <label for="sf-areas">مناطق التغطية والمندوب (مفصولة بفاصلة)</label>
+              <input class="input" id="sf-areas" name="serviceAreasCsv" placeholder="مدينة نصر, مصر الجديدة, التجمع الخامس, المعادي">
+            </div>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:var(--sp-4);padding:var(--sp-3);background:var(--bg);border-radius:var(--r-md);border:1px solid var(--line)">
+            <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">
+              <input type="checkbox" id="sf-courier" name="offersCourier" checked>
+              <span>يوفر المعمل مندوب استلام وتسليم للعيادات</span>
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">
+              <input type="checkbox" id="sf-pickup" name="offersPickup" checked>
+              <span>يتيح الاستلام المباشر من مقر المعمل</span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary" type="submit" style="justify-self:start">حفظ بيانات المتجر والـ Bio والمواعيد</button>
+        </form>
+
+        <hr style="border:0;border-block-start:1px solid var(--line);margin-block:var(--sp-6)">
+
+        <!-- Equipment & Portfolio Dual Editor -->
+        <div class="dash-grid-2">
+          <!-- Equipment Manager -->
+          <div style="display:grid;gap:var(--sp-3);align-content:start">
+            <h3 style="font-size:var(--fs-md);color:var(--g-900)">2. الأجهزة والتقنيات المستخدمة في المعمل</h3>
+            <p class="muted" style="font-size:var(--fs-xs)">أضف ماكينات التفريز، الماسحات الضوئية، أفران التلبيد، والطابعات ثلاثية الأبعاد ليراها الأطباء.</p>
+            <div id="sf-equipment-list" style="display:grid;gap:8px"></div>
+            <form id="sf-add-equipment-form" style="display:grid;gap:var(--sp-2);padding:var(--sp-3);background:var(--bg);border-radius:var(--r-md);border:1px solid var(--line)">
+              <strong style="font-size:var(--fs-xs)">+ إضافة جهاز جديد للمعمل</strong>
+              <input class="input" name="name" placeholder="اسم الجهاز (مثال: ماكينة تفريز 5 محاور)" required>
+              <input class="input ltr" name="brandAndModel" placeholder="الموديل (مثال: Roland DWX-52D / 3Shape E4)" required>
+              <button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">إضافة الجهاز</button>
+            </form>
+          </div>
+
+          <!-- Portfolio Showcase Manager -->
+          <div style="display:grid;gap:var(--sp-3);align-content:start">
+            <h3 style="font-size:var(--fs-md);color:var(--g-900)">3. معرض منتجات الشغل والحالات المنفذة (Portfolio)</h3>
+            <p class="muted" style="font-size:var(--fs-xs)">أضف نماذج شغلك مع درجة اللون (VITA Shade) والوصف الفني لتظهر في متجرك.</p>
+            <div id="sf-portfolio-list" style="display:grid;gap:8px"></div>
+            <form id="sf-add-portfolio-form" style="display:grid;gap:var(--sp-2);padding:var(--sp-3);background:var(--bg);border-radius:var(--r-md);border:1px solid var(--line)">
+              <strong style="font-size:var(--fs-xs)">+ إضافة عمل جديد لمعرض المعمل</strong>
+              <div class="form-row-2">
+                <input class="input" name="title" placeholder="عنوان العمل (مثال: 6 فينير إيماكس)" required>
+                <input class="input ltr" name="shade" placeholder="اللون (مثال: BL2 / A1)" value="A1" required>
+              </div>
+              <input class="input" name="caption" placeholder="وصف المرحلة والتشطيب (مثال: تجميل قوس علوي مع جليز نهائي)" required>
+              <button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">إضافة لمعرض الأعمال</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=9"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

@@ -1,0 +1,606 @@
+<title>Labstage</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;600&family=Sora:wght@500;600;700&display=swap">
+<style>
+/* Layout: one sticky 3D stage; the page scrolls past it in four colour chapters (one per case stage), then working product fragments on graphite. */
+:root {
+  --graphite: #0e1216;   /* ground: the CAD screen */
+  --graphite-2: #171d23; /* tone step for panels */
+  --graphite-3: #222a32;
+  --porcelain: #eef0ec;  /* ink on dark, ground on light */
+  --muted-d: #a3adb6;    /* secondary on graphite */
+  --scan: #22d3ee;       /* the one accent: actions */
+  --on-scan: #04161a;
+  --f-design: #1f45b8;   /* chapter fields, from the four stages */
+  --f-milling: #dedcd5;
+  --f-layering: #d08a48;
+  --f-glaze: #f3f4f1;
+  --ink-dark: #0e1216;
+  --muted-l: #46515c;
+  --display: "Sora", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --text: "IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --gutter: max(20px, min(4vw, 56px));
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--graphite); color: var(--porcelain); font: 400 17px/1.55 var(--text); -webkit-font-smoothing: antialiased; }
+img, canvas { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--scan); outline-offset: 3px; }
+.wrap { padding-left: max(var(--gutter), env(safe-area-inset-left, 0px)); padding-right: max(var(--gutter), env(safe-area-inset-right, 0px)); }
+.ar { font-family: "IBM Plex Sans Arabic", var(--text); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* nav */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 20; padding-top: env(safe-area-inset-top, 0px); transition: background-color .3s, color .3s; color: var(--nav-ink, var(--porcelain)); }
+.nav .bar { display: flex; align-items: center; gap: 28px; height: 68px; }
+.wordmark { font: 700 22px/1 var(--display); letter-spacing: -0.03em; text-decoration: none; }
+.nav nav { display: flex; gap: 24px; margin-inline-start: auto; font-size: 15px; font-weight: 500; }
+.nav nav a { text-decoration: none; opacity: .85; }
+.nav nav a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 22px; border: 0; border-radius: 0; font: 600 16px/1 var(--text); text-decoration: none; cursor: pointer; transition: transform .15s, background-color .15s; }
+.btn:active { transform: translateY(1px) scale(.98); }
+.btn-scan { background: var(--scan); color: var(--on-scan); }
+.btn-scan:hover { background: #67e3f5; }
+.btn-plain { background: transparent; color: inherit; box-shadow: inset 0 0 0 2px currentColor; }
+.btn-plain:hover { background: rgba(127,127,127,.14); }
+@media (max-width: 760px) { .nav nav { display: none; } .nav .btn { margin-inline-start: auto; min-height: 40px; padding: 0 14px; font-size: 14px; } }
+
+/* the stage scene */
+.scene { position: relative; background: var(--field, var(--graphite)); color: var(--scene-ink, var(--porcelain)); transition: background-color .45s ease, color .45s ease; }
+.stage { position: sticky; top: 0; height: 100vh; height: 100svh; width: 100%; pointer-events: none; }
+.stage-inner { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.stage .cell { grid-column: 2; position: relative; min-width: 0; min-height: 0; }
+.stage .cell canvas, .stage .fallback { position: absolute; inset: 0; }
+.fallback { display: grid; place-items: center; }
+.fallback svg { width: 46%; }
+.chapters { position: relative; margin-top: -100vh; margin-top: -100svh; }
+.chapter { min-height: 100vh; min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; }
+.chapter > .copy { padding-block: 120px; display: flex; flex-direction: column; gap: 28px; max-width: 600px; }
+.hero .copy { padding-top: 140px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(44px, 6.6vw, 104px); line-height: .95; letter-spacing: -0.045em; }
+.lede { font-size: clamp(18px, 1.5vw, 22px); line-height: 1.5; max-width: 34em; margin: 0; }
+.hero .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.stage-name { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; }
+.stage-name h2 { font-size: clamp(64px, 9vw, 150px); line-height: .88; letter-spacing: -0.05em; }
+.stage-name .ar { font-size: clamp(28px, 3vw, 44px); font-weight: 600; opacity: .8; }
+.chapter p { margin: 0; font-size: 19px; max-width: 30em; }
+.ping { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; max-width: 420px; background: rgba(255,255,255,.12); color: inherit; }
+.on-light .ping { background: rgba(14,18,22,.07); }
+.ping .dot { flex: none; width: 10px; height: 10px; margin-top: 7px; border-radius: 50%; background: currentColor; }
+.ping b { display: block; font-weight: 600; }
+.ping span { font-size: 14px; opacity: .8; }
+.ping time { margin-inline-start: auto; font-size: 13px; opacity: .7; white-space: nowrap; }
+.progress { position: absolute; right: max(var(--gutter), env(safe-area-inset-right, 0px)); bottom: 32px; display: flex; gap: 6px; }
+.progress i { width: 34px; height: 4px; background: currentColor; opacity: .22; transition: opacity .3s; }
+.progress i.on { opacity: 1; }
+
+@media (max-width: 860px) {
+  .stage-inner { grid-template-columns: 1fr; grid-template-rows: 46svh 1fr; }
+  .stage .cell { grid-column: 1; grid-row: 1; }
+  .chapter { grid-template-columns: 1fr; align-items: end; }
+  .chapter > .copy { padding-block: 50svh 72px; }
+  .hero .copy { padding-top: 48svh; }
+  .progress { display: none; }
+}
+
+/* sections after the scene */
+section.block { padding-block: clamp(96px, 14vw, 200px); }
+.block h2 { font-size: clamp(40px, 5.2vw, 84px); line-height: .98; letter-spacing: -0.04em; }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 88px); align-items: start; }
+.split > * { min-width: 0; }
+.stack { display: flex; flex-direction: column; gap: 24px; }
+.stack p { margin: 0; max-width: 34em; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+
+/* shade live thing */
+.shade { background: var(--graphite); }
+.shade-view { position: relative; aspect-ratio: 1 / 1; max-height: 640px; width: 100%; background: var(--graphite-2); }
+.shade-view canvas { width: 100%; height: 100%; }
+.shade-read { position: absolute; left: 24px; bottom: 20px; font: 600 clamp(48px, 7vw, 96px)/1 var(--display); letter-spacing: -0.04em; }
+.shade-read small { display: block; font: 400 15px/1.4 var(--text); letter-spacing: 0; color: var(--muted-d); margin-top: 8px; }
+.tabs { display: flex; flex-direction: column; gap: 14px; border: 0; padding: 0; margin: 0; }
+.tabs legend { padding: 0; margin-bottom: 4px; font-weight: 600; }
+.tab-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.tab-row .g { width: 22px; font-weight: 600; color: var(--muted-d); }
+.tab { position: relative; width: 52px; height: 72px; cursor: pointer; }
+.tab input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.tab span { position: absolute; inset: 0; border-radius: 4px 4px 22px 22px; background: var(--c); display: grid; align-items: end; justify-items: center; padding-bottom: 8px; font: 600 12px/1 var(--text); color: #2a241b; transition: transform .15s; }
+.tab:hover span { transform: translateY(-3px); }
+.tab input:checked + span { transform: translateY(-8px); box-shadow: 0 0 0 3px var(--graphite), 0 0 0 6px var(--scan); }
+.tab input:focus-visible + span { outline: 3px solid var(--scan); outline-offset: 6px; }
+
+/* product fragments */
+[data-ui] { font: 400 14px/1.45 var(--text); }
+.board { background: var(--graphite-2); padding: 18px; display: flex; flex-direction: column; gap: 16px; overflow-x: auto; }
+.board-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.board-top input { flex: 1 1 260px; min-width: 0; background: var(--graphite); color: var(--porcelain); border: 1px solid #3a4550; padding: 10px 12px; font: inherit; }
+.incoming { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px; background: var(--graphite-3); }
+.incoming .who { flex: 1 1 240px; }
+.incoming b { font-weight: 600; }
+.mini { min-height: 36px; padding: 0 14px; font-size: 14px; }
+.cols { display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); gap: 10px; min-width: 720px; }
+.col h3 { font: 600 13px/1 var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.col h3 i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.card { background: var(--graphite); padding: 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; border-top: 3px solid var(--c); }
+.card .id { color: var(--muted-d); font-size: 12px; }
+.card .meta { color: var(--muted-d); font-size: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; background: var(--graphite-2); }
+.facts div { padding: 26px 24px; }
+.facts div + div { background: var(--graphite-3); }
+.facts b { display: block; font: 600 clamp(32px, 3.6vw, 52px)/1 var(--display); letter-spacing: -0.03em; margin-bottom: 10px; }
+
+.doctors { background: var(--f-glaze); color: var(--ink-dark); }
+.doctors .stack p { color: var(--ink-dark); }
+.search { background: #fff; color: var(--ink-dark); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted-l); flex: 1 1 150px; }
+.filters select { font: 400 15px/1 var(--text); padding: 10px; border: 1px solid #7d8a97; background: #fff; color: var(--ink-dark); }
+.lab { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px; background: #eef1f4; }
+.lab .mono { width: 52px; height: 52px; display: grid; place-items: center; background: var(--ink-dark); color: var(--porcelain); font: 600 17px/1 var(--display); }
+.lab b { display: block; font-size: 16px; }
+.lab .sub { font-size: 13px; color: var(--muted-l); }
+.lab .rate { text-align: end; font-weight: 600; }
+.lab .rate small { display: block; font-weight: 400; font-size: 12px; color: var(--muted-l); }
+.sponsored { font-size: 12px; font-weight: 600; color: #8a5200; }
+.note { font-size: 13px; color: var(--muted-l); margin: 0; }
+
+.money { background: var(--f-layering); color: var(--ink-dark); }
+.halves { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
+.halves > div { padding: clamp(24px, 3vw, 40px); display: flex; flex-direction: column; gap: 10px; }
+.halves > div:first-child { background: var(--f-design); color: #fff; }
+.halves > div:last-child { background: var(--ink-dark); color: var(--porcelain); }
+.halves b { font: 600 clamp(40px, 5vw, 76px)/1 var(--display); letter-spacing: -0.04em; }
+.calc { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 10px 24px; font-size: 18px; }
+.calc dd { margin: 0; text-align: end; font-weight: 600; }
+.calc .t { padding-top: 12px; font-weight: 600; }
+@media (max-width: 600px) { .halves { grid-template-columns: 1fr; } }
+
+.faq dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px 56px; }
+.faq dt { font: 600 21px/1.3 var(--display); letter-spacing: -0.01em; margin-bottom: 10px; }
+.faq dd { margin: 0; color: var(--porcelain); }
+@media (max-width: 760px) { .faq dl { grid-template-columns: 1fr; } }
+
+.close { background: var(--scan); color: var(--on-scan); padding-block: clamp(80px, 10vw, 140px) 40px; }
+.close .big { font: 700 clamp(72px, 21vw, 340px)/.8 var(--display); letter-spacing: -0.06em; margin: 0; }
+.close .row { display: flex; flex-wrap: wrap; gap: 16px 40px; align-items: center; justify-content: space-between; margin-top: 48px; font-size: 15px; }
+.close .btn-ink { background: var(--ink-dark); color: var(--porcelain); }
+.close .btn-ink:hover { background: #26303a; }
+
+[data-rise] { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .scene, .nav, .btn, .tab span { transition: none; } }
+</style>
+
+<header class="nav" id="nav">
+  <div class="bar wrap">
+    <a class="wordmark" href="#top">Labstage</a>
+    <nav aria-label="Main">
+      <a href="#stages">How a case moves</a>
+      <a href="#labs">For labs</a>
+      <a href="#doctors">For doctors</a>
+      <a href="#money">Payments</a>
+    </nav>
+    <a class="btn btn-scan" href="#start">Order a case</a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="scene" id="scene">
+    <div class="stage" aria-hidden="true">
+      <div class="stage-inner">
+        <div class="cell" id="stageInner">
+        <div class="fallback" id="fallback">
+          <svg viewBox="0 0 100 100"><path d="M24 80C19 64 16 48 19 36c3-12 12-15 19-9 4-8 13-9 18-2 6-7 16-6 20 3 7-4 11 7 9 19-1 13-4 24-8 33-12 6-41 6-53 0z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </div>
+        </div>
+      </div>
+      <div class="progress" id="progress"><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="chapters">
+      <section class="chapter hero wrap" data-stage="glaze" data-field="graphite" aria-labelledby="h1">
+        <div class="copy">
+          <h1 id="h1" data-rise>Every crown, from scan to glaze.</h1>
+          <p class="lede" data-rise>Labstage is where dentists in Egypt order from dental labs. Send the case, follow it through all four stages, talk on the case itself and pay in two halves.</p>
+          <div class="actions" data-rise>
+            <a class="btn btn-scan" href="#start">Order your first case</a>
+            <a class="btn btn-plain" href="#labs">I run a lab</a>
+          </div>
+        </div>
+      </section>
+
+      <div id="stages">
+        <section class="chapter wrap" data-stage="design" data-field="design" aria-labelledby="st1">
+          <div class="copy">
+            <div class="stage-name" data-rise><h2 id="st1">Design</h2><span class="ar" lang="ar">تصميم</span></div>
+            <p data-rise>The lab designs the crown on your scan. The file lands in the case chat: approve it or ask for a change before anything is cut.</p>
+            <div class="ping" data-rise><i class="dot"></i><div><b>LS-24817 · Design uploaded</b><span>First half due: EGP 1,890</span></div><time>10:12</time></div>
+          </div>
+        </section>
+        <section class="chapter wrap" data-stage="milling" data-field="milling" aria-labelledby="st2">
+          <div class="copy">
+            <div class="stage-name" data-rise><h2 id="st2">Milling</h2><span class="ar" lang="ar">ميلينج</span></div>
+            <p data-rise>The approved design is cut from a zirconia disc on a five-axis mill, then sintered until it shrinks to size.</p>
+            <div class="ping" data-rise><i class="dot"></i><div><b>LS-24817 moved to Milling</b><span>Nile Precision Lab · Dokki</span></div><time>11:05</time></div>
+          </div>
+        </section>
+        <section class="chapter wrap on-light" data-stage="layering" data-field="layering" aria-labelledby="st3">
+          <div class="copy">
+            <div class="stage-name" data-rise><h2 id="st3">Layering</h2><span class="ar" lang="ar">ليرينج</span></div>
+            <p data-rise>A technician builds the colour in layers to the shade you picked, from dentin at the neck to enamel at the tip.</p>
+            <div class="ping" data-rise><i class="dot"></i><div><b>New photo on LS-24817</b><span>LS-24817_milled.jpg · before layering</span></div><time>16:20</time></div>
+          </div>
+        </section>
+        <section class="chapter wrap" data-stage="glaze" data-field="glaze" aria-labelledby="st4">
+          <div class="copy">
+            <div class="stage-name" data-rise><h2 id="st4">Glaze</h2><span class="ar" lang="ar">جليس</span></div>
+            <p data-rise>Fired, glazed and checked. A courier brings it to your clinic and the second half is due on delivery.</p>
+            <div class="ping" data-rise><i class="dot"></i><div><b>LS-24817 is ready</b><span>Courier arrives at 2:00 pm</span></div><time>09:30</time></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <section class="block shade wrap" id="start" aria-labelledby="shade-h">
+    <div class="split">
+      <div class="stack">
+        <h2 id="shade-h" data-rise>Pick the shade, see the crown.</h2>
+        <p data-rise>This is the shade picker from the order form. Choose a VITA tab and the crown takes its colour, so you and the lab are looking at the same thing.</p>
+        <fieldset class="tabs" data-rise>
+          <legend>VITA classical</legend>
+          <div class="tab-row" id="tabs"></div>
+        </fieldset>
+        <p class="note" style="color: var(--muted-d)">Screen colours are close, not exact. The lab works from the code and your shade photo.</p>
+      </div>
+      <div class="shade-view" id="shadeView" data-rise>
+        <div class="shade-read" aria-live="polite"><span id="shadeCode">A2</span><small id="shadeLine">Reddish-brown family, light</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="labs" aria-labelledby="labs-h">
+    <div class="split">
+      <div class="stack">
+        <h2 id="labs-h" data-rise>Every order on one board.</h2>
+        <p data-rise>Accept or decline new orders, move each case to its next stage, and every move tells the doctor. Search by order number, doctor or patient. Each doctor's invoices add themselves up, with an Excel export at the end of the month.</p>
+        <p data-rise>Show your work, your machines and your prices on the lab's profile. Doctors rate every case, and the labs with the best ratings come first in search.</p>
+      </div>
+      <div class="board" data-ui data-rise aria-label="Example of the lab board">
+        <div class="board-top">
+          <label class="sr" for="bsearch" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search cases</label>
+          <input id="bsearch" type="search" placeholder="Order number, doctor or patient">
+          <span style="color: var(--muted-d)">14 active cases</span>
+        </div>
+        <div class="incoming">
+          <div class="who"><b>New order LS-24833</b><br><span style="color: var(--muted-d)">Dr. Karim Adel · 2 zirconia crowns · 16, 26 · shade A2</span></div>
+          <button class="btn btn-plain mini" type="button">Decline</button>
+          <button class="btn btn-scan mini" type="button">Accept</button>
+        </div>
+        <div class="cols">
+          <div class="col" style="--c:#6f95ff"><h3><i></i>Design</h3>
+            <div class="card"><span class="id">LS-24790</span><b>Youssef Samir</b><span class="meta">Dr. Nadia Fouad · veneers 11, 21</span></div>
+            <div class="card"><span class="id">LS-24802</span><b>Salma Nabil</b><span class="meta">Dr. Karim Adel · implant crown 36</span></div>
+          </div>
+          <div class="col" style="--c:#a7b2bf"><h3><i></i>Milling</h3>
+            <div class="card"><span class="id">LS-24795</span><b>Hana Ezzat</b><span class="meta">Dr. Omar Rashed · PFM 24</span></div>
+          </div>
+          <div class="col" style="--c:#f2a65a"><h3><i></i>Layering</h3>
+            <div class="card"><span class="id">LS-24817</span><b>Mona Hassan</b><span class="meta">Dr. Karim Adel · zirconia 16, 26</span></div>
+          </div>
+          <div class="col" style="--c:#3fd69a"><h3><i></i>Glaze</h3>
+            <div class="card"><span class="id">LS-24811</span><b>Omar Fathy</b><span class="meta">Dr. Laila Mahmoud · bridge 44–46</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="facts" style="margin-top: clamp(48px, 6vw, 88px)" data-rise>
+      <div><b>1 month free</b>Every lab starts with a free month.</div>
+      <div><b>EGP 2,000</b>A month after that, for the whole lab.</div>
+      <div><b>5%</b>Of each order goes to Labstage, taken from the lab's payout.</div>
+    </div>
+  </section>
+
+  <section class="block doctors wrap" id="doctors" aria-labelledby="doc-h">
+    <div class="split">
+      <div class="search" data-ui data-rise aria-label="Example of lab search">
+        <div class="filters">
+          <label for="gov">Governorate<select id="gov"><option>Giza</option><option>Cairo</option><option>Alexandria</option><option>Qalyubia</option></select></label>
+          <label for="area">Area<select id="area"><option>Dokki</option><option>Mohandessin</option><option>6th of October</option><option>Sheikh Zayed</option></select></label>
+          <label for="sort">Sort<select id="sort"><option>Nearest to my clinic</option><option>Highest rated</option></select></label>
+        </div>
+        <div class="lab"><span class="mono">NP</span><div><b>Nile Precision Lab</b><span class="sub">Dokki · 3.2 km · 5-axis mill, intraoral scanner</span><br><span class="sponsored">Sponsored</span></div><div class="rate">4.8<small>126 reviews</small></div></div>
+        <div class="lab"><span class="mono">DS</span><div><b>Delta Smile Lab</b><span class="sub">Mohandessin · 4.1 km · press furnace, 4-axis mill</span></div><div class="rate">4.7<small>84 reviews</small></div></div>
+        <div class="lab"><span class="mono">CC</span><div><b>Cairo Ceramic Studio</b><span class="sub">Agouza · 5.6 km · layering ceramics, implant work</span></div><div class="rate">4.6<small>61 reviews</small></div></div>
+        <p class="note">Sample labs, to show the layout.</p>
+      </div>
+      <div class="stack">
+        <h2 id="doc-h" data-rise>Find a lab near your clinic.</h2>
+        <p data-rise>Filter by governorate and area, or let the map find the labs closest to you. Open a lab to see its work, its machines and its prices before you send anything.</p>
+        <p data-rise>Ask the lab to send a courier for the impression, upload your scans and photos, and search any case by its order number to open its chat.</p>
+        <div data-rise><a class="btn" style="background: var(--ink-dark); color: var(--porcelain)" href="#start">Order your first case</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block money wrap" id="money" aria-labelledby="money-h">
+    <div class="split">
+      <div class="stack">
+        <h2 id="money-h" data-rise>You pay in two halves.</h2>
+        <p data-rise>Half when the design is uploaded, half when the case is glazed. Every payment comes with a PDF receipt, and the case chat keeps the record.</p>
+        <dl class="calc num" data-rise>
+          <dt>2 zirconia crowns</dt><dd>EGP 3,600</dd>
+          <dt>Labstage fee, 5%</dt><dd>EGP 180</dd>
+          <dt class="t">Total</dt><dd class="t">EGP 3,780</dd>
+        </dl>
+      </div>
+      <div class="halves num" data-rise>
+        <div><span>After Design</span><b>EGP 1,890</b><span>You approve the file, then pay.</span></div>
+        <div><span>After Glaze</span><b>EGP 1,890</b><span>Paid when the case reaches you.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block faq wrap" aria-labelledby="faq-h">
+    <h2 id="faq-h" style="margin-bottom: clamp(40px, 5vw, 72px)" data-rise>Questions doctors and labs ask.</h2>
+    <dl>
+      <div data-rise><dt>Can I skip a stage?</dt><dd>Yes. You choose the stages in the order form. A monolithic crown can skip layering, and the tracker only shows the stages you picked.</dd></div>
+      <div data-rise><dt>What if the lab declines my order?</dt><dd>You are told straight away and nothing is charged. Send the same order to another lab in one tap.</dd></div>
+      <div data-rise><dt>Which files can I send?</dt><dd>Scans as STL or PLY, photos as JPG, and PDFs, straight into the case. The lab sends its design files back the same way.</dd></div>
+      <div data-rise><dt>How are labs ranked?</dt><dd>By the ratings doctors give after each case. Labs that pay to be featured appear first and are always marked Sponsored.</dd></div>
+      <div data-rise><dt>Does it work in Arabic?</dt><dd>Every screen works in English and Arabic, and the stage names are the ones labs already use.</dd></div>
+      <div data-rise><dt>What does a lab pay?</dt><dd>The first month is free, then EGP 2,000 a month. Labstage keeps 5% of each order from the lab's payout.</dd></div>
+    </dl>
+  </section>
+
+  <footer class="close wrap" aria-labelledby="close-h">
+    <h2 id="close-h" class="big">Labstage</h2>
+    <div class="row">
+      <span>Orders, stages, chat and payments between dentists and dental labs in Egypt.</span>
+      <a class="btn btn-ink" href="#top">Back to the top</a>
+    </div>
+  </footer>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var FIELDS = {
+    graphite: { bg: "#0e1216", ink: "#eef0ec" },
+    design:   { bg: "#1f45b8", ink: "#ffffff" },
+    milling:  { bg: "#2b3138", ink: "#eef0ec" },
+    layering: { bg: "#d08a48", ink: "#0e1216" },
+    glaze:    { bg: "#0f3d30", ink: "#eef0ec" }
+  };
+  var SHADES = [
+    ["A", [["A1", "#efe3cd", "light"], ["A2", "#e9d8b8", "light"], ["A3", "#e0c79c", "medium"], ["A3.5", "#d6b886", "medium-dark"], ["A4", "#c9a674", "dark"]], "Reddish-brown family"],
+    ["B", [["B1", "#f1e8d3", "lightest"], ["B2", "#e9dcb9", "light"], ["B3", "#dcc593", "medium"], ["B4", "#d2b97f", "dark"]], "Reddish-yellow family"],
+    ["C", [["C1", "#e1d9c6", "light"], ["C2", "#d5c9ad", "medium"], ["C3", "#c8b997", "medium-dark"], ["C4", "#b4a07a", "dark"]], "Grey family"],
+    ["D", [["D2", "#e2d6c0", "light"], ["D3", "#d6c7aa", "medium"], ["D4", "#d2c09c", "medium-dark"]], "Reddish-grey family"]
+  ];
+
+  /* ---------- crown geometry ---------- */
+  function crownGeometry(T, seg) {
+    var prof = [[0.56,-1.05],[0.66,-0.96],[0.8,-0.7],[0.93,-0.32],[1.0,0.02],[1.0,0.3],[0.93,0.52],[0.8,0.68],[0.62,0.78],[0.42,0.76],[0.24,0.66],[0.08,0.6],[0.0,0.59]];
+    var geo = new T.LatheGeometry(prof.map(function (p) { return new T.Vector2(p[0], p[1]); }), seg);
+    var pos = geo.attributes.position;
+    for (var i = 0; i < pos.count; i++) {
+      var x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      var r = Math.sqrt(x * x + z * z), th = Math.atan2(z, x);
+      if (y > 0.2) {
+        var cusp = Math.pow((Math.cos(4 * th + Math.PI / 4) + 1) / 2, 2.2);
+        var rim = Math.min(1, r / 0.65);
+        y += 0.24 * cusp * rim * Math.min(1, (y - 0.2) / 0.4);
+        var groove = Math.exp(-Math.pow(Math.sin(2 * th), 2) * 18) * 0.05 * rim;
+        y -= groove;
+      }
+      var bulge = 1 + 0.04 * Math.cos(2 * th);
+      pos.setXYZ(i, x * 1.1 * bulge, y, z * 0.95 * bulge);
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+  function discGeometry(T) {
+    var s = new T.Shape(); s.absarc(0, 0, 2.0, 0, Math.PI * 2, false);
+    var hole = new T.Path(); hole.absarc(0, 0, 1.3, 0, Math.PI * 2, true); s.holes.push(hole);
+    var g = new T.ExtrudeGeometry(s, { depth: 0.42, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, curveSegments: 96 });
+    g.translate(0, 0, -0.21); g.rotateX(Math.PI / 2);
+    return g;
+  }
+  function colourise(T, geo, base) {
+    var pos = geo.attributes.position, col = [], c = new T.Color();
+    var neck = new T.Color(base).offsetHSL(0.0, 0.3, -0.3), tip = new T.Color(base).lerp(new T.Color("#f6f6f2"), 0.5);
+    var mid = new T.Color(base);
+    for (var i = 0; i < pos.count; i++) {
+      var t = Math.min(1, Math.max(0, (pos.getY(i) + 1.05) / 1.9));
+      if (t < 0.6) c.copy(neck).lerp(mid, t / 0.6); else c.copy(mid).lerp(tip, (t - 0.6) / 0.4);
+      col.push(c.r, c.g, c.b);
+    }
+    geo.setAttribute("color", new T.Float32BufferAttribute(col, 3));
+  }
+
+  /* ---------- a crown viewer ---------- */
+  function makeViewer(host, opts) {
+    var T = window.THREE;
+    if (!T) return null;
+    var renderer;
+    try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { return null; }
+    if (!renderer.getContext()) return null;
+    renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    renderer.outputEncoding = T.sRGBEncoding;
+    renderer.toneMapping = T.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    host.appendChild(renderer.domElement);
+
+    var scene = new T.Scene();
+    var cam = new T.PerspectiveCamera(30, 1, 0.1, 100);
+    cam.position.set(0, 1.9, 6.6); cam.lookAt(0, 0, 0);
+    scene.add(new T.HemisphereLight(0xffffff, 0x2a3440, 0.75));
+    var key = new T.DirectionalLight(0xffffff, 1.5); key.position.set(3, 5, 4); scene.add(key);
+    var fill = new T.DirectionalLight(0xbfd4ff, 0.5); fill.position.set(-4, 1, 2); scene.add(fill);
+    var rim = new T.DirectionalLight(0xffffff, 1.0); rim.position.set(-2, 3, -5); scene.add(rim);
+
+    var group = new T.Group(); group.rotation.x = 0.42; scene.add(group);
+    var hi = crownGeometry(T, 160), lo = crownGeometry(T, 26), layerGeo = crownGeometry(T, 160);
+    var shadeHex = opts.shade || "#e9d8b8";
+    colourise(T, layerGeo, shadeHex);
+
+    var m = {
+      design: new T.Mesh(hi, new T.MeshBasicMaterial({ color: 0xbcd0ff, wireframe: true, transparent: true, opacity: 0 })),
+      milling: new T.Mesh(lo, new T.MeshStandardMaterial({ color: 0xe9e7e1, roughness: 1, metalness: 0, flatShading: true, transparent: true, opacity: 0 })),
+      layering: new T.Mesh(layerGeo, new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0, transparent: true, opacity: 0 })),
+      glaze: new T.Mesh(hi, new T.MeshPhysicalMaterial({ color: new T.Color(shadeHex), roughness: 0.14, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05, reflectivity: 0.7, transparent: true, opacity: 0 }))
+    };
+    var disc = new T.Mesh(discGeometry(T), new T.MeshStandardMaterial({ color: 0xf1efe9, roughness: 0.95, transparent: true, opacity: 0 }));
+    disc.position.y = -0.15;
+    Object.keys(m).forEach(function (k) { group.add(m[k]); });
+    group.add(disc);
+
+    var state = { stage: null };
+    function setStage(s) {
+      if (state.stage === s) return;
+      state.stage = s;
+      Object.keys(m).forEach(function (k) {
+        var to = k === s ? (k === "design" ? 0.95 : 1) : 0;
+        if (window.gsap && !reduce) gsap.to(m[k].material, { opacity: to, duration: 0.6, ease: "power2.out", onUpdate: function () { m[k].visible = m[k].material.opacity > 0.01; } });
+        else { m[k].material.opacity = to; m[k].visible = to > 0; }
+        m[k].material.depthWrite = k === s;
+      });
+      var dTo = s === "milling" ? 0.9 : 0;
+      if (window.gsap && !reduce) gsap.to(disc.material, { opacity: dTo, duration: 0.6, onUpdate: function () { disc.visible = disc.material.opacity > 0.01; } });
+      else { disc.material.opacity = dTo; disc.visible = dTo > 0; }
+      if (s === "design") m.design.material.color.set(opts.wireOnDark ? 0xdbe5ff : 0xbcd0ff);
+    }
+    function setShade(hex) {
+      m.glaze.material.color.set(hex);
+      colourise(T, layerGeo, hex);
+      layerGeo.attributes.color.needsUpdate = true;
+    }
+    function size() {
+      var w = host.clientWidth, h = host.clientHeight;
+      if (!w || !h) return;
+      renderer.setSize(w, h, false);
+      renderer.domElement.style.width = w + "px"; renderer.domElement.style.height = h + "px";
+      cam.aspect = w / h;
+      cam.position.z = w / h < 0.8 ? 8.4 : 6.6;
+      cam.updateProjectionMatrix();
+    }
+    size();
+    if (window.ResizeObserver) new ResizeObserver(size).observe(host); else window.addEventListener("resize", size);
+
+    var running = true, spin = 0.0045, extra = 0;
+    function frame() {
+      if (!reduce) group.rotation.y += spin;
+      group.rotation.y += extra; extra *= 0.9;
+      renderer.render(scene, cam);
+      if (running) requestAnimationFrame(frame);
+    }
+    group.rotation.y = 0.7;
+    setStage(opts.stage || "glaze");
+    frame();
+    if (reduce) { running = false; renderer.render(scene, cam); }
+    return {
+      setStage: function (s) { setStage(s); if (!running) setTimeout(function () { renderer.render(scene, cam); }, 650); },
+      setShade: function (h) { setShade(h); renderer.render(scene, cam); },
+      nudge: function (v) { extra += v; },
+      pause: function (p) { if (reduce) return; if (p && running) running = false; else if (!p && !running) { running = true; frame(); } }
+    };
+  }
+
+  /* ---------- scene: chapters drive stage + field ---------- */
+  var sceneEl = document.getElementById("scene");
+  var nav = document.getElementById("nav");
+  var bars = document.querySelectorAll("#progress i");
+  var stageInner = document.getElementById("stageInner");
+  var viewer = makeViewer(stageInner, { stage: "glaze", wireOnDark: true });
+  if (viewer) document.getElementById("fallback").remove();
+
+  var ORDER = ["design", "milling", "layering", "glaze"];
+  function apply(ch) {
+    var f = FIELDS[ch.dataset.field];
+    sceneEl.style.setProperty("--field", f.bg);
+    sceneEl.style.setProperty("--scene-ink", f.ink);
+    nav.style.setProperty("--nav-ink", f.ink);
+    if (viewer) viewer.setStage(ch.dataset.stage);
+    var idx = ch.classList.contains("hero") ? -1 : ORDER.indexOf(ch.dataset.stage);
+    bars.forEach(function (b, i) { b.classList.toggle("on", i <= idx); });
+  }
+  var chapters = Array.prototype.slice.call(document.querySelectorAll(".chapter"));
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) apply(e.target); });
+    }, { rootMargin: "-45% 0px -45% 0px" });
+    chapters.forEach(function (c) { io.observe(c); });
+  }
+  // nav ink once past the scene
+  var after = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (!e.isIntersecting && e.boundingClientRect.top < 0) nav.style.setProperty("--nav-ink", "#eef0ec"); });
+  });
+  after.observe(sceneEl);
+  window.addEventListener("scroll", (function () {
+    var last = window.scrollY;
+    return function () { var d = window.scrollY - last; last = window.scrollY; if (viewer) viewer.nudge(d * 0.0009); };
+  })(), { passive: true });
+  if (viewer && "IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { viewer.pause(!es[0].isIntersecting); }).observe(sceneEl);
+  }
+
+  /* ---------- shade picker ---------- */
+  var tabs = document.getElementById("tabs");
+  var groupNames = {};
+  SHADES.forEach(function (g) {
+    var row = document.createElement("div"); row.className = "tab-row";
+    var gl = document.createElement("span"); gl.className = "g"; gl.textContent = g[0]; gl.setAttribute("aria-hidden", "true"); row.appendChild(gl);
+    g[1].forEach(function (s) {
+      groupNames[s[0]] = g[2] + ", " + s[2];
+      var lab = document.createElement("label"); lab.className = "tab"; lab.style.setProperty("--c", s[1]);
+      lab.innerHTML = '<input type="radio" name="shade" value="' + s[0] + '" data-hex="' + s[1] + '"' + (s[0] === "A2" ? " checked" : "") + ' aria-label="Shade ' + s[0] + '"><span>' + s[0] + "</span>";
+      row.appendChild(lab);
+    });
+    tabs.appendChild(row);
+  });
+  var shadeView = document.getElementById("shadeView");
+  var shadeViewer = null;
+  function startShade() {
+    if (shadeViewer) return;
+    shadeViewer = makeViewer(shadeView, { stage: "glaze", shade: "#e9d8b8" });
+  }
+  if ("IntersectionObserver" in window) {
+    var so = new IntersectionObserver(function (es) {
+      if (es[0].isIntersecting) startShade();
+      if (shadeViewer) shadeViewer.pause(!es[0].isIntersecting);
+    }, { rootMargin: "200px" });
+    so.observe(shadeView);
+  } else startShade();
+  tabs.addEventListener("change", function (e) {
+    var t = e.target; if (!t.value) return;
+    document.getElementById("shadeCode").textContent = t.value;
+    document.getElementById("shadeLine").textContent = groupNames[t.value];
+    if (shadeViewer) { shadeViewer.setShade(t.dataset.hex); shadeViewer.nudge(0.12); }
+    if (viewer) viewer.setShade(t.dataset.hex);
+  });
+  document.getElementById("shadeLine").textContent = groupNames["A2"];
+
+  /* ---------- entrances ---------- */
+  if (window.gsap && window.ScrollTrigger && !reduce) {
+    gsap.registerPlugin(ScrollTrigger);
+    var groups = new Map();
+    document.querySelectorAll("[data-rise]").forEach(function (el) {
+      var host = el.closest("section, footer") || document.body;
+      if (!groups.has(host)) groups.set(host, []);
+      groups.get(host).push(el);
+    });
+    groups.forEach(function (els, host) {
+      gsap.from(els, { y: 26, opacity: 0, duration: 0.7, ease: "power3.out", stagger: 0.075,
+        scrollTrigger: { trigger: host, start: "top 78%", once: true } });
+    });
+    gsap.from(".close .big", { yPercent: 18, duration: 1.1, ease: "power3.out", scrollTrigger: { trigger: ".close", start: "top 85%", once: true } });
+  }
+})();
+</script>

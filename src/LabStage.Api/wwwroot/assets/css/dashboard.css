@@ -1,0 +1,1380 @@
+/* ==========================================================================
+   Dashboard layout & components (3D Spatial Glassmorphism, Interactive Tilt,
+   WebGL 3D Crown Hero Stage, Custom Duotone Icons & Tactile Micro-interactions).
+   ========================================================================== */
+.page-dash {
+  min-block-size: 100svh;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  background:
+    radial-gradient(circle at 18% 12%, rgb(124 196 255 / .42), transparent 38%),
+    radial-gradient(circle at 86% 82%, rgb(47 107 255 / .18), transparent 44%),
+    var(--grad-ground);
+  perspective: 1400px;
+}
+
+.dash-sidebar {
+  background: linear-gradient(175deg, var(--g-950) 0%, var(--g-900) 58%, #141F3A 100%);
+  color: var(--ink-on-dark);
+  padding: var(--sp-5) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  position: sticky;
+  inset-block-start: 0;
+  block-size: 100svh;
+  border-inline-end: 1px solid rgb(124 196 255 / .16);
+  box-shadow: -12px 0 36px rgb(3 8 23 / .25);
+  z-index: 10;
+}
+
+.dash-sidebar .brand {
+  color: var(--ink-on-dark);
+  padding-inline: var(--sp-2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  text-decoration: none;
+}
+
+.dash-nav {
+  display: grid;
+  gap: 8px;
+}
+
+.dash-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  color: rgb(243 247 255 / .82);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  border: 1px solid transparent;
+  transform: perspective(500px) translate3d(0, 0, 0);
+  transition:
+    transform 240ms cubic-bezier(.22, 1, .36, 1),
+    background 240ms ease,
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    color 200ms ease;
+}
+
+.dash-nav a .nav-ic {
+  inline-size: 34px;
+  block-size: 34px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / .07);
+  border: 1px solid rgb(124 196 255 / .18);
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--g-300);
+  transition: transform 240ms cubic-bezier(.22, 1, .36, 1), background 240ms ease, color 240ms ease;
+}
+
+.dash-nav a .nav-ic svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.dash-nav a:hover {
+  background: rgb(124 196 255 / .12);
+  border-color: rgb(124 196 255 / .28);
+  color: var(--white);
+  transform: perspective(500px) translate3d(-4px, 0, 8px);
+}
+
+.dash-nav a:hover .nav-ic {
+  background: var(--g-300);
+  color: var(--g-950);
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.dash-nav a[aria-current="page"] {
+  background: linear-gradient(135deg, var(--g-700) 0%, var(--g-800) 100%);
+  border-color: rgb(124 196 255 / .45);
+  color: var(--white);
+  font-weight: 700;
+  box-shadow: 0 10px 22px -6px rgb(3 8 23 / .5), inset 0 1px 0 rgb(255 255 255 / .26);
+}
+
+.dash-nav a[aria-current="page"] .nav-ic {
+  background: var(--g-300);
+  color: var(--g-950);
+  box-shadow: 0 4px 10px rgb(3 8 23 / .3);
+}
+
+.dash-sidebar-foot {
+  display: grid;
+  gap: var(--sp-2);
+  padding-block-top: var(--sp-4);
+  border-block-start: 1px solid rgb(255 255 255 / .12);
+  font-size: var(--fs-xs);
+}
+
+.dash-main {
+  padding: clamp(1.25rem, 2.8vw, 2.25rem);
+  display: grid;
+  align-content: start;
+  gap: var(--sp-5);
+  min-inline-size: 0;
+}
+
+.dash-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 12px var(--sp-5);
+  background: linear-gradient(180deg, rgb(255 255 255 / .9) 0%, rgb(240 245 255 / .8) 100%);
+  border: 1px solid rgb(255 255 255 / .92);
+  backdrop-filter: blur(18px);
+  border-radius: var(--r-xl);
+  box-shadow:
+    0 12px 28px -10px rgb(11 26 69 / .12),
+    inset 0 1px 0 var(--white);
+}
+
+.dash-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1 1 280px;
+  max-inline-size: 460px;
+}
+
+.dash-user {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+
+.notif-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, var(--g-200) 0%, var(--g-300) 100%);
+  border: 1px solid rgb(47 107 255 / .25);
+  color: var(--g-950);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  box-shadow: 0 4px 12px rgb(27 71 214 / .14), inset 0 1px 0 rgb(255 255 255 / .75);
+}
+
+.notif-pill svg {
+  inline-size: 16px;
+  block-size: 16px;
+  color: var(--g-800);
+}
+
+/* ==========================================================================
+   3D Greeting Hero Banner with Interactive Three.js Dental Crown Canvas
+   ========================================================================== */
+.greeting-banner {
+  background:
+    radial-gradient(circle at 18% 50%, rgb(124 196 255 / .28), transparent 45%),
+    linear-gradient(135deg, var(--g-950) 0%, var(--g-900) 48%, var(--g-700) 100%);
+  color: var(--ink-on-dark);
+  border-radius: var(--r-xl);
+  border: 1px solid rgb(124 196 255 / .3);
+  padding: clamp(1.5rem, 2.8vw, 2.25rem) clamp(1.75rem, 3.2vw, 2.75rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) 230px auto;
+  align-items: center;
+  gap: var(--sp-5);
+  box-shadow:
+    0 24px 48px -14px rgb(3 8 23 / .38),
+    inset 0 1px 0 rgb(255 255 255 / .22);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transition: transform 320ms cubic-bezier(.22, 1, .36, 1), box-shadow 320ms ease;
+}
+
+.greeting-banner:hover {
+  transform: perspective(1100px) translate3d(0, -3px, 8px) rotateX(1deg);
+  box-shadow:
+    0 30px 60px -14px rgb(3 8 23 / .46),
+    0 0 0 1px rgb(124 196 255 / .4),
+    inset 0 1px 0 rgb(255 255 255 / .32);
+}
+
+.greeting-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+}
+
+.greeting-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: fit-content;
+  padding: 5px 14px;
+  border-radius: var(--r-pill);
+  background: rgb(124 196 255 / .14);
+  border: 1px solid rgb(124 196 255 / .32);
+  color: var(--g-200);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.greeting-eyebrow svg {
+  inline-size: 15px;
+  block-size: 15px;
+  flex: none;
+  color: var(--g-300);
+}
+
+.greeting-banner h1 {
+  color: var(--ink-on-dark);
+  font-size: clamp(1.5rem, 1.15rem + 1.3vw, 2.15rem);
+  letter-spacing: -0.015em;
+}
+
+.greeting-banner p {
+  color: rgb(243 247 255 / .86);
+  max-inline-size: 42rem;
+}
+
+/* Interactive 3D Crown Viewport inside Dashboard Hero */
+.dash-3d-stage {
+  position: relative;
+  inline-size: 230px;
+  block-size: 170px;
+  border-radius: var(--r-lg);
+  background: radial-gradient(circle at 50% 45%, rgb(124 196 255 / .28), rgb(3 8 23 / .52) 76%);
+  border: 1px solid rgb(124 196 255 / .38);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / .28),
+    0 16px 34px rgb(3 8 23 / .42);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  justify-self: center;
+  cursor: pointer;
+}
+
+.dash-3d-stage canvas {
+  position: absolute;
+  inset: 0;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  display: block;
+  z-index: 2;
+}
+
+.dash-3d-wire-fallback {
+  inline-size: 138px;
+  block-size: 138px;
+  filter: drop-shadow(0 12px 18px rgb(0 0 0 / .45));
+  animation: dash-crown-float 5.5s ease-in-out infinite;
+  z-index: 1;
+  transition: opacity 350ms ease;
+}
+
+.dash-3d-stage.is-webgl-ready .dash-3d-wire-fallback {
+  opacity: 0.18;
+}
+
+@keyframes dash-crown-float {
+  0%, 100% { transform: translateY(0) rotate(-3deg) scale(1); }
+  50% { transform: translateY(-6px) rotate(4deg) scale(1.04); }
+}
+
+.dash-3d-pill {
+  position: absolute;
+  inset-block-end: 8px;
+  inset-inline: 10px;
+  text-align: center;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: rgb(3 8 23 / .72);
+  border: 1px solid rgb(124 196 255 / .35);
+  color: var(--g-200);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ==========================================================================
+   3D Perspective Stat Cards with Duotone Glowing Icon Orbs & Glare
+   ========================================================================== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  gap: var(--sp-4);
+  perspective: 1100px;
+}
+
+.stat-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, rgb(255 255 255 / .95) 0%, rgb(236 243 255 / .84) 100%);
+  border: 1px solid rgb(255 255 255 / .95);
+  backdrop-filter: blur(18px);
+  border-radius: var(--r-xl);
+  padding: var(--sp-5);
+  box-shadow:
+    0 14px 32px -10px rgb(11 26 69 / .14),
+    0 2px 6px rgb(11 26 69 / .06),
+    inset 0 1px 0 var(--white),
+    inset 0 -2px 0 rgb(27 71 214 / .12);
+  display: grid;
+  gap: 8px;
+  transform-style: preserve-3d;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateZ(0);
+  transition:
+    transform 280ms cubic-bezier(.22, 1, .36, 1),
+    box-shadow 280ms cubic-bezier(.22, 1, .36, 1),
+    border-color 240ms ease;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(320px circle at var(--mx) var(--my), rgb(124 196 255 / .35), transparent 65%);
+  opacity: 0;
+  transition: opacity 260ms ease;
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  border-color: var(--g-300);
+  transform: perspective(900px) rotateX(var(--rx, 4deg)) rotateY(var(--ry, -4deg)) translate3d(0, -7px, 16px);
+  box-shadow:
+    0 24px 46px -12px rgb(11 26 69 / .26),
+    0 6px 16px rgb(11 26 69 / .12),
+    inset 0 1px 0 var(--white),
+    inset 0 -3px 0 var(--g-700);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.stat-icon-3d {
+  inline-size: 46px;
+  block-size: 46px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--g-800) 0%, var(--g-900) 100%);
+  border: 1px solid rgb(124 196 255 / .4);
+  color: var(--g-200);
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 10px 20px -6px rgb(11 26 69 / .45),
+    inset 0 1px 1px rgb(255 255 255 / .35);
+  transform: translateZ(18px);
+  transition: transform 280ms cubic-bezier(.22, 1, .36, 1), background 280ms ease;
+}
+
+.stat-card:hover .stat-icon-3d {
+  transform: translateZ(26px) scale(1.1) rotate(-6deg);
+  background: linear-gradient(145deg, var(--g-700) 0%, var(--g-800) 100%);
+  color: var(--white);
+}
+
+.stat-icon-3d svg {
+  inline-size: 22px;
+  block-size: 22px;
+}
+
+.stat-card .stat-label {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.stat-card .stat-value {
+  font-size: clamp(1.55rem, 1.15rem + 1.05vw, 2.15rem);
+  font-weight: 800;
+  color: var(--g-950);
+  letter-spacing: -0.02em;
+  transform: translateZ(12px);
+}
+
+.stat-card .stat-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--g-700);
+}
+
+/* Dashboard cards & 3D hover lift */
+.page-dash .card {
+  background: linear-gradient(180deg, rgb(255 255 255 / .96) 0%, rgb(246 249 255 / .92) 100%);
+  border: 1px solid rgb(255 255 255 / .95);
+  border-radius: var(--r-xl);
+  box-shadow:
+    0 16px 36px -14px rgb(11 26 69 / .12),
+    0 2px 6px rgb(11 26 69 / .05),
+    inset 0 1px 0 var(--white);
+  transition: transform 280ms cubic-bezier(.22, 1, .36, 1), box-shadow 280ms ease, border-color 240ms ease;
+}
+
+.page-dash .card:hover {
+  border-color: rgb(110 143 224 / .45);
+  box-shadow:
+    0 22px 44px -14px rgb(11 26 69 / .18),
+    inset 0 1px 0 var(--white);
+}
+
+/* Dashboard split grid */
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+/* Data tables with 3D row lift on hover */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  font-size: var(--fs-sm);
+}
+
+.data-table th,
+.data-table td {
+  padding: 13px 15px;
+  text-align: start;
+  vertical-align: middle;
+}
+
+.data-table th {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--g-900);
+  background: rgb(207 226 255 / .45);
+  border-block: 1px solid rgb(110 143 224 / .28);
+}
+
+.data-table th:first-child { border-start-start-radius: var(--r-md); border-end-start-radius: var(--r-md); }
+.data-table th:last-child { border-start-end-radius: var(--r-md); border-end-end-radius: var(--r-md); }
+
+.data-table tbody tr {
+  background: rgb(255 255 255 / .82);
+  box-shadow: 0 2px 6px rgb(11 26 69 / .04);
+  transition: transform 220ms cubic-bezier(.22, 1, .36, 1), box-shadow 220ms ease, background-color 200ms ease;
+}
+
+.data-table tbody tr td {
+  border-block: 1px solid rgb(11 26 69 / .08);
+}
+.data-table tbody tr td:first-child { border-inline-start: 1px solid rgb(11 26 69 / .08); border-start-start-radius: var(--r-md); border-end-start-radius: var(--r-md); }
+.data-table tbody tr td:last-child { border-inline-end: 1px solid rgb(11 26 69 / .08); border-start-end-radius: var(--r-md); border-end-end-radius: var(--r-md); }
+
+.data-table tbody tr:hover {
+  background: linear-gradient(90deg, rgb(207 226 255 / .38) 0%, var(--white) 100%);
+  transform: perspective(700px) translate3d(0, -2px, 6px);
+  box-shadow: 0 10px 22px -6px rgb(11 26 69 / .14);
+}
+
+/* Production stage timeline */
+.stage-timeline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-3);
+  perspective: 900px;
+}
+
+.stage-node {
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  display: grid;
+  gap: var(--sp-2);
+  position: relative;
+  box-shadow: 0 8px 20px -8px rgb(11 26 69 / .12);
+  transition: transform 260ms cubic-bezier(.22, 1, .36, 1), box-shadow 260ms ease;
+}
+
+.stage-node:hover {
+  transform: perspective(700px) translate3d(0, -5px, 12px) rotateX(2deg);
+  box-shadow: 0 18px 34px -10px rgb(11 26 69 / .22);
+}
+
+.stage-node.is-completed {
+  border-color: var(--g-700);
+  background: linear-gradient(165deg, rgb(207 226 255 / .65) 0%, var(--surface) 100%);
+  box-shadow: 0 10px 24px -8px rgb(27 71 214 / .22), inset 0 1px 0 var(--white);
+}
+
+.stage-node.is-active {
+  border: 2px solid var(--g-800);
+  background: linear-gradient(165deg, var(--white) 0%, rgb(124 196 255 / .32) 100%);
+  box-shadow: 0 14px 30px -8px rgb(11 26 69 / .25), 0 0 0 3px rgb(124 196 255 / .35);
+}
+
+.stage-node-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+/* Order chat box */
+.chat-box {
+  display: flex;
+  flex-direction: column;
+  block-size: 380px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-4);
+  display: grid;
+  align-content: start;
+  gap: var(--sp-3);
+}
+
+.chat-msg {
+  max-inline-size: 82%;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+
+.chat-msg.is-mine {
+  justify-self: end;
+  background: var(--g-800);
+  color: var(--white);
+  border-color: transparent;
+}
+
+.chat-msg-meta {
+  font-size: var(--fs-xs);
+  opacity: .75;
+  margin-block-bottom: 4px;
+}
+
+.chat-form {
+  display: flex;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border-block-start: 1px solid var(--line);
+}
+
+/* ==========================================================================
+   CAD/CAM Dental Case Builder (Exocad-inspired split workstation)
+   ========================================================================== */
+.cad-workstation {
+  background: linear-gradient(160deg, var(--g-950) 0%, #0B111F 55%, var(--g-900) 100%);
+  color: var(--ink-on-dark);
+  border-radius: var(--r-xl);
+  border: 1px solid rgb(124 196 255 / .22);
+  box-shadow: var(--sh-3);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: var(--sp-6);
+  align-items: start;
+}
+
+.cad-pane {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.cad-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding-block-end: var(--sp-2);
+  border-block-end: 1px solid rgb(124 196 255 / .14);
+}
+
+.cad-header h2 {
+  color: var(--ink-on-dark);
+  font-size: clamp(1.35rem, 1.1rem + .9vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.cad-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cad-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--r-sm);
+  border: 1px solid rgb(124 196 255 / .3);
+  background: rgb(11 26 69 / .75);
+  color: var(--ink-on-dark);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-1), border-color var(--dur-1), transform var(--dur-1);
+}
+
+.cad-tool-btn:hover {
+  background: var(--g-800);
+  border-color: var(--g-300);
+}
+
+.cad-tool-btn.is-primary {
+  background: var(--g-300);
+  color: var(--g-950);
+  border-color: var(--g-300);
+}
+
+.cad-tool-btn.is-primary:hover {
+  background: var(--g-200);
+}
+
+.cad-hint {
+  color: var(--g-300);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.cad-box {
+  background: rgb(11 26 69 / .65);
+  border: 1px solid rgb(124 196 255 / .18);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.cad-box-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding-block-end: var(--sp-2);
+  border-block-end: 1px solid rgb(124 196 255 / .14);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--g-200);
+}
+
+/* Floating-label outlined CAD fields */
+.cad-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 155px;
+  gap: var(--sp-3);
+  align-items: stretch;
+}
+
+.cad-field {
+  position: relative;
+  border: 1px solid rgb(163 181 222 / .42);
+  border-radius: var(--r-sm);
+  background: rgb(3 8 23 / .45);
+  padding: 10px 12px 6px;
+  transition: border-color var(--dur-1), box-shadow var(--dur-1);
+}
+
+.cad-field:focus-within {
+  border-color: var(--g-300);
+  box-shadow: 0 0 0 2px rgb(124 196 255 / .2);
+}
+
+.cad-field > label {
+  position: absolute;
+  inset-block-start: -9px;
+  inset-inline-start: 10px;
+  padding-inline: 6px;
+  background: #0E1424;
+  color: var(--g-200);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cad-field input,
+.cad-field select,
+.cad-field textarea {
+  inline-size: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ink-on-dark);
+  font: inherit;
+  font-size: var(--fs-sm);
+  outline: none;
+}
+
+.cad-field select option {
+  background: var(--g-900);
+  color: var(--ink-on-dark);
+}
+
+.cad-field textarea {
+  min-block-size: 92px;
+  resize: vertical;
+}
+
+/* Mode toggle (Patient / Multi-die) */
+.cad-mode-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.cad-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--g-200);
+  cursor: pointer;
+}
+
+.cad-switch input {
+  appearance: none;
+  inline-size: 40px;
+  block-size: 20px;
+  border-radius: var(--r-pill);
+  background: rgb(163 181 222 / .35);
+  position: relative;
+  cursor: pointer;
+  transition: background-color var(--dur-2);
+}
+
+.cad-switch input::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 50%;
+  background: var(--white);
+  transition: transform var(--dur-2);
+}
+
+.cad-switch input:checked {
+  background: var(--g-300);
+}
+
+.cad-switch input:checked::after {
+  transform: translateX(-20px);
+}
+
+/* Interactive FDI Dental Arch Chart */
+.odontogram-stage {
+  background: radial-gradient(circle at 50% 50%, rgb(27 71 214 / .32), rgb(3 8 23 / .55) 75%);
+  border: 1px solid rgb(124 196 255 / .18);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.odontogram-svg {
+  inline-size: min(100%, 390px);
+  block-size: auto;
+  overflow: visible;
+  user-select: none;
+}
+
+/* The outer .tooth-node carries its position as an SVG transform attribute. A CSS transform on that
+   same element replaces the attribute, so hover used to throw the tooth to the chart's corner and back
+   (endless hover/unhover flicker). The hover scale lives on the inner .tooth-body instead. */
+.tooth-node { cursor: pointer; outline: none; }
+.tooth-body {
+  transition: transform 140ms var(--ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.tooth-node:hover .tooth-body,
+.tooth-node:focus-visible .tooth-body { transform: scale(1.08); }
+.tooth-node:focus-visible .tooth-crown { stroke: var(--white); stroke-width: 2.2; }
+
+.tooth-crown {
+  fill: #CACFDA;
+  stroke: #242A3A;
+  stroke-width: 1.6;
+  transition: fill 140ms, stroke 140ms;
+}
+
+.tooth-grooves {
+  stroke: #545A6A;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  fill: none;
+  pointer-events: none;
+}
+
+.tooth-num {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  fill: #0B1A45;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.tooth-node:hover .tooth-crown {
+  fill: var(--g-200);
+  stroke: var(--g-300);
+}
+
+.tooth-node.is-selected .tooth-crown {
+  fill: var(--g-300);
+  stroke: var(--white);
+  stroke-width: 2.2;
+}
+
+.tooth-node.is-selected .tooth-num {
+  fill: var(--g-950);
+  font-weight: 800;
+}
+
+.odontogram-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-block-top: var(--sp-2);
+}
+
+.cad-stage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cad-stage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgb(124 196 255 / .3);
+  background: rgb(3 8 23 / .4);
+  color: var(--g-200);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cad-stage-chip:has(input:checked) {
+  background: var(--g-700);
+  border-color: var(--g-300);
+  color: var(--white);
+}
+
+.cad-stage-chip input {
+  accent-color: var(--g-300);
+}
+
+.cad-status-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: var(--fs-xs);
+  color: var(--g-200);
+}
+
+@media (max-width: 980px) {
+  .page-dash {
+    grid-template-columns: 1fr;
+  }
+  .dash-sidebar {
+    position: static;
+    block-size: auto;
+  }
+  .dash-nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .greeting-banner {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .dash-3d-stage {
+    inline-size: 100%;
+    max-inline-size: 260px;
+  }
+  .dash-grid-2,
+  .cad-workstation {
+    grid-template-columns: 1fr;
+  }
+  .cad-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   Dashboard Interactive Charts, Dentists Cards, Storefront Preview & Ads Manager
+   ========================================================================== */
+.dash-tab-pane,
+.fin-tab-pane {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.dash-tab-pane[hidden],
+.fin-tab-pane[hidden] {
+  display: none !important;
+}
+
+.chart-card {
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+
+.chart-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.dash-chart-box {
+  background: linear-gradient(180deg, #F7F9FD 0%, #ECEFF6 100%);
+  border: 1px solid rgb(110 143 224 / .32);
+  border-radius: 16px;
+  padding: var(--sp-4);
+  min-block-size: 230px;
+  display: grid;
+  gap: var(--sp-3);
+  align-content: space-between;
+  box-shadow: inset 0 1px 0 #fff;
+}
+
+.chart-bars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
+  gap: 12px;
+  align-items: end;
+  block-size: 155px;
+  padding-block-start: 18px;
+  border-block-end: 1px solid rgb(110 143 224 / .4);
+}
+
+.chart-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  block-size: 100%;
+  gap: 6px;
+}
+
+.chart-bar-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--g-900);
+  white-space: nowrap;
+}
+
+.chart-bar-fill {
+  inline-size: 100%;
+  max-inline-size: 46px;
+  border-radius: 10px 10px 3px 3px;
+  background: linear-gradient(180deg, #2F6BFF 0%, #0B1A45 100%);
+  box-shadow: 0 8px 16px -6px rgb(11 26 69 / .35), inset 0 1px 0 rgb(207 226 255 / .45);
+  transition: block-size 400ms cubic-bezier(.22, 1, .36, 1), transform 180ms ease;
+}
+
+.chart-bar-fill.is-mint {
+  background: linear-gradient(180deg, #7CC4FF 0%, #2F6BFF 100%);
+}
+
+.chart-bar-col:hover .chart-bar-fill {
+  transform: translateY(-3px) scaleX(1.05);
+}
+
+.chart-bar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.chart-progress-list {
+  display: grid;
+  gap: 12px;
+}
+
+.chart-progress-row {
+  display: grid;
+  gap: 5px;
+}
+
+.chart-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.chart-progress-track {
+  block-size: 11px;
+  border-radius: 999px;
+  background: rgb(163 181 222 / .3);
+  overflow: hidden;
+}
+
+.chart-progress-fill {
+  block-size: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #0B1A45 0%, #2F6BFF 60%, #7CC4FF 100%);
+}
+
+/* Dentists mini cards on Lab Dashboard */
+.dentists-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--sp-3);
+}
+
+.dentist-mini-card {
+  padding: var(--sp-4);
+  border-radius: 16px;
+  background: linear-gradient(165deg, #ffffff 0%, #F0F3F9 100%);
+  border: 1px solid rgb(110 143 224 / .36);
+  box-shadow: 0 10px 22px -12px rgb(11 26 69 / .16), 0 3px 0 0 rgb(163 181 222 / .35);
+  display: grid;
+  gap: 8px;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.dentist-mini-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--g-600);
+  box-shadow: 0 18px 32px -12px rgb(11 26 69 / .24), 0 4px 0 0 rgb(47 107 255 / .35);
+}
+
+/* Storefront live banner inside Lab Dashboard */
+.storefront-preview-banner {
+  padding: var(--sp-5);
+  border-radius: 20px;
+  background:
+    radial-gradient(480px 200px at 15% 20%, rgb(124 196 255 / .25), transparent 70%),
+    linear-gradient(135deg, #080C16 0%, #0B1A45 55%, #1B47D6 100%);
+  color: #fff;
+  border: 1px solid rgb(207 226 255 / .32);
+  box-shadow: 0 20px 38px -16px rgb(3 8 23 / .45);
+}
+
+.storefront-preview-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+/* Sponsored Campaign Cards with Analytics */
+.campaign-admin-card {
+  padding: var(--sp-4);
+  border-radius: 18px;
+  background: linear-gradient(170deg, #ffffff 0%, #F2F4FA 100%);
+  border: 1px solid rgb(110 143 224 / .4);
+  box-shadow: 0 12px 26px -14px rgb(11 26 69 / .16), 0 3px 0 0 rgb(163 181 222 / .35);
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.campaign-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 10px;
+}
+
+.campaign-kpi-box {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  display: grid;
+  gap: 2px;
+}
+
+.campaign-kpi-box span {
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.campaign-kpi-box strong {
+  font-size: var(--fs-md);
+  color: var(--g-900);
+}
+
+/* ==========================================================================
+   Dark Mode Overrides for All Dashboards (Dentist, Lab, Admin)
+   ========================================================================== */
+html[data-theme="dark"] .page-dash {
+  background:
+    radial-gradient(920px 440px at 15% -5%, rgb(124 196 255 / .1), transparent 65%),
+    radial-gradient(760px 380px at 90% 12%, rgb(47 107 255 / .14), transparent 60%),
+    linear-gradient(180deg, #0A0D16 0%, #06090F 100%);
+}
+
+html[data-theme="dark"] .dash-topbar {
+  background: rgb(10 22 52 / .88);
+  border-color: rgb(124 196 255 / .22);
+  box-shadow: 0 12px 28px -14px rgb(0 0 0 / .6);
+}
+
+html[data-theme="dark"] .notif-pill {
+  background: linear-gradient(180deg, #0F214F 0%, #0A1838 100%);
+  border-color: rgb(124 196 255 / .25);
+  color: var(--ink-1);
+}
+
+html[data-theme="dark"] .stat-card {
+  background:
+    radial-gradient(240px 140px at var(--mx, 80%) var(--my, 15%), rgb(124 196 255 / .14), transparent 70%),
+    linear-gradient(165deg, #0E1F4B 0%, #0A1838 100%);
+  border-color: rgb(124 196 255 / .24);
+  box-shadow:
+    0 16px 32px -16px rgb(0 0 0 / .65),
+    0 4px 0 0 rgb(27 71 214 / .45);
+}
+
+html[data-theme="dark"] .stat-card:hover {
+  border-color: var(--g-300);
+  box-shadow:
+    0 24px 42px -14px rgb(0 0 0 / .75),
+    0 6px 0 0 rgb(124 196 255 / .35);
+}
+
+html[data-theme="dark"] .stat-value {
+  background: linear-gradient(135deg, #EBEEF7 0%, #CFE2FF 55%, #7CC4FF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html[data-theme="dark"] .page-dash .card {
+  background: linear-gradient(180deg, #0D1D47 0%, #091634 100%);
+  border-color: rgb(124 196 255 / .22);
+  box-shadow:
+    0 16px 34px -18px rgb(0 0 0 / .65),
+    0 3px 0 0 rgb(27 71 214 / .35);
+}
+
+html[data-theme="dark"] .page-dash .card:hover {
+  border-color: rgb(124 196 255 / .42);
+}
+
+html[data-theme="dark"] .data-table th {
+  background: linear-gradient(180deg, #151D31 0%, #101625 100%);
+  color: var(--g-200);
+}
+
+html[data-theme="dark"] .data-table tbody tr:hover {
+  background: rgb(124 196 255 / .08);
+}
+
+html[data-theme="dark"] .stage-node {
+  background: linear-gradient(165deg, #0E1F4B 0%, #0A1838 100%);
+  border-color: rgb(124 196 255 / .24);
+  box-shadow: 0 10px 22px -12px rgb(0 0 0 / .55);
+}
+
+html[data-theme="dark"] .stage-node.is-completed {
+  background: linear-gradient(165deg, #182138 0%, #111728 100%);
+  border-color: var(--g-300);
+}
+
+html[data-theme="dark"] .stage-node.is-active {
+  background: linear-gradient(165deg, #1B2640 0%, #121A2D 100%);
+  border-color: var(--g-200);
+}
+
+html[data-theme="dark"] .chat-msg {
+  background: #0F214F;
+  color: var(--ink-1);
+}
+
+html[data-theme="dark"] .chat-msg.is-mine {
+  background: linear-gradient(135deg, #1B47D6 0%, #2F6BFF 100%);
+  color: #fff;
+}
+
+html[data-theme="dark"] .dash-chart-box {
+  background: linear-gradient(180deg, #091634 0%, #090C15 100%);
+  border-color: rgb(124 196 255 / .22);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .05);
+}
+
+html[data-theme="dark"] .chart-bar-val,
+html[data-theme="dark"] .campaign-kpi-box strong {
+  color: var(--g-200);
+}
+
+html[data-theme="dark"] .dentist-mini-card,
+html[data-theme="dark"] .campaign-admin-card {
+  background: linear-gradient(165deg, #0F214F 0%, #0A1838 100%);
+  border-color: rgb(124 196 255 / .25);
+  box-shadow: 0 12px 24px -14px rgb(0 0 0 / .6);
+}
+
+/* ==========================================================================
+   Simple order form (doctor-orders.html, .order-simple)
+   ========================================================================== */
+.order-simple { align-items: start; }
+.order-simple .cad-header h2 { margin: 0; }
+.cad-created { font-size: var(--fs-xs); color: var(--g-200); }
+.order-simple .cad-box { display: grid; gap: var(--sp-4); }
+.cad-field-row.cad-field-row-even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cad-field[hidden] { display: none; }
+.order-simple .cad-field input[type="date"] { color-scheme: dark; }
+.cad-file-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+.cad-file-name { font-size: var(--fs-xs); color: var(--g-200); overflow-wrap: anywhere; }
+
+.order-summary { padding: var(--sp-4); }
+.sum-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); margin: 0; }
+.sum-grid > div { display: grid; gap: 4px; align-content: start; padding: var(--sp-3); border-radius: var(--r-md);
+  background: rgb(3 8 23 / .4); border: 1px solid rgb(124 196 255 / .14); min-inline-size: 0; }
+.sum-grid dt { font-size: var(--fs-xs); color: var(--g-200); }
+.sum-grid dd { margin: 0; font-weight: 700; font-size: var(--fs-md); color: var(--ink-on-dark); overflow-wrap: anywhere; }
+.sum-grid dd small { display: block; font-size: 11px; font-weight: 500; color: var(--g-200); }
+.sum-grid dd small[hidden] { display: none; }
+.sum-grid .sum-total { background: linear-gradient(135deg, rgb(27 71 214 / .55), rgb(47 107 255 / .35)); border-color: rgb(124 196 255 / .35); }
+.sum-grid .sum-total dd, .sum-grid .sum-now dd { font-size: var(--fs-lg); }
+.sum-grid .sum-now { border-color: rgb(127 227 255 / .45); }
+.sum-grid .sum-now dd { color: var(--aqua, #7FE3FF); }
+.sum-note { margin: var(--sp-2) 0 0; font-size: 11px; color: var(--g-200); opacity: .85; }
+
+.cad-stages { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.cad-stages legend { padding: 0; margin-block-end: 8px; font-size: var(--fs-xs); font-weight: 600; color: var(--g-200); }
+.order-submit { inline-size: 100%; justify-content: center; }
+
+.odontogram-hint { margin: 0; font-size: var(--fs-xs); color: var(--g-200); text-align: center; }
+.odontogram-hint bdi { color: var(--g-300); font-weight: 700; }
+
+@media (max-width: 1100px) { .sum-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .cad-field-row.cad-field-row-even { grid-template-columns: 1fr; } }
+
+/* The order form sits on a solid dark panel: backdrop blur behind its boxes buys nothing and costs a full
+   re-blur every time anything inside repaints (tooth hover, typing). */
+.cad-workstation .cad-box { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* Grid tracks must be allowed to shrink below their content (long <select> options) on phones. */
+.order-simple > .cad-pane, .order-simple .cad-box, .order-simple .cad-field { min-inline-size: 0; }
+@media (max-width: 1100px) { .order-simple.cad-workstation { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) {
+  .order-simple.cad-workstation { padding: var(--sp-4); gap: var(--sp-5); }
+  .order-simple .cad-field select { text-overflow: ellipsis; }
+}
+.order-simple { min-inline-size: 0; max-inline-size: 100%; }
+/* dash-main is an auto-sized grid: let its column shrink to the screen instead of to the form's content. */
+.dash-main:has(> .order-simple) { grid-template-columns: minmax(0, 1fr); }
+/* One column: details first, then teeth & restoration, then the summary and the send button. */
+@media (max-width: 1100px) {
+  .order-simple.cad-workstation { gap: var(--sp-4); }
+  .order-simple > .cad-pane { display: contents; }
+  .order-simple > .cad-pane:last-child > * { order: 2; }
+  .order-simple .order-summary, .order-simple .cad-stages, .order-simple .order-submit { order: 3; }
+}
+
+/* ==========================================================================
+   Responsive shell (phones & tablets). Root cause of the "zoomed-out" dashboards:
+   .dash-main is a grid whose single column was sized by its widest content (wide tables,
+   chart grids, the search bar), so the whole page grew to 700–1100px and phones zoomed out.
+   ========================================================================== */
+.dash-main { grid-template-columns: minmax(0, 1fr); }
+.dash-main > * { min-inline-size: 0; }
+.page-dash .dash-main h1, .page-dash .dash-main h2, .page-dash .dash-main h3 { overflow-wrap: anywhere; }
+/* Tables that are not inside a .table-wrap scroll inside their own parent instead of widening the page */
+.page-dash :has(> .data-table):not(.table-wrap) { overflow-x: auto; scrollbar-width: thin; }
+@media (max-width: 980px) {
+  .dash-topbar { padding: 10px var(--sp-3); }
+  .dash-search { flex: 1 1 100%; max-inline-size: none; }
+  .dash-search input { min-inline-size: 0; flex: 1; }
+  .stats-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+}
+@media (max-width: 600px) {
+  .dash-main { padding: var(--sp-3); gap: var(--sp-4); }
+  .chart-bars-grid { grid-template-columns: repeat(auto-fit, minmax(26px, 1fr)); gap: 6px; }
+  .page-dash .card { padding: var(--sp-4); }
+}
+/* Block-level boxes inside the dashboard may shrink below their content (text wraps instead of
+   pushing the page wider). Controls (buttons, inputs) keep their natural minimum. */
+.page-dash .dash-main :is(div, section, article, header, form, figure, dl, ul, ol) { min-inline-size: 0; }
+/* Inline-styled flex rows (title + actions) wrap on narrow screens */
+@media (max-width: 1100px) { .page-dash .dash-main div[style*="display:flex"], .page-dash .dash-main div[style*="display: flex"] { flex-wrap: wrap; } }
+
+/* Phones: table rows become stacked cards (labels come from data-label, set by dashboard.js) */
+@media (max-width: 700px) {
+  .page-dash .data-table { min-inline-size: 0 !important; border-spacing: 0; display: block; }
+  .page-dash .data-table thead { display: none; }
+  .page-dash .data-table tbody { display: grid; gap: 10px; }
+  .page-dash .data-table tbody tr {
+    display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--r-md); transform: none !important;
+    background: var(--glass-bg, rgb(255 255 255 / .7)); border: 1px solid var(--glass-border, rgb(11 26 69 / .1));
+  }
+  .page-dash .data-table tbody tr td {
+    display: grid; grid-template-columns: minmax(84px, 38%) minmax(0, 1fr); gap: 10px; align-items: start;
+    padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important;
+    white-space: normal !important; overflow-wrap: anywhere; text-align: start;
+  }
+  .page-dash .data-table tbody tr td::before { content: attr(data-label); font-size: var(--fs-xs); font-weight: 600; color: var(--ink-2, #5b6783); }
+  .page-dash .data-table tbody tr td[data-label=""] { grid-template-columns: minmax(0, 1fr); }
+  .page-dash .data-table tbody tr td[data-label=""]::before { display: none; }
+  .page-dash .data-table td .btn { justify-self: start; }
+  .page-dash :has(> .data-table):not(.table-wrap), .page-dash .table-wrap { overflow-x: visible; }
+}
+@media (max-width: 700px) {
+  .page-dash .data-table tbody tr td::before { font-family: var(--font-sans); letter-spacing: normal; text-transform: none; direction: rtl; }
+  [dir="ltr"] .page-dash .data-table tbody tr td::before { direction: ltr; }
+}

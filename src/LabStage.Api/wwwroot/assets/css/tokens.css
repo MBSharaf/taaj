@@ -1,0 +1,147 @@
+/* ==========================================================================
+   LabStage design tokens — single source of truth.
+   Palette "Lagoon": deep navy ground, cobalt primary, azure → aqua light.
+   Material: frosted glass panels floating over a slow blue aurora.
+   ========================================================================== */
+@layer tokens {
+  :root {
+    /* Brand scale (kept under the --g-* names so every stylesheet re-skins) */
+    --g-950: #030817;
+    --g-900: #0B1A45;
+    --g-800: #1B47D6;
+    --g-700: #2F6BFF;
+    --g-500: #6E8FE0;
+    --g-400: #A3B5DE;
+    --g-300: #7CC4FF;
+    --g-200: #CFE2FF;
+    --g-100: #E3ECFB;
+    --white: #ffffff;
+
+    --cobalt: #2F6BFF;
+    --azure: #4DA8FF;
+    --aqua: #7FE3FF;
+    --abyss: #050B24;
+    --ice: #EEF4FF;
+
+    /* Semantic roles */
+    --bg: #EEF4FF;
+    --surface: rgb(255 255 255 / .72);
+    --surface-glass: rgb(255 255 255 / .55);
+    --surface-tint: rgb(207 226 255 / .6);
+    --ink: #071233;
+    --ink-1: #071233;
+    --ink-2: #33416A;
+    --ink-3: #5A6B98;
+    --ink-on-dark: #F3F7FF;
+    --line: rgb(11 26 69 / .10);
+    --line-strong: rgb(11 26 69 / .2);
+    --primary: var(--cobalt);
+    --primary-hover: #1B47D6;
+    --primary-ink: var(--white);
+    --accent: var(--azure);
+    --focus: var(--cobalt);
+
+    --success: #0130AA;
+    --warning: #A86A00;
+    --danger: #D2364B;
+    --info: #1B47D6;
+    --sponsored: #7A5B00;
+
+    /* Gradients */
+    --grad-brand: linear-gradient(120deg, #2F6BFF 0%, #4DA8FF 55%, #7FE3FF 100%);
+    --grad-hero: linear-gradient(140deg, #0B1A45 0%, #1B47D6 60%, #2F6BFF 100%);
+    --grad-mint: linear-gradient(135deg, #CFE2FF 0%, #7FE3FF 100%);
+    --grad-ground:
+      radial-gradient(900px 600px at 88% -8%, rgb(77 168 255 / .35), transparent 62%),
+      radial-gradient(800px 560px at -6% 30%, rgb(47 107 255 / .22), transparent 60%),
+      radial-gradient(700px 520px at 60% 110%, rgb(127 227 255 / .30), transparent 60%),
+      #EEF4FF;
+
+    /* Glass material */
+    --glass-bg: rgb(255 255 255 / .52);
+    --glass-bg-strong: rgb(255 255 255 / .72);
+    --glass-border: rgb(255 255 255 / .75);
+    --glass-edge: rgb(11 26 69 / .08);
+    --glass-highlight: inset 0 1px 0 rgb(255 255 255 / .9);
+    --glass-blur: blur(22px) saturate(170%);
+    --glass-shadow: 0 1px 0 rgb(255 255 255 / .6) inset, 0 18px 48px -22px rgb(11 26 69 / .35);
+    --aurora-1: rgb(47 107 255 / .45);
+    --aurora-2: rgb(127 227 255 / .5);
+    --aurora-3: rgb(77 168 255 / .38);
+
+    /* Typography */
+    --font-ar: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+    --font-display: "Alexandria", var(--font-ar);
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --fs-xs: .75rem; --fs-sm: .875rem; --fs-md: 1rem; --fs-lg: 1.125rem;
+    --fs-xl: 1.375rem; --fs-2xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.25rem);
+    --fs-3xl: clamp(2.2rem, 1.4rem + 3.6vw, 4rem);
+
+    /* Spacing (4px base) */
+    --sp-1: .25rem; --sp-2: .5rem; --sp-3: .75rem; --sp-4: 1rem; --sp-5: 1.5rem;
+    --sp-6: 2rem; --sp-7: 3rem; --sp-8: 4.5rem; --sp-9: 7rem;
+
+    /* Radii: small controls, medium panels, large hero glass */
+    --r-sm: 10px; --r-md: 14px; --r-lg: 22px; --r-xl: 32px; --r-pill: 999px;
+
+    /* Shadows (navy-tinted) */
+    --sh-1: 0 1px 2px rgb(11 26 69 / .06), 0 1px 1px rgb(11 26 69 / .04);
+    --sh-2: 0 10px 28px -10px rgb(11 26 69 / .22);
+    --sh-3: 0 30px 70px -24px rgb(11 26 69 / .38);
+    --glow: 0 10px 30px -8px rgb(47 107 255 / .55);
+
+    /* Motion */
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    --dur-1: 120ms; --dur-2: 220ms; --dur-3: 420ms; --dur-4: 800ms;
+
+    /* Layout */
+    --container: 1200px;
+    --gutter: clamp(1rem, 4vw, 2.5rem);
+    --header-h: 72px;
+    --sidebar-w: 256px;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #050B24;
+    --surface: rgb(255 255 255 / .06);
+    --surface-glass: rgb(255 255 255 / .06);
+    --surface-tint: rgb(77 168 255 / .12);
+    --ink: #EEF3FF;
+    --ink-1: #EEF3FF;
+    --ink-2: #B4C2E6;
+    --ink-3: #8696C4;
+    --line: rgb(160 190 255 / .13);
+    --line-strong: rgb(160 190 255 / .26);
+    --primary: #4D86FF;
+    --primary-hover: #7CA6FF;
+    --primary-ink: #ffffff;
+    --accent: var(--aqua);
+    --focus: var(--aqua);
+
+    --grad-ground:
+      radial-gradient(900px 600px at 88% -8%, rgb(47 107 255 / .38), transparent 62%),
+      radial-gradient(800px 560px at -6% 35%, rgb(27 71 214 / .30), transparent 60%),
+      radial-gradient(700px 520px at 60% 110%, rgb(127 227 255 / .16), transparent 60%),
+      #050B24;
+
+    --glass-bg: rgb(255 255 255 / .055);
+    --glass-bg-strong: rgb(16 30 74 / .72);
+    --glass-border: rgb(170 200 255 / .16);
+    --glass-edge: rgb(0 0 0 / .3);
+    --glass-highlight: inset 0 1px 0 rgb(255 255 255 / .1);
+    --glass-shadow: 0 1px 0 rgb(255 255 255 / .08) inset, 0 24px 60px -24px rgb(0 0 0 / .7);
+    --aurora-1: rgb(47 107 255 / .5);
+    --aurora-2: rgb(127 227 255 / .22);
+    --aurora-3: rgb(27 71 214 / .55);
+
+    --sh-1: 0 2px 6px rgb(0 0 0 / .45);
+    --sh-2: 0 12px 30px -8px rgb(0 0 0 / .6);
+    --sh-3: 0 26px 64px -18px rgb(0 0 0 / .75);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root { --dur-1: 0ms; --dur-2: 0ms; --dur-3: 0ms; --dur-4: 0ms; }
+  }
+}
