@@ -1,0 +1,60 @@
+# Build and run all tests on every push and pull request to main.
+# Windows runner: the integration tests use SQL Server LocalDB, which is installed on GitHub's Windows images.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'brand/**'
+      - 'design/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Start SQL Server LocalDB
+        shell: pwsh
+        run: |
+          sqllocaldb create MSSQLLocalDB -s
+          sqllocaldb info MSSQLLocalDB
+
+      - name: Restore
+        run: dotnet restore LabStage.sln
+
+      - name: Build
+        run: dotnet build LabStage.sln --configuration Release --no-restore
+
+      - name: Check the EF model has no un-migrated changes
+        shell: pwsh
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.*
+          dotnet ef migrations has-pending-model-changes -p src/LabStage.Infrastructure -s src/LabStage.Infrastructure --configuration Release --no-build
+
+      - name: Test
+        run: dotnet test LabStage.sln --configuration Release --no-build --logger "trx;LogFileName=results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'

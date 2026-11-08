@@ -45,7 +45,7 @@ for f in OUT.rglob('*'):
         t = rewrite(s)
         if f.suffix == '.html':
             # In-browser demo API (Pages only): a classic script that runs before the page's modules.
-            tag = f'<script src="{P}assets/js/demo/mock-api.js?v=1"></script>'
+            tag = f'<script src="{P}assets/js/demo/mock-api.js?v=2"></script>'
             t = t.replace('<meta charset="utf-8">', '<meta charset="utf-8">' + chr(10) + '  ' + tag, 1)
         if t != s:
             f.write_text(t, encoding='utf-8')

@@ -350,6 +350,7 @@ public sealed class FinanceController(
                 {
                     o.OrderNumber,
                     o.CaseReference,
+                    o.PatientName,
                     o.ServiceName,
                     LaboratoryName = o.Laboratory?.Name,
                     ConfirmedPriceEgp = basePiastres / 100m,
@@ -418,6 +419,7 @@ public sealed class FinanceController(
             orders = orders.Where(o =>
                 o.OrderNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 o.CaseReference.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                (o.PatientName != null && o.PatientName.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
                 (o.DentistUser?.FullName.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
         }
 
@@ -477,6 +479,7 @@ public sealed class FinanceController(
                             x.Id,
                             x.OrderNumber,
                             x.CaseReference,
+                            x.PatientName,
                             x.ServiceName,
                             x.Shade,
                             Status = x.Status.ToString(),
@@ -512,6 +515,7 @@ public sealed class FinanceController(
                 {
                     o.OrderNumber,
                     o.CaseReference,
+                    o.PatientName,
                     o.ServiceName,
                     o.DentistUserId,
                     DentistName = o.DentistUser?.FullName,

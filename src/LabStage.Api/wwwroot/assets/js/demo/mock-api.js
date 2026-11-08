@@ -7,7 +7,7 @@
  */
 (() => {
   'use strict';
-  const KEY = 'taaj_demo_state_v1';
+  const KEY = 'taaj_demo_state_v2';
   const SESSION = 'taaj_demo_session_v1';
   const BASE = location.pathname.startsWith('/taaj/') ? '/taaj' : '';
   const realFetch = window.fetch.bind(window);
@@ -24,10 +24,10 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* quota: keep in memory */ } };
 
   async function load() {
-    try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.v === 1) { state = s; return; } } catch { /* reseed */ }
+    try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.v === 2) { state = s; return; } } catch { /* reseed */ }
     const res = await realFetch(`${BASE}/assets/js/demo/fixtures.json`);
     const f = await res.json();
-    state = { v: 1, public: f.public, users: f.users, seq: 0 };
+    state = { v: 2, public: f.public, users: f.users, seq: 0 };
     // Friendly patient names instead of internal test references.
     const names = {};
     for (const u of Object.values(state.users)) {
@@ -41,6 +41,8 @@
         };
         const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') { fix(o); Object.values(o).forEach(walk); } };
         walk(v); void k;
+        const addPatient = (o) => { if (Array.isArray(o)) o.forEach(addPatient); else if (o && typeof o === 'object') { if (o.orderNumber && o.caseReference && o.patientName === undefined) o.patientName = o.caseReference; Object.values(o).forEach(addPatient); } };
+        addPatient(v);
       }
     }
     save();
@@ -204,7 +206,7 @@
       if (p === '/api/v1/orders') {
         const term = (q.get('q') || '').trim();
         const all = clone(G['/api/v1/orders']);
-        if (term) all.items = all.items.filter((o) => [o.orderNumber, o.caseReference, o.serviceName, o.laboratoryName, o.dentistName].some((x) => String(x || '').includes(term)));
+        if (term) all.items = all.items.filter((o) => [o.orderNumber, o.caseReference, o.patientName, o.serviceName, o.laboratoryName, o.dentistName].some((x) => String(x || '').includes(term)));
         all.total = all.items.length;
         return json(all);
       }
@@ -230,7 +232,7 @@
       if (!stages.length) return problem('يجب اختيار مرحلة تصنيع واحدة على الأقل.');
       const created = now();
       const detail = {
-        id: uuid(), orderNumber, caseReference: body.caseReference || orderNumber, serviceName: body.serviceName, toothNumbers: body.toothNumbers,
+        id: uuid(), orderNumber, caseReference: body.caseReference || body.patientName || orderNumber, patientName: body.patientName || body.caseReference || null, serviceName: body.serviceName, toothNumbers: body.toothNumbers,
         shade: body.shade, instructions: body.instructions || '', status: 'PendingLabReview', rejectionReason: null, priceRevisionNote: null,
         estimatedPriceEgp: Number(body.estimatedPriceEgp), proposedPriceEgp: null, confirmedPriceEgp: null, commissionRateBpsSnapshot: null,
         dentistCommissionPercent: null, labCommissionPercent: null, deliveryMethod: body.deliveryMethod === 0 ? 'Pickup' : 'LabCourier', deliveryStatus: 'NotRequested',
@@ -246,7 +248,7 @@
       for (const [vr, extra] of views) {
         state.users[vr].get[`/api/v1/orders/${orderNumber}`] = { ...clone(detail), ...extra };
         const list = state.users[vr].get['/api/v1/orders'];
-        list.items.unshift({ id: detail.id, orderNumber, caseReference: detail.caseReference, serviceName: detail.serviceName, toothNumbers: detail.toothNumbers, shade: detail.shade, status: detail.status, deliveryStatus: detail.deliveryStatus, estimatedPriceEgp: detail.estimatedPriceEgp, proposedPriceEgp: null, confirmedPriceEgp: null, dentistName: me.fullName, laboratoryName: lab.name, laboratorySlug: lab.slug, createdAt: created, stages: detail.stages.map((s) => ({ stage: s.stage, status: s.status })), paidEgp: 0, dueEgp: 0 });
+        list.items.unshift({ id: detail.id, orderNumber, caseReference: detail.caseReference, patientName: detail.patientName, serviceName: detail.serviceName, toothNumbers: detail.toothNumbers, shade: detail.shade, status: detail.status, deliveryStatus: detail.deliveryStatus, estimatedPriceEgp: detail.estimatedPriceEgp, proposedPriceEgp: null, confirmedPriceEgp: null, dentistName: me.fullName, laboratoryName: lab.name, laboratorySlug: lab.slug, createdAt: created, stages: detail.stages.map((s) => ({ stage: s.stage, status: s.status })), paidEgp: 0, dueEgp: 0 });
         list.total = list.items.length;
       }
       const lf = state.users.lab.get['/api/v1/finance/lab'];

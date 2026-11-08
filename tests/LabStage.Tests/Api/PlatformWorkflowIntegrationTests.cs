@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -17,6 +18,10 @@ public sealed class PlatformWorkflowIntegrationTests : IClassFixture<WebApplicat
         var dbName = $"LabStageTestDb_{Guid.NewGuid():N}";
         _factory = factory.WithWebHostBuilder(b =>
         {
+            // UseSetting is applied before Program.cs reads the connection string (ConfigureAppConfiguration is too late),
+            // so the tests never fall back to the local development database.
+            b.UseSetting("ConnectionStrings:DefaultConnection", $@"Server=(localdb)\mssqllocaldb;Database={dbName};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+            b.UseSetting("Payments:WebhookSecret", "test-hmac-secret-key");
             b.ConfigureAppConfiguration((_, cfg) =>
             {
                 cfg.AddInMemoryCollection(new Dictionary<string, string?>

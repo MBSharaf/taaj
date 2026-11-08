@@ -31,7 +31,8 @@ public sealed class OrdersController(
         decimal EstimatedPriceEgp,
         DeliveryMethod DeliveryMethod,
         string? PickupAddress,
-        DateTimeOffset? RequiredDeliveryDate);
+        DateTimeOffset? RequiredDeliveryDate,
+        string? PatientName = null);
 
     [Authorize(Roles = AppRoles.Dentist)]
     [HttpPost]
@@ -67,7 +68,9 @@ public sealed class OrdersController(
             OrderNumber = orderNumber,
             DentistUserId = userId,
             LaboratoryId = lab.Id,
-            CaseReference = string.IsNullOrWhiteSpace(req.CaseReference) ? orderNumber : req.CaseReference.Trim(),
+            PatientName = string.IsNullOrWhiteSpace(req.PatientName) ? null : req.PatientName.Trim(),
+            CaseReference = !string.IsNullOrWhiteSpace(req.CaseReference) ? req.CaseReference.Trim()
+                : !string.IsNullOrWhiteSpace(req.PatientName) ? req.PatientName.Trim() : orderNumber,
             ServiceName = req.ServiceName.Trim(),
             ToothNumbers = req.ToothNumbers?.Trim() ?? string.Empty,
             Shade = string.IsNullOrWhiteSpace(req.Shade) ? "A2" : req.Shade.Trim(),
@@ -167,6 +170,7 @@ public sealed class OrdersController(
             orders = orders.Where(o =>
                 o.OrderNumber.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 o.CaseReference.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                (o.PatientName != null && o.PatientName.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
                 o.ServiceName.Contains(term, StringComparison.OrdinalIgnoreCase) ||
                 (o.DentistUser?.FullName.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (o.Laboratory?.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)).ToList();
@@ -199,6 +203,7 @@ public sealed class OrdersController(
             order.Id,
             order.OrderNumber,
             order.CaseReference,
+            order.PatientName,
             order.ServiceName,
             order.ToothNumbers,
             order.Shade,
@@ -694,6 +699,7 @@ public sealed class OrdersController(
         o.Id,
         o.OrderNumber,
         o.CaseReference,
+        o.PatientName,
         o.ServiceName,
         o.ToothNumbers,
         o.Shade,

@@ -49,9 +49,36 @@ public static class DatabaseSeeder
         await db.SaveChangesAsync(ct);
     }
 
+    /// <summary>
+    /// Brings the schema up to date with EF Core migrations. Databases created earlier with EnsureCreated
+    /// already have exactly the InitialCreate schema (verified column-by-column), so that first migration is
+    /// recorded as applied instead of being run again; later migrations then apply normally. No data is touched.
+    /// </summary>
+    private static async Task MigrateAsync(LabStageDbContext db, CancellationToken ct)
+    {
+        if (await db.Database.CanConnectAsync(ct) && !(await db.Database.GetAppliedMigrationsAsync(ct)).Any())
+        {
+            var hasSchema = (await db.Database
+                .SqlQuery<int>($"SELECT CASE WHEN OBJECT_ID(N'dbo.Users') IS NULL THEN 0 ELSE 1 END AS [Value]")
+                .ToListAsync(ct)).FirstOrDefault() == 1;
+            if (hasSchema)
+            {
+                var initial = db.Database.GetMigrations().First();
+                var version = Microsoft.EntityFrameworkCore.Infrastructure.ProductInfo.GetVersion();
+                await db.Database.ExecuteSqlRawAsync(
+                    "IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL CREATE TABLE [__EFMigrationsHistory] " +
+                    "([MigrationId] nvarchar(150) NOT NULL, [ProductVersion] nvarchar(32) NOT NULL, " +
+                    "CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId]));", ct);
+                await db.Database.ExecuteSqlInterpolatedAsync(
+                    $"INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion]) VALUES ({initial}, {version})", ct);
+            }
+        }
+        await db.Database.MigrateAsync(ct);
+    }
+
     private static async Task SeedCoreAsync(LabStageDbContext db, SeedOptions options, CancellationToken ct)
     {
-        await db.Database.EnsureCreatedAsync(ct);
+        await MigrateAsync(db, ct);
 
         if (!await db.PlatformSettings.AnyAsync(ct))
         {

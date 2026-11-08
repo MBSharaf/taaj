@@ -293,7 +293,7 @@ async function initDoctorDashboard() {
     tbody.innerHTML = items.length ? items.slice(0, 8).map((o) => `
       <tr>
         <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
-        <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">${esc(o.caseReference)}</div></td>
+        <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">${esc(o.patientName || o.caseReference)}</div></td>
         <td>${esc(o.laboratoryName)}</td>
         <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
         <td class="num">${fmtEgp(o.paidEgp)} / ${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
@@ -526,7 +526,7 @@ async function initDoctorOrders() {
     tbody.innerHTML = data.items?.length ? data.items.map((o) => `
       <tr>
         <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
-        <td>${esc(o.caseReference)}</td>
+        <td>${esc(o.patientName || o.caseReference)}</td>
         <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})</td>
         <td>${esc(o.laboratoryName)}</td>
         <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}: ${esc(statusAr[s.status] || s.status)}`).join(' · ')}</td>
@@ -570,6 +570,7 @@ async function initDoctorOrders() {
     const payload = {
       laboratorySlug: labSelect.value,
       // The patient's name is stored as the case name: it is what the doctor searches by later.
+      patientName: patient,
       caseReference: patient,
       serviceName: serviceSelect.value,
       toothNumbers: teethStr,
@@ -648,7 +649,7 @@ async function initOrderDetails(isLabView) {
         <div>
           <span class="badge">${esc(statusAr[o.status] || o.status)}</span>
           <h1 style="font-size:var(--fs-2xl);margin-block-top:var(--sp-2)">طلب <span class="ltr mono">${esc(o.orderNumber)}</span> — ${esc(o.serviceName)}</h1>
-          <p class="muted">اسم المريض: <strong>${esc(o.caseReference)}</strong> · الأسنان: <bdi class="ltr">${esc(o.toothNumbers)}</bdi> · اللون: <bdi class="ltr">${esc(o.shade)}</bdi></p>
+          <p class="muted">اسم المريض: <strong>${esc(o.patientName || o.caseReference)}</strong> · الأسنان: <bdi class="ltr">${esc(o.toothNumbers)}</bdi> · اللون: <bdi class="ltr">${esc(o.shade)}</bdi></p>
           <p class="muted" style="font-size:var(--fs-sm)">الطبيب: ${esc(o.dentist?.name)} · المعمل: ${esc(o.laboratory?.name)}</p>
           ${o.instructions ? `<p style="margin-block-top:var(--sp-2);font-size:var(--fs-sm)"><strong>ملاحظات الحالة:</strong> ${esc(o.instructions)}</p>` : ''}
         </div>
@@ -1258,7 +1259,7 @@ async function initLabOrders() {
       <tr>
         <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
         <td>${esc(o.dentistName)}</td>
-        <td>${esc(o.caseReference)}</td>
+        <td>${esc(o.patientName || o.caseReference)}</td>
         <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})</td>
         <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}: ${esc(statusAr[s.status] || s.status)}`).join(' · ')}</td>
         <td class="num">${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
@@ -1314,7 +1315,7 @@ async function initLabFinance() {
       tbody.innerHTML = dOrders.length ? dOrders.map((o) => `
         <tr>
           <td class="ltr mono"><a href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}"><strong>${esc(o.orderNumber)}</strong></a></td>
-          <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">مرجع: ${esc(o.caseReference)} · لون ${esc(o.shade)}</div></td>
+          <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">مرجع: ${esc(o.patientName || o.caseReference)} · لون ${esc(o.shade)}</div></td>
           <td class="ltr">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-EG') : '—'}</td>
           <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
           <td class="num">${fmtEgp(o.totalEgp)}</td>
@@ -1399,7 +1400,7 @@ async function initLabFinance() {
         <tr>
           <td class="ltr mono"><a href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">${esc(o.orderNumber)}</a></td>
           <td>${esc(o.dentistName)}</td>
-          <td>${esc(o.serviceName)} (${esc(o.caseReference)})</td>
+          <td>${esc(o.serviceName)} (${esc(o.patientName || o.caseReference)})</td>
           <td class="num">${fmtEgp(o.totalEgp)}</td>
           <td class="num">${fmtEgp(o.paidEgp)}</td>
           <td class="num">${fmtEgp(o.remainingEgp)}</td>

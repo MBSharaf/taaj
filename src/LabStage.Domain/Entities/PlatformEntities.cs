@@ -230,6 +230,8 @@ public sealed class Order
     public Guid LaboratoryId { get; set; }
     public Laboratory? Laboratory { get; set; }
     public string CaseReference { get; set; } = string.Empty;
+    /// <summary>Patient's name as typed by the dentist (used to find the case later). Older orders: copied from CaseReference.</summary>
+    public string? PatientName { get; set; }
     public string ServiceName { get; set; } = string.Empty;
     public string ToothNumbers { get; set; } = string.Empty;
     public string Shade { get; set; } = "A2";
