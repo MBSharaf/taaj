@@ -385,6 +385,9 @@ public sealed class AdminAndMonetizationController(LabStageDbContext db) : Contr
     [HttpPost("admin/settlements")]
     public async Task<IActionResult> CreateSettlementBatch([FromBody] CreateSettlementBatchRequest req, CancellationToken ct)
     {
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        await DbLocks.AcquireAsync(db, $"payout:{req.LaboratoryId}", ct);
+
         var eligible = await db.CommissionEntries
             .Where(c => c.LaboratoryId == req.LaboratoryId && !c.IsSettled && c.LabNetPiastres > 0)
             .ToListAsync(ct);
@@ -424,6 +427,7 @@ public sealed class AdminAndMonetizationController(LabStageDbContext db) : Contr
             Details = $"NetPayableEgp={batch.NetPayablePiastres / 100m:0.00}",
         });
         await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
 
         return Ok(new { batch.Id, Status = batch.Status.ToString(), NetPayableEgp = batch.NetPayablePiastres / 100m });
     }

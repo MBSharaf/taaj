@@ -3,6 +3,7 @@ using LabStage.Api.Hubs;
 using LabStage.Application.Payments;
 using LabStage.Infrastructure.Payments;
 using LabStage.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,24 @@ builder.Services
         o.Cookie.Name = "LabStage.Auth";
         o.Cookie.HttpOnly = true;
         o.Cookie.SameSite = SameSiteMode.Lax;
+        // HTTPS-only cookie outside local development; sessions expire after 8 idle hours unless "remember me".
+        o.Cookie.SecurePolicy = isDevelopment ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+        o.ExpireTimeSpan = TimeSpan.FromHours(8);
+        o.SlidingExpiration = true;
         o.LoginPath = "/login.html";
+        // A suspended or deleted account loses access on its next request, not when the cookie expires.
+        o.Events.OnValidatePrincipal = async ctx =>
+        {
+            var id = ctx.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var db = ctx.HttpContext.RequestServices.GetRequiredService<LabStageDbContext>();
+            var active = Guid.TryParse(id, out var userId) &&
+                         await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && !u.IsSuspended, ctx.HttpContext.RequestAborted);
+            if (!active)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            }
+        };
         o.Events.OnRedirectToLogin = ctx =>
         {
             if (ctx.Request.Path.StartsWithSegments("/api"))
@@ -70,9 +88,15 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 
+builder.Services.AddMemoryCache();
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    // Sign-in and sign-up: at most 10 attempts per minute from one address (on top of the per-account lockout).
+    o.AddPolicy("auth", ctx =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     o.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",

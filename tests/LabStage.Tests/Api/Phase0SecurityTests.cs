@@ -22,6 +22,9 @@ public sealed class Phase0SecurityTests(WebApplicationFactory<Program> baseFacto
         baseFactory.WithWebHostBuilder(b =>
         {
             b.UseEnvironment(environment);
+            // UseSetting reaches the configuration before Program.cs reads it at startup
+            // (ConfigureAppConfiguration is applied too late for those top-level reads).
+            foreach (var kv in settings) b.UseSetting(kv.Key, kv.Value);
             b.ConfigureAppConfiguration((_, cfg) => cfg.AddInMemoryCollection(settings));
         });
 
@@ -42,8 +45,9 @@ public sealed class Phase0SecurityTests(WebApplicationFactory<Program> baseFacto
         ["Payments:WebhookSecret"] = StrongSecret,
     });
 
+    // https: outside Development the auth cookie is Secure-only, exactly like the real deployment.
     private static HttpClient CookieClient(WebApplicationFactory<Program> f) =>
-        f.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        f.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true, BaseAddress = new Uri("https://localhost") });
 
     private static async Task LoginAsync(HttpClient client, string email, string password)
     {

@@ -40,6 +40,26 @@ public sealed class FinanceController(
         if (milestone.Status != MilestoneStatus.Due)
             return Problem("هذه الدفعة غير مستحقة بعد؛ تُفتح بعد اكتمال المرحلة المرتبطة بها.", statusCode: StatusCodes.Status400BadRequest);
 
+        // One open checkout per milestone: a second click returns the same session instead of opening
+        // another one that could also be paid.
+        var open = await db.Payments.FirstOrDefaultAsync(
+            p => p.MilestoneId == milestone.Id && p.PayerDentistUserId == userId && p.Status == PaymentStatus.Pending, ct);
+        if (open is not null)
+        {
+            var again = await paymentGateway.CreateCheckoutSessionAsync(
+                open.Id, order.OrderNumber, milestone.Sequence, open.AmountPiastres, order.DentistUser?.Email ?? "dentist@labstage.eg", ct);
+            return Ok(new
+            {
+                open.Id,
+                Provider = open.Provider,
+                CheckoutId = open.ProviderCheckoutId,
+                again.CheckoutUrl,
+                AmountEgp = open.AmountPiastres / 100m,
+                again.Currency,
+                Reused = true,
+            });
+        }
+
         var payment = new Payment
         {
             OrderId = order.Id,
@@ -114,6 +134,10 @@ public sealed class FinanceController(
             return Problem("المبلغ المرسل لا يطابق قيمة الدفعة المسجلة.", statusCode: StatusCodes.Status400BadRequest);
 
         await using var tx = await db.Database.BeginTransactionAsync(ct);
+        // Only one webhook at a time may book a given milestone.
+        await DbLocks.AcquireAsync(db, $"milestone:{payment.MilestoneId}", ct);
+        if (await db.PaymentProviderEvents.AnyAsync(e => e.Provider == paymentGateway.ProviderName && e.EventId == dto.EventId, ct))
+            return Ok(new { status = "duplicate_ignored", dto.EventId });
 
         db.PaymentProviderEvents.Add(new PaymentProviderEvent
         {
@@ -157,6 +181,26 @@ public sealed class FinanceController(
         payment.ConfirmedAt = now;
 
         var milestone = order.Milestones.First(m => m.Id == payment.MilestoneId);
+        if (milestone.Status != MilestoneStatus.Due)
+        {
+            // The milestone was already settled by another payment (or is not due): never book it twice.
+            // The money from this payment goes back to the dentist; no commission or lab payable is created.
+            // Sandbox: recorded as refunded here. A real gateway adapter (P0-8) must also call the provider's refund API.
+            payment.Status = PaymentStatus.Refunded;
+            payment.RefundedPiastres = payment.AmountPiastres;
+            db.AuditLogs.Add(new AuditLog
+            {
+                ActorUserId = payment.PayerDentistUserId,
+                ActorRole = AppRoles.Dentist,
+                Action = "DuplicateMilestonePaymentRefunded",
+                EntityType = nameof(Payment),
+                EntityId = payment.Id.ToString(),
+                Details = $"Order={order.OrderNumber}, Milestone={milestone.Sequence}, MilestoneStatus={milestone.Status}, AmountEgp={payment.AmountPiastres / 100m:0.00}",
+            });
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+            return Ok(new { status = "milestone_not_due_refunded", payment.Id });
+        }
         milestone.Status = MilestoneStatus.Paid;
         milestone.PaidAt = now;
 
@@ -207,12 +251,28 @@ public sealed class FinanceController(
             });
         }
 
-        await db.SaveChangesAsync(ct);
-        await tx.CommitAsync(ct);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            await tx.CommitAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Same event delivered twice at the same moment: the unique index stops the second one.
+            if (await IsDuplicateEventAsync(dto.EventId))
+                return Ok(new { status = "duplicate_ignored", dto.EventId });
+            throw;
+        }
 
         // Status only: this response can reach the dentist (via the sandbox helper) and the gateway,
         // so it must never carry either party's commission. Role-scoped endpoints expose the figures.
         return Ok(new { status = "succeeded", payment.Id });
+    }
+
+    private async Task<bool> IsDuplicateEventAsync(string eventId)
+    {
+        db.ChangeTracker.Clear();
+        return await db.PaymentProviderEvents.AnyAsync(e => e.Provider == paymentGateway.ProviderName && e.EventId == eventId);
     }
 
     /// <summary>
@@ -489,6 +549,9 @@ public sealed class FinanceController(
         var lab = await db.Laboratories.FirstOrDefaultAsync(l => l.OwnerUserId == userId || l.Staff.Any(s => s.UserId == userId), ct);
         if (lab is null) return NotFound();
 
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        await DbLocks.AcquireAsync(db, $"payout:{lab.Id}", ct); // a double click cannot create two batches
+
         var eligible = await db.CommissionEntries
             .Where(c => c.LaboratoryId == lab.Id && !c.IsSettled && c.LabNetPiastres > 0)
             .ToListAsync(ct);
@@ -533,6 +596,7 @@ public sealed class FinanceController(
         });
 
         await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return Ok(new
         {
             batch.Id,

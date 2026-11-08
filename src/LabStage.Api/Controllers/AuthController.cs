@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using LabStage.Application.Security;
 using LabStage.Domain.Entities;
@@ -25,6 +27,7 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
 
     public sealed record LoginRequest(string Email, string Password, bool RememberMe = true);
 
+    [EnableRateLimiting("auth")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req, CancellationToken ct)
     {
@@ -119,16 +122,36 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
         return Ok(new { user.Id, user.Email, user.FullName, user.Role });
     }
 
+    /// <summary>Failed sign-ins allowed per account before a temporary lockout.</summary>
+    public const int MaxFailedLogins = 5;
+    public static readonly TimeSpan LockoutWindow = TimeSpan.FromMinutes(15);
+
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken ct)
+    public async Task<IActionResult> Login([FromBody] LoginRequest req, [FromServices] IMemoryCache cache, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
             return Problem("البريد الإلكتروني وكلمة المرور مطلوبان.", statusCode: StatusCodes.Status400BadRequest);
 
         var normEmail = req.Email.Trim().ToUpperInvariant();
+        var failKey = $"login-fail:{normEmail}";
+        if (cache.TryGetValue(failKey, out int fails) && fails >= MaxFailedLogins)
+            return Problem("تم إيقاف تسجيل الدخول لهذا الحساب مؤقتًا بعد محاولات فاشلة متكررة. حاول مرة أخرى بعد 15 دقيقة.", statusCode: StatusCodes.Status429TooManyRequests);
+
         var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normEmail, ct);
         if (user is null || !PasswordHasher.Verify(req.Password, user.PasswordHash))
+        {
+            cache.Set(failKey, fails + 1, LockoutWindow);
             return Problem("البريد الإلكتروني أو كلمة المرور غير صحيحة.", statusCode: StatusCodes.Status401Unauthorized);
+        }
+        cache.Remove(failKey);
+
+        // Older, weaker hashes are upgraded transparently on a successful sign-in.
+        if (PasswordHasher.NeedsRehash(user.PasswordHash))
+        {
+            user.PasswordHash = PasswordHasher.Hash(req.Password);
+            await db.SaveChangesAsync(ct);
+        }
 
         if (user.IsSuspended)
             return Problem($"تم تعليق الحساب: {user.SuspensionReason ?? "راجع إدارة المنصة"}", statusCode: StatusCodes.Status403Forbidden);
@@ -186,6 +209,7 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
         await HttpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity),
-            new AuthenticationProperties { IsPersistent = isPersistent, ExpiresUtc = DateTimeOffset.UtcNow.AddDays(14) });
+            // "Remember me": 14 days; otherwise the cookie options apply (8 idle hours, sliding).
+            new AuthenticationProperties { IsPersistent = isPersistent, ExpiresUtc = isPersistent ? DateTimeOffset.UtcNow.AddDays(14) : null });
     }
 }
