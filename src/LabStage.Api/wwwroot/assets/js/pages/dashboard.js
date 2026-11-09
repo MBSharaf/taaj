@@ -233,14 +233,14 @@ async function updateNavCount(user) {
 
 // Mobile drawer + keyboard shortcut for the top search (behaviour only; markup is in the HTML).
 (() => {
-  const btn = document.querySelector('.dash-menu-btn');
+  const btns = [...document.querySelectorAll('.dash-menu-btn')];
   const scrim = document.querySelector('.dash-scrim');
   const setOpen = (open) => {
     document.body.classList.toggle('nav-open', open);
-    btn?.setAttribute('aria-expanded', String(open));
+    btns.forEach((btn) => btn.setAttribute('aria-expanded', String(open)));
     if (scrim) scrim.hidden = !open;
   };
-  btn?.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open')));
+  btns.forEach((btn) => btn.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open'))));
   scrim?.addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setOpen(false);
@@ -249,6 +249,57 @@ async function updateNavCount(user) {
       if (q) { e.preventDefault(); q.focus(); }
     }
   });
+})();
+
+// Icon rail: pin state (remembered) and the sliding active pills on the rail and the phone bar.
+(() => {
+  const body = document.body;
+  if (!body.classList.contains('dash-v2')) return;
+  const KEY = 'taaj_rail_pinned';
+  const pin = document.querySelector('.dash-pin');
+  const setPinned = (on) => {
+    body.classList.toggle('rail-pinned', on);
+    pin?.setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem(KEY, on ? '1' : '0'); } catch { /* private mode */ }
+  };
+  setPinned(localStorage.getItem(KEY) === '1');
+  pin?.addEventListener('click', () => setPinned(!body.classList.contains('rail-pinned')));
+
+  // Admin and lab dashboards switch sections with #hash links: keep aria-current on the matching rail item.
+  const syncHash = () => {
+    const links = [...document.querySelectorAll('.dash-nav-main a[href*="#"]')];
+    const hit = links.find((a) => a.hash && a.hash === location.hash && a.pathname === location.pathname);
+    if (hit) { document.querySelectorAll('.dash-nav-main a[aria-current]').forEach((a) => a.removeAttribute('aria-current')); hit.setAttribute('aria-current', 'page'); }
+  };
+
+  // The pill starts where it was on the previous page and slides to the current item.
+  const place = (indicator, item, axis, key) => {
+    if (!indicator || !item) return;
+    const pos = axis === 'y' ? item.offsetTop : item.offsetLeft;
+    const prev = sessionStorage.getItem(key);
+    if (axis === 'x') indicator.style.setProperty('--w', `${item.offsetWidth}px`);
+    if (prev !== null && !indicator.classList.contains('is-ready')) {
+      indicator.style.transition = 'none';
+      indicator.style.setProperty(axis === 'y' ? '--y' : '--x', `${prev}px`);
+      void indicator.offsetWidth; // apply the start position before animating
+      indicator.style.transition = '';
+    }
+    requestAnimationFrame(() => {
+      indicator.style.setProperty(axis === 'y' ? '--y' : '--x', `${pos}px`);
+      indicator.classList.add('is-ready');
+      sessionStorage.setItem(key, String(pos));
+    });
+  };
+  const update = () => {
+    syncHash();
+    place(document.querySelector('.rail-indicator'), document.querySelector('.dash-nav-main a[aria-current="page"]'), 'y', 'taaj_rail_y');
+    place(document.querySelector('.bb-indicator'), document.querySelector('.dash-bottombar [aria-current="page"]'), 'x', 'taaj_bb_x');
+  };
+  window.addEventListener('hashchange', update);
+  window.addEventListener('resize', () => { requestAnimationFrame(update); }, { passive: true });
+  // after icons are injected and fonts settle
+  requestAnimationFrame(() => requestAnimationFrame(update));
+  document.fonts?.ready.then(update);
 })();
 
 async function loadNotifications() {

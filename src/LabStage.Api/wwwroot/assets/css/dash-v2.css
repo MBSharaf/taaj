@@ -443,3 +443,161 @@ html[data-theme="dark"] .dash-v2 .cad-workstation .cad-field input[type="date"] 
 /* Weekday letters under the bars: both written in the HTML, one shown per language */
 .dash-v2 .pill-day .day-en, html[lang="en"] .dash-v2 .pill-day .day-ar { display: none; }
 html[lang="en"] .dash-v2 .pill-day .day-en { display: inline; }
+
+/* ==========================================================================
+   Icon rail (reference: the game-dashboard sidebar Sharaf sent), Taaj colors.
+   Desktop/tablet (>980px): 84px rail that slides open on hover/focus, labels revealed with a stagger;
+   a pin keeps it open (body.rail-pinned, saved by dashboard.js). Phones (<=980px): floating bottom bar +
+   the full rail as a side drawer (button "المزيد").
+   ========================================================================== */
+.dash-v2 { --d-rail: #E9EFFC; --d-rail-w: 84px; --d-rail-open: 252px; --rail-ease: cubic-bezier(.22, 1, .36, 1); }
+html[data-theme="dark"] .dash-v2 { --d-rail: #0B1A45; }
+.dash-v2 .brand-rail-mark { display: none; inline-size: 44px; block-size: 44px; border-radius: 14px; flex: none; }
+.dash-v2 .dash-pin, .dash-v2 .dash-rail-plus, .dash-v2 .dash-bottombar, .dash-v2 .rail-indicator, .dash-v2 .bb-indicator { display: none; }
+
+@media (min-width: 981px) {
+  body.page-dash.dash-v2 { grid-template-columns: var(--d-rail-w) minmax(0, 1fr); transition: grid-template-columns .38s var(--rail-ease); }
+  body.page-dash.dash-v2.rail-pinned { grid-template-columns: var(--d-rail-open) minmax(0, 1fr); }
+  .dash-v2 .dash-sidebar {
+    z-index: 40; inline-size: var(--d-rail-w); padding: 16px 12px 14px !important; gap: 4px;
+    background: var(--d-rail) !important; border-radius: 24px !important; overflow-x: hidden;
+    transition: inline-size .38s var(--rail-ease), box-shadow .3s ease;
+  }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within), .dash-v2.rail-pinned .dash-sidebar { inline-size: var(--d-rail-open); }
+  .dash-v2:not(.rail-pinned) .dash-sidebar:is(:hover, :focus-within) { box-shadow: 0 30px 70px -24px rgb(11 26 69 / .45); }
+
+  /* brand: the mark always, the wordmark only when open */
+  .dash-v2 .dash-sidebar .brand { display: flex; align-items: center; gap: 10px; padding: 2px 4px 12px !important; }
+  .dash-v2 .brand-rail-mark { display: block; }
+  html .dash-v2:not(.rail-pinned) .dash-sidebar:not(:hover):not(:focus-within) .brand .brand-logo { display: none !important; }
+  .dash-v2 .dash-sidebar .brand .brand-logo { block-size: 28px; animation: rail-fade .35s var(--rail-ease) both .08s; }
+
+  /* pin */
+  .dash-v2 .dash-pin {
+    display: grid; place-items: center; position: absolute; inset-block-start: 22px; inset-inline-end: 12px;
+    inline-size: 30px; block-size: 30px; border-radius: 10px; border: 1px solid var(--d-border); background: var(--d-card);
+    color: var(--d-ink-2); cursor: pointer; opacity: 0; transition: opacity .2s ease, transform .3s var(--rail-ease);
+  }
+  .dash-v2 .dash-pin svg { inline-size: 16px; block-size: 16px; }
+  [dir="rtl"] .dash-v2 .dash-pin svg { transform: scaleX(-1); }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-pin, .dash-v2.rail-pinned .dash-pin { opacity: 1; }
+  .dash-v2.rail-pinned .dash-pin { transform: rotate(180deg); color: var(--d-primary); }
+
+  /* nav items: square icon buttons that grow into pills with labels */
+  .dash-v2 .dash-nav { position: relative; gap: 6px !important; }
+  .dash-v2 .dash-nav a, .dash-v2 .dash-nav button {
+    z-index: 1; min-block-size: 48px; padding: 0 16px !important; gap: 14px; border-radius: 14px;
+    white-space: nowrap; overflow: hidden; color: transparent !important;
+    transition: color .25s ease, background-color .2s ease;
+  }
+  .dash-v2 .dash-nav .nav-ic { color: var(--d-ink-2); transition: transform .25s var(--rail-ease), color .2s ease; }
+  .dash-v2 .dash-nav a:hover .nav-ic, .dash-v2 .dash-nav button:hover .nav-ic { transform: scale(1.14); color: var(--d-ink); }
+  .dash-v2 .dash-nav a:active .nav-ic, .dash-v2 .dash-nav button:active .nav-ic { transform: scale(.92); }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button), .dash-v2.rail-pinned .dash-nav :is(a, button) { color: var(--d-ink-2) !important; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):hover { color: var(--d-ink) !important; }
+  /* staggered label reveal */
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):nth-child(2) { transition-delay: .06s; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):nth-child(3) { transition-delay: .10s; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):nth-child(4) { transition-delay: .14s; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):nth-child(5) { transition-delay: .18s; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):nth-child(6) { transition-delay: .22s; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav :is(a, button):nth-child(n+7) { transition-delay: .26s; }
+  .dash-v2 .dash-nav a:hover, .dash-v2 .dash-nav button:hover { background: rgb(42 98 245 / .08) !important; }
+  .dash-v2 .dash-nav a[aria-current="page"]::before { display: none; }
+  /* active item: white icon/label on the sliding primary pill */
+  .dash-v2 .dash-nav a[aria-current="page"] .nav-ic { color: #fff; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-nav a[aria-current="page"], .dash-v2.rail-pinned .dash-nav a[aria-current="page"] { color: #fff !important; }
+  .dash-v2 .dash-nav a[aria-current="page"]:hover { background: transparent !important; }
+  .dash-v2 .rail-indicator {
+    display: block; position: absolute; z-index: 0; inset-inline: 0; inset-block-start: 0; block-size: 48px; border-radius: 14px;
+    background: linear-gradient(150deg, var(--d-primary), var(--d-deep-2));
+    box-shadow: 0 10px 24px -8px rgb(42 98 245 / .6), 0 0 0 4px rgb(42 98 245 / .12);
+    transform: translateY(var(--y, 0)); transition: transform .45s var(--rail-ease), opacity .2s ease; opacity: 0;
+  }
+  .dash-v2 .rail-indicator.is-ready { opacity: 1; }
+  /* count badge: a dot on the icon when closed */
+  .dash-v2 .nav-badge { transition: all .25s ease; }
+  html .dash-v2:not(.rail-pinned) .dash-sidebar:not(:hover):not(:focus-within) .nav-badge {
+    position: absolute; inset-block-start: 9px; inset-inline-start: 34px; min-inline-size: 0; inline-size: 10px; block-size: 10px;
+    padding: 0; font-size: 0; background: var(--d-bad); box-shadow: 0 0 0 2px var(--d-rail);
+  }
+  /* group labels: a short divider when closed */
+  .dash-v2 .dash-nav-label { white-space: nowrap; overflow: hidden; transition: color .2s ease, margin .3s var(--rail-ease); }
+  html .dash-v2:not(.rail-pinned) .dash-sidebar:not(:hover):not(:focus-within) .dash-nav-label {
+    color: transparent; block-size: 1px; margin: 12px 14px; background: var(--d-hatch); padding: 0;
+  }
+  /* bottom: dashed "+" when closed, promo card when open */
+  .dash-v2 .dash-rail-plus {
+    display: grid; place-items: center; margin-block-start: auto; margin-inline: auto; inline-size: 56px; block-size: 56px; flex: none;
+    border-radius: 16px; border: 2px dashed var(--d-primary); color: var(--d-primary); background: rgb(42 98 245 / .06);
+    transition: transform .25s var(--rail-ease), background-color .2s ease;
+  }
+  .dash-v2 .dash-rail-plus:hover { transform: scale(1.06) rotate(90deg); background: rgb(42 98 245 / .12); }
+  .dash-v2 .dash-rail-plus svg { inline-size: 22px; block-size: 22px; }
+  .dash-v2 .dash-sidebar:is(:hover, :focus-within) .dash-rail-plus, .dash-v2.rail-pinned .dash-rail-plus { display: none; }
+  html .dash-v2:not(.rail-pinned) .dash-sidebar:not(:hover):not(:focus-within) .dash-promo { display: none; }
+  .dash-v2 .dash-promo { min-inline-size: calc(var(--d-rail-open) - 24px); animation: rail-rise .4s var(--rail-ease) both .12s; }
+}
+/* Tablets / touch (no hover): the pin is the way to open the rail, so keep it visible */
+@media (min-width: 981px) and (hover: none) {
+  .dash-v2 .dash-pin { opacity: 1; position: static; margin: 0 auto 8px; }
+}
+@keyframes rail-fade { from { opacity: 0; transform: translateX(8px); } }
+@keyframes rail-rise { from { opacity: 0; transform: translateY(10px); } }
+
+/* ---- Phones (<=980px): floating bottom bar + full rail drawer ---- */
+@media (max-width: 980px) {
+  .dash-v2 .dash-topbar .dash-menu-btn { display: none; }
+  .dash-v2 .dash-main { padding-block-end: calc(110px + env(safe-area-inset-bottom)) !important; }
+  .dash-v2 .dash-bottombar {
+    position: fixed; z-index: 50; inset-inline: 12px; inset-block-end: calc(12px + env(safe-area-inset-bottom));
+    display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; gap: 4px; padding: 8px;
+    border-radius: 24px; background: var(--d-rail); border: 1px solid var(--d-border);
+    box-shadow: 0 20px 50px -18px rgb(11 26 69 / .5);
+  }
+  .dash-v2 .bb-item {
+    position: relative; z-index: 1; display: grid; place-items: center; block-size: 52px; border: 0; border-radius: 16px;
+    background: none; color: var(--d-ink-2); cursor: pointer; font: inherit; text-decoration: none;
+    transition: color .2s ease, transform .2s var(--rail-ease);
+  }
+  .dash-v2 .bb-item svg { inline-size: 22px; block-size: 22px; }
+  .dash-v2 .bb-item:active { transform: scale(.9); }
+  .dash-v2 .bb-item[aria-current="page"] { color: #fff; }
+  .dash-v2 .bb-label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .dash-v2 .bb-plus {
+    position: relative; z-index: 1; display: grid; place-items: center; justify-self: center; inline-size: 52px; block-size: 52px; border-radius: 16px;
+    border: 2px dashed var(--d-primary); color: var(--d-primary); background: var(--d-card);
+    transition: transform .25s var(--rail-ease);
+  }
+  .dash-v2 .bb-plus:active { transform: scale(.9) rotate(90deg); }
+  .dash-v2 .bb-plus svg { inline-size: 22px; block-size: 22px; }
+  .dash-v2 .bb-indicator {
+    display: block; position: absolute; z-index: 0; inset-block: 8px; left: 0; inline-size: var(--w, 52px); border-radius: 16px;
+    background: linear-gradient(150deg, var(--d-primary), var(--d-deep-2)); box-shadow: 0 10px 22px -8px rgb(42 98 245 / .6);
+    transform: translateX(var(--x, 0)); transition: transform .45s var(--rail-ease), opacity .2s; opacity: 0;
+  }
+  .dash-v2 .bb-indicator.is-ready { opacity: 1; }
+  /* drawer = the full rail, items slide in one after another */
+  .dash-v2 .dash-sidebar { background: var(--d-rail) !important; border-radius: 0 24px 24px 0 !important; }
+  [dir="rtl"] .dash-v2 .dash-sidebar { border-radius: 24px 0 0 24px !important; }
+  .dash-v2 .dash-sidebar .dash-nav :is(a, button) { opacity: 0; transform: translateX(-14px); transition: opacity .3s ease, transform .35s var(--rail-ease); }
+  [dir="rtl"] .dash-v2 .dash-sidebar .dash-nav :is(a, button) { transform: translateX(14px); }
+  .dash-v2.nav-open .dash-sidebar .dash-nav :is(a, button) { opacity: 1; transform: none; }
+  .dash-v2.nav-open .dash-sidebar .dash-nav :is(a, button):nth-child(2) { transition-delay: .05s; }
+  .dash-v2.nav-open .dash-sidebar .dash-nav :is(a, button):nth-child(3) { transition-delay: .09s; }
+  .dash-v2.nav-open .dash-sidebar .dash-nav :is(a, button):nth-child(4) { transition-delay: .13s; }
+  .dash-v2.nav-open .dash-sidebar .dash-nav :is(a, button):nth-child(5) { transition-delay: .17s; }
+  .dash-v2.nav-open .dash-sidebar .dash-nav :is(a, button):nth-child(n+6) { transition-delay: .21s; }
+  .dash-v2 .dash-sidebar .dash-nav a[aria-current="page"] { background: linear-gradient(150deg, var(--d-primary), var(--d-deep-2)) !important; color: #fff !important; }
+  .dash-v2 .dash-sidebar .dash-nav a[aria-current="page"] .nav-ic { color: #fff; }
+  .dash-v2 .dash-sidebar .dash-nav a[aria-current="page"]::before { display: none; }
+  .dash-v2 .floating-dash-pill, .dash-v2 .demo-notice { inset-block-end: calc(92px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-v2 .dash-sidebar, .dash-v2 .rail-indicator, .dash-v2 .bb-indicator, .dash-v2 .dash-nav :is(a, button), .dash-v2 .nav-ic,
+  body.page-dash.dash-v2 { transition: none !important; animation: none !important; }
+}
+/* rail polish: plain icons (no old duotone chip), centred in the closed rail */
+.dash-v2 .dash-nav .nav-ic { background: none !important; box-shadow: none !important; border: 0 !important; inline-size: 20px !important; block-size: 20px !important; }
+@media (min-width: 981px) { .dash-v2 .dash-nav a, .dash-v2 .dash-nav button { padding-inline: 20px !important; } }
+.dash-v2 .dash-nav a, .dash-v2 .dash-nav button { text-overflow: ellipsis; }

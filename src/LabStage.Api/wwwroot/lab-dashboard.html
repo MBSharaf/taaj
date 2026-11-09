@@ -14,15 +14,17 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
   <link rel="stylesheet" href="/assets/css/glass.css?v=12">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=5">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=9">
 </head>
 <body class="page-dash dash-v2" data-dash-page="lab-dashboard">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
   <aside class="dash-sidebar" id="dash-sidebar" aria-label="قائمة المعمل">
     <div>
-      <a class="brand" href="/" aria-label="تاج — الصفحة الرئيسية"><img class="brand-logo logo-ar logo-light" src="/assets/brand/taaj-wordmark-ar-light.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-ar logo-dark" src="/assets/brand/taaj-wordmark-ar-dark.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-en logo-light" src="/assets/brand/taaj-wordmark-en-light.svg" alt="Taaj" width="54" height="30"><img class="brand-logo logo-en logo-dark" src="/assets/brand/taaj-wordmark-en-dark.svg" alt="Taaj" width="54" height="30"></a>
+      <a class="brand" href="/" aria-label="تاج — الصفحة الرئيسية"><img class="brand-rail-mark" src="/assets/brand/taaj-icon.svg" alt="" width="44" height="44"><img class="brand-logo logo-ar logo-light" src="/assets/brand/taaj-wordmark-ar-light.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-ar logo-dark" src="/assets/brand/taaj-wordmark-ar-dark.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-en logo-light" src="/assets/brand/taaj-wordmark-en-light.svg" alt="Taaj" width="54" height="30"><img class="brand-logo logo-en logo-dark" src="/assets/brand/taaj-wordmark-en-dark.svg" alt="Taaj" width="54" height="30"></a>
+      <button class="dash-pin" type="button" aria-pressed="false" aria-label="تثبيت القائمة مفتوحة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
       <p class="dash-nav-label">القائمة</p>
-      <nav class="dash-nav" aria-label="القائمة">
+      <nav class="dash-nav dash-nav-main" aria-label="القائمة">
+        <span class="rail-indicator" aria-hidden="true"></span>
         <a href="/lab-dashboard.html#overview" data-dash-tab="overview" aria-current="page">لوحة المعمل والإحصائيات</a>
         <a href="/lab-orders.html">الطلبات ومراحل الإنتاج<span class="nav-badge num" data-nav-count hidden></span></a>
         <a href="/lab-finance.html#dentists">الأطباء وكشف حساب كل طبيب</a>
@@ -39,6 +41,7 @@
         <button type="button" id="logout-btn"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></span>تسجيل الخروج</button>
       </nav>
     </div>
+    <a class="dash-rail-plus" href="/lab-finance.html#campaigns" aria-label="إنشاء حملة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
     <div class="dash-promo">
       <span class="dash-promo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z"/></svg></span>
       <p class="dash-promo-title">زوّد ظهور معملك</p>
@@ -46,6 +49,14 @@
       <a class="dash-promo-btn" href="/lab-finance.html#campaigns">إنشاء حملة</a>
     </div>
   </aside>
+    <nav class="dash-bottombar" aria-label="القائمة السريعة">
+    <span class="bb-indicator" aria-hidden="true"></span>
+    <a class="bb-item" href="/lab-dashboard.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span class="bb-label">الرئيسية</span></a>
+    <a class="bb-item" href="/lab-orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7.5 4.5c2-1.6 3.4-1 4.5-.3 1.1-.7 2.5-1.3 4.5.3 2 1.7 1.6 5.2.6 7.9-.7 2-1 4.3-1.9 5.9-.6 1-1.7 1-2.1-.2l-.9-3.3c-.2-.8-1.5-.8-1.7 0l-.9 3.3c-.4 1.2-1.5 1.2-2.1.2-.9-1.6-1.2-3.9-1.9-5.9-1-2.7-1.4-6.2.6-7.9z"/></svg><span class="bb-label">الطلبات</span></a>
+    <a class="bb-plus" href="/lab-dashboard.html#pricelist" aria-label="خدمة جديدة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+    <a class="bb-item" href="/lab-finance.html#wallet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/></svg><span class="bb-label">المحفظة</span></a>
+    <button class="bb-item bb-more dash-menu-btn" type="button" aria-controls="dash-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span class="bb-label">المزيد</span></button>
+  </nav>
   <button class="dash-scrim" type="button" aria-label="إغلاق القائمة" hidden></button>
 
   <main class="dash-main">
@@ -351,7 +362,7 @@
     </div>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=16"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=17"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>
