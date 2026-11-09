@@ -390,3 +390,21 @@ html[data-theme="dark"] .dash-v2 .dash-avatar { background: var(--d-soft); color
   .dash-v2 .dash-topbar .pref-toggles { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .dash-v2 .pill-bar, .dash-v2 .dash-sidebar { transition: none; } }
+
+/* Fixes after first review */
+/* The v2 sidebar is a light panel: navy wordmark in light theme, ice wordmark in dark theme. */
+html:not([lang="en"]) .dash-v2 .dash-sidebar .brand .logo-ar.logo-light,
+html[lang="en"] .dash-v2 .dash-sidebar .brand .logo-en.logo-light { display: block !important; }
+.dash-v2 .dash-sidebar .brand .logo-dark { display: none !important; }
+html[data-theme="dark"] .dash-v2 .dash-sidebar .brand .logo-light { display: none !important; }
+html[data-theme="dark"]:not([lang="en"]) .dash-v2 .dash-sidebar .brand .logo-ar.logo-dark,
+html[data-theme="dark"][lang="en"] .dash-v2 .dash-sidebar .brand .logo-en.logo-dark { display: block !important; }
+/* Pill bars: heights from a definite track (JS sets --p = 0..1) */
+.dash-v2 .pill-chart { --chart-h: 190px; block-size: var(--chart-h); grid-template-rows: 100%; }
+.dash-v2 .pill-col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 8px; block-size: 100%; }
+.dash-v2 .pill-bar { --p: .3; block-size: calc((var(--chart-h) - 52px) * var(--p)); min-block-size: 22px; }
+@media (max-width: 480px) { .dash-v2 .pill-chart { --chart-h: 160px; } }
+.dash-v2 .timer-digits { white-space: nowrap; font-size: clamp(1.6rem, 1.2rem + 1vw, 2.3rem); }
+/* KPI numbers (incl. money) stay on one line and scale with the card width */
+.dash-v2 .kpi-card { container-type: inline-size; }
+.dash-v2 .kpi-value { white-space: nowrap; font-size: clamp(1.5rem, 13cqi, 2.8rem); }

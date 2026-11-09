@@ -1,4 +1,5 @@
 import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=9';
+import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -316,54 +317,9 @@ function getArabicMonogram(name) {
 
 // ---- Doctor Dashboard ----
 async function initDoctorDashboard() {
-  document.getElementById('greeting-title').textContent = `مرحبًا ${currentUser.fullName}`;
-  const [ordersRes, finRes] = await Promise.all([
-    fetch('/api/v1/orders'),
-    fetch('/api/v1/finance/doctor'),
-  ]);
-  let items = [];
-  if (ordersRes.ok) {
-    const ordersData = await ordersRes.json();
-    items = ordersData.items || [];
-    document.getElementById('st-total-orders').textContent = fmt.format(items.length);
-    document.getElementById('st-active-orders').textContent = fmt.format(items.filter((o) => !['Completed', 'Rejected'].includes(o.status)).length);
-    const tbody = document.getElementById('doc-recent-orders');
-    tbody.innerHTML = items.length ? items.slice(0, 8).map((o) => `
-      <tr>
-        <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
-        <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">${esc(o.patientName || o.caseReference)}</div></td>
-        <td>${esc(o.laboratoryName)}</td>
-        <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
-        <td class="num">${fmtEgp(o.paidEgp)} / ${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
-        <td><a class="btn btn-primary btn-sm" href="/doctor-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">التفاصيل والمحادثة</a></td>
-      </tr>`).join('') : `<tr><td colspan="6" class="muted">لا توجد طلبات بعد.</td></tr>`;
-
-    const allStages = items.flatMap((o) => o.stages || []);
-    const sCounts = {
-      Design: allStages.filter((s) => s.stage === 'Design').length || 1,
-      Milling: allStages.filter((s) => s.stage === 'Milling').length || 1,
-      Layering: allStages.filter((s) => s.stage === 'Layering').length || 1,
-      Glazing: allStages.filter((s) => s.stage === 'Glazing').length || 1,
-    };
-    renderProgressChart('doc-stages-chart', [
-      { label: '01 · التصميم الرقمي (Design)', value: sCounts.Design, display: `${fmt.format(sCounts.Design)} حالة` },
-      { label: '02 · التفريز الخماسي (Milling)', value: sCounts.Milling, display: `${fmt.format(sCounts.Milling)} حالة` },
-      { label: '03 · بناء الطبقات (Layering)', value: sCounts.Layering, display: `${fmt.format(sCounts.Layering)} حالة` },
-      { label: '04 · الجليز والتشطيب (Glazing)', value: sCounts.Glazing, display: `${fmt.format(sCounts.Glazing)} حالة` },
-    ]);
-  }
-  if (finRes.ok) {
-    const fin = await finRes.json();
-    document.getElementById('st-paid-egp').textContent = fmtEgp(fin.totalPaidEgp);
-    document.getElementById('st-due-egp').textContent = fmtEgp(fin.totalDueNowEgp);
-    document.getElementById('st-doc-comm') && (document.getElementById('st-doc-comm').textContent = fmtEgp(fin.dentistCommissionEgp || fin.totalExpectedDentistCommissionEgp));
-    renderBarChart('doc-finance-chart', [
-      { label: 'إجمالي الحالات المؤكدة', value: fin.totalConfirmedEgp || 1800, display: fmtEgp(fin.totalConfirmedEgp) },
-      { label: 'المدفوع حتى الآن', value: fin.totalPaidEgp || 900, display: fmtEgp(fin.totalPaidEgp), mint: true },
-      { label: 'دفعات مستحقة السداد', value: fin.totalDueNowEgp || 450, display: fmtEgp(fin.totalDueNowEgp) },
-      { label: 'المتبقي عند الإتمام', value: fin.totalRemainingEgp || 900, display: fmtEgp(fin.totalRemainingEgp), mint: true },
-    ]);
-  }
+  const res = await fetch('/api/v1/orders');
+  const items = res.ok ? ((await res.json()).items || []) : [];
+  await fillDoctorHome(items, statusAr);
   await loadNotifications();
 }
 
@@ -939,7 +895,8 @@ async function initDoctorFinance() {
 // ---- Lab Dashboard, Dedicated Price List Editor & Storefront Customizer ----
 async function initLabDashboard() {
   if (currentUser.laboratoryName) {
-    document.getElementById('greeting-title').textContent = `لوحة ${currentUser.laboratoryName}`;
+    const gt = document.getElementById('greeting-title');
+    if (gt) gt.textContent = `لوحة ${currentUser.laboratoryName}`;
   }
   if (currentUser.laboratorySlug) {
     const pubUrl = `/labs/${encodeURIComponent(currentUser.laboratorySlug)}`;
@@ -972,68 +929,21 @@ async function initLabDashboard() {
     fetch('/api/v1/orders'),
     fetch('/api/v1/finance/lab'),
   ]);
-  let orderItems = [];
-  if (ordersRes.ok) {
-    const oData = await ordersRes.json();
-    orderItems = oData.items || [];
-    document.getElementById('lab-st-orders').textContent = fmt.format(orderItems.length);
-    const tbody = document.getElementById('lab-recent-orders');
-    tbody.innerHTML = orderItems.length ? orderItems.slice(0, 8).map((o) => `
+  const orderItems = ordersRes.ok ? ((await ordersRes.json()).items || []) : [];
+  const fin = finRes.ok ? await finRes.json() : null;
+  const recent = document.getElementById('lab-recent-orders');
+  if (recent) {
+    recent.innerHTML = orderItems.length ? orderItems.slice(0, 8).map((o) => `
       <tr>
         <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
         <td><strong>${esc(o.dentistName)}</strong></td>
         <td>${esc(o.serviceName)}</td>
-        <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}`).join(' ← ')}</td>
+        <td>${(o.stages || []).map((st) => `${esc(stageAr[st.stage] || st.stage)}`).join(' ← ')}</td>
         <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">إدارة المراحل</a></td>
       </tr>`).join('') : `<tr><td colspan="6" class="muted">لا توجد طلبات بعد.</td></tr>`;
   }
-  if (finRes.ok) {
-    const fin = await finRes.json();
-    const dentists = fin.dentistStatements || [];
-    document.getElementById('lab-st-dentists') && (document.getElementById('lab-st-dentists').textContent = fmt.format(dentists.length));
-    document.getElementById('lab-st-gross').textContent = fmtEgp(fin.grossPaidEgp);
-    document.getElementById('lab-st-comm').textContent = fmtEgp(fin.totalCommissionEgp);
-    document.getElementById('lab-st-net').textContent = fmtEgp(fin.availableToWithdrawEgp ?? fin.unsettledPayableEgp);
-
-    // Render Revenue Chart
-    const totalOrderVal = dentists.reduce((acc, d) => acc + Number(d.totalOrderEgp || 0), 0);
-    renderBarChart('lab-revenue-chart', [
-      { label: 'إجمالي قيمة الطلبات', value: totalOrderVal || 3600, display: fmtEgp(totalOrderVal) },
-      { label: 'المحصل من الأطباء', value: fin.grossPaidEgp || 1800, display: fmtEgp(fin.grossPaidEgp), mint: true },
-      { label: 'صافي أرباح المعمل (98%)', value: fin.netEarnedEgp || 1764, display: fmtEgp(fin.netEarnedEgp), mint: true },
-      { label: 'رصيد المحفظة للسحب', value: (fin.availableToWithdrawEgp ?? fin.unsettledPayableEgp) || 1764, display: fmtEgp(fin.availableToWithdrawEgp ?? fin.unsettledPayableEgp) },
-    ]);
-
-    // Render Stages & Dentists Distribution Chart
-    const allStages = orderItems.flatMap((o) => o.stages || []);
-    renderProgressChart('lab-stages-chart', [
-      { label: 'مراحل التصميم الرقمي (Design)', value: allStages.filter((s) => s.stage === 'Design').length || 2, display: `${fmt.format(allStages.filter((s) => s.stage === 'Design').length)} مرحلة` },
-      { label: 'مراحل التفريز الخماسي (Milling)', value: allStages.filter((s) => s.stage === 'Milling').length || 2, display: `${fmt.format(allStages.filter((s) => s.stage === 'Milling').length)} مرحلة` },
-      { label: 'مراحل الطبقات والجليز', value: allStages.filter((s) => ['Layering', 'Glazing'].includes(s.stage)).length || 2, display: `${fmt.format(allStages.filter((s) => ['Layering', 'Glazing'].includes(s.stage)).length)} مرحلة` },
-      { label: 'الأطباء المتعاملون مع المعمل', value: dentists.length || 1, display: `${fmt.format(dentists.length)} أطباء` },
-    ]);
-
-    // Render Quick Dentists Cards on Lab Dashboard Overview
-    const dentistsBox = document.getElementById('lab-overview-dentists');
-    if (dentistsBox) {
-      dentistsBox.innerHTML = dentists.length ? dentists.map((d) => `
-        <article class="dentist-mini-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-            <div>
-              <strong style="font-size:var(--fs-md);color:var(--g-900)">${esc(d.dentistName)}</strong>
-              <div class="muted" style="font-size:var(--fs-xs)">${esc(d.clinicName || 'عيادة أسنان')} · ${esc(d.governorate || 'القاهرة')}</div>
-            </div>
-            <span class="badge badge-verified">${fmt.format(d.orderCount)} طلبات</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:var(--fs-xs);padding-block-top:6px;border-block-start:1px solid var(--line)">
-            <span>المدفوع: <b class="num" style="color:var(--g-800)">${fmtEgp(d.paidEgp)}</b></span>
-            <span>المتبقي: <b class="num">${fmtEgp(d.remainingEgp)}</b></span>
-          </div>
-          <a class="btn btn-ghost btn-sm" href="/lab-finance.html?dentistId=${encodeURIComponent(d.dentistUserId)}#dentists">كشف حساب الطبيب التفصيلي ←</a>
-        </article>`).join('') : `<p class="muted">لا يوجد أطباء متعاملون بعد.</p>`;
-    }
-  }
+  await fillLabHome(orderItems, fin, statusAr, fmtEgp);
 
   const priceGroupsEl = document.getElementById('lab-editable-price-groups');
   const alertEl = document.getElementById('add-srv-alert');
@@ -1646,24 +1556,7 @@ async function initAdminDashboard() {
     const res = await fetch('/api/v1/admin/overview');
     if (!res.ok) return;
     const d = await res.json();
-    document.getElementById('ad-collected').textContent = fmtEgp(d.metrics.totalCollectedEgp);
-    document.getElementById('ad-comm').textContent = fmtEgp(d.metrics.totalCommissionRevenueEgp);
-    document.getElementById('ad-subs').textContent = fmtEgp(d.metrics.totalSubscriptionRevenueEgp);
-    document.getElementById('ad-gw-fee').textContent = fmtEgp(d.metrics.platformGatewayFeeExpenseEgp);
-
-    renderBarChart('admin-revenue-chart', [
-      { label: 'إجمالي التحصيل', value: d.metrics.totalCollectedEgp || 3600, display: fmtEgp(d.metrics.totalCollectedEgp) },
-      { label: 'عمولات المنصة (2% + 1%)', value: d.metrics.totalCommissionRevenueEgp || 72, display: fmtEgp(d.metrics.totalCommissionRevenueEgp), mint: true },
-      { label: 'إيراد الاشتراكات', value: d.metrics.totalSubscriptionRevenueEgp || 2000, display: fmtEgp(d.metrics.totalSubscriptionRevenueEgp), mint: true },
-      { label: 'مصروف البوابة', value: d.metrics.platformGatewayFeeExpenseEgp || 54, display: fmtEgp(d.metrics.platformGatewayFeeExpenseEgp) },
-    ]);
-
-    renderProgressChart('admin-ops-chart', [
-      { label: 'المعامل الموثقة النشطة', value: d.metrics.verifiedLabs || 1, display: `${fmt.format(d.metrics.verifiedLabs)} / ${fmt.format(d.metrics.totalLabs)} معامل` },
-      { label: 'إجمالي الطلبات المسجلة', value: d.metrics.totalOrders || 1, display: `${fmt.format(d.metrics.totalOrders)} طلبات` },
-      { label: 'إجمالي المستخدمين والحسابات', value: d.metrics.totalUsers || 1, display: `${fmt.format(d.metrics.totalUsers)} حسابات` },
-      { label: 'دفعات التسوية البنكية للمعامل', value: (d.settlements || []).length || 1, display: `${fmt.format((d.settlements || []).length)} دفعات` },
-    ]);
+    fillAdminHome(d, fmtEgp);
 
     const sf = document.getElementById('admin-settings-form');
     if (sf && d.settings) {

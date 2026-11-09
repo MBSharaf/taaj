@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
   <link rel="stylesheet" href="/assets/css/glass.css?v=12">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=1">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=3">
 </head>
 <body class="page-dash dash-v2" data-dash-page="admin-dashboard">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -70,36 +70,86 @@
 
     <div id="admin-alert" class="alert alert-success" hidden></div>
 
-    <section class="stats-grid" id="overview">
-      <article class="stat-card"><span class="stat-label">إجمالي المحصل عبر البوابة</span><strong class="stat-value num" id="ad-collected">0 ج.م</strong><span class="stat-sub">جميع الدفعات المؤكدة (20% / 80%)</span></article>
-      <article class="stat-card"><span class="stat-label">إيراد عمولة المنصة (2% معمل + 1% طبيب)</span><strong class="stat-value num" id="ad-comm">0 ج.م</strong><span class="stat-sub">صافي العمولة بعد أي استرداد</span></article>
-      <article class="stat-card"><span class="stat-label">إيراد اشتراكات المعامل</span><strong class="stat-value num" id="ad-subs">0 ج.م</strong><span class="stat-sub">2,000 ج.م / شهر بعد التجربة</span></article>
-      <article class="stat-card"><span class="stat-label">مصروف رسوم بوابة الدفع (تتحمله المنصة)</span><strong class="stat-value num" id="ad-gw-fee">0 ج.م</strong><span class="stat-sub">لا يُخصم من المعمل ولا الطبيب</span></article>
+    <section class="kpi-row" id="overview" aria-label="ملخص">
+      <article class="kpi-card kpi-card-primary">
+        <div class="kpi-head"><span class="kpi-label">المستخدمون</span><a class="kpi-arrow" href="#labs" aria-label="المستخدمون"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <strong class="kpi-value num" id="kpi-1">0</strong>
+        <p class="kpi-trend"><span class="kpi-chip" aria-hidden="true">↗</span><span class="num" id="kpi-1-n">0</span> <span>حساب جديد هذا الشهر</span></p>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-head"><span class="kpi-label">المعامل</span><a class="kpi-arrow" href="#labs" aria-label="المعامل"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <strong class="kpi-value num" id="kpi-2">0</strong>
+        <p class="kpi-trend"><span class="kpi-chip" aria-hidden="true">↗</span><span class="num" id="kpi-2-n">0</span> <span>معمل موثّق</span></p>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-head"><span class="kpi-label">الطلبات</span><a class="kpi-arrow" href="#audit" aria-label="الطلبات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <strong class="kpi-value num" id="kpi-3">0</strong>
+        <p class="kpi-trend"><span class="kpi-chip" aria-hidden="true">↗</span><span class="num" id="kpi-3-n">0</span> <span>طلب هذا الشهر</span></p>
+      </article>
+      <article class="kpi-card">
+        <div class="kpi-head"><span class="kpi-label">إيراد المنصة</span><a class="kpi-arrow" href="#settlements" aria-label="إيراد المنصة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <strong class="kpi-value num" id="kpi-4">0</strong>
+        <p class="kpi-trend"><span>عمولات واشتراكات المعامل</span></p>
+      </article>
     </section>
 
-    <!-- Admin Financial & Operational Charts -->
-    <div class="dash-grid-2">
-      <section class="card chart-card">
-        <div class="chart-card-head">
-          <div>
-            <h2>هيكل التدفقات المالية للمنصة (ج.م)</h2>
-            <p class="muted" style="font-size:var(--fs-xs)">مقارنة إجمالي التحصيل، صافي المعامل (98%)، عمولة المنصة (2%)، والاشتراكات</p>
-          </div>
-          <span class="badge badge-verified">دفتر الأستاذ المزدوج</span>
+    <div class="home-row home-row-2">
+      <section class="dcard dcard-analytics">
+        <div class="dcard-head"><h2>طلبات المنصة</h2><span class="dcard-sub">الطلبات المسجلة هذا الأسبوع</span></div>
+        <div class="pill-chart" id="home-bars" role="img" aria-label="طلبات المنصة">
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="0"><span class="pill-tip" hidden></span></span><span class="pill-day">س</span></div>
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="1"><span class="pill-tip" hidden></span></span><span class="pill-day">ح</span></div>
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="2"><span class="pill-tip" hidden></span></span><span class="pill-day">ن</span></div>
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="3"><span class="pill-tip" hidden></span></span><span class="pill-day">ث</span></div>
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="4"><span class="pill-tip" hidden></span></span><span class="pill-day">ر</span></div>
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="5"><span class="pill-tip" hidden></span></span><span class="pill-day">خ</span></div>
+          <div class="pill-col"><span class="pill-bar is-empty" data-day="6"><span class="pill-tip" hidden></span></span><span class="pill-day">ج</span></div>
         </div>
-        <div id="admin-revenue-chart" class="dash-chart-box"></div>
       </section>
-
-      <section class="card chart-card">
-        <div class="chart-card-head">
-          <div>
-            <h2>مؤشر توثيق المعامل والتسويات البنكية</h2>
-            <p class="muted" style="font-size:var(--fs-xs)">نسب المعامل الموثقة وحالة دفعات التسوية</p>
-          </div>
+      <section class="dcard dcard-reminder">
+        <h2>بانتظار المراجعة</h2>
+        <div>
+          <p class="reminder-title" id="rem-title">لا توجد معامل بانتظار التوثيق</p>
+          <p class="reminder-time" id="rem-time"></p>
         </div>
-        <div id="admin-ops-chart" class="dash-chart-box"></div>
+        <a class="pill-btn pill-btn-dark" id="rem-link" href="#labs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>مراجعة المعامل</a>
+      </section>
+      <section class="dcard dcard-list">
+        <div class="dcard-head"><h2>بانتظار الموافقة</h2><a class="pill-btn pill-btn-outline pill-btn-sm" href="#labs">عرض الكل</a></div>
+        <ul class="mini-list" id="home-list"><li class="muted">جاري التحميل...</li></ul>
       </section>
     </div>
+
+    <div class="home-row home-row-3">
+      <section class="dcard dcard-team">
+        <div class="dcard-head"><h2>أحدث التسجيلات</h2><a class="pill-btn pill-btn-outline pill-btn-sm" href="/labs">دليل المعامل</a></div>
+        <ul class="team-list" id="home-team"><li class="muted">جاري التحميل...</li></ul>
+      </section>
+      <section class="dcard dcard-gauge">
+        <h2>توثيق المعامل</h2>
+        <div class="gauge">
+          <svg viewBox="0 0 200 112" aria-hidden="true">
+            <defs><pattern id="g-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--d-panel)"/><rect width="2.2" height="6" fill="var(--d-hatch)"/></pattern></defs>
+            <path class="g-track" d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke-width="26" stroke-linecap="round"/>
+            <path id="g-pending" d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke="url(#g-hatch)" stroke-width="26" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+            <path class="g-progress" id="g-progress" d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke-width="26" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+            <path class="g-done" id="g-done" d="M18 100 A82 82 0 0 1 182 100" fill="none" stroke-width="26" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+          </svg>
+          <div class="gauge-center"><strong class="num" id="g-pct">0%</strong><span>من المعامل موثّقة</span></div>
+        </div>
+        <ul class="gauge-legend"><li><i class="lg-done"></i>موثّقة</li><li><i class="lg-progress"></i>قيد المراجعة</li><li><i class="lg-pending"></i>غير موثّقة</li></ul>
+      </section>
+      <section class="dcard dcard-timer">
+        <h2>حتى تسوية نهاية الشهر</h2>
+        <p class="timer-digits num" id="timer-digits">00:00:00</p>
+        <p class="timer-sub" id="timer-sub">موعد إنشاء دفعات التسوية للمعامل</p>
+        <div class="timer-actions">
+          <a class="timer-btn" id="timer-open" href="#labs" aria-label="فتح التسويات"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg></a>
+          <button class="timer-btn timer-btn-alt" type="button" id="timer-refresh" aria-label="تحديث"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></button>
+        </div>
+      </section>
+    </div>
+
 
     <div class="dash-grid-2">
       <section class="card" id="settings">
