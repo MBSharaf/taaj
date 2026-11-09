@@ -14,15 +14,17 @@
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
   <link rel="stylesheet" href="/assets/css/glass.css?v=12">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=1">
 </head>
-<body class="page-dash" data-dash-page="lab-orders">
+<body class="page-dash dash-v2" data-dash-page="lab-orders">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
-  <aside class="dash-sidebar">
+  <aside class="dash-sidebar" id="dash-sidebar">
     <div>
       <a class="brand" href="/" aria-label="تاج — الصفحة الرئيسية"><img class="brand-logo logo-ar logo-light" src="/assets/brand/taaj-wordmark-ar-light.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-ar logo-dark" src="/assets/brand/taaj-wordmark-ar-dark.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-en logo-light" src="/assets/brand/taaj-wordmark-en-light.svg" alt="Taaj" width="54" height="30"><img class="brand-logo logo-en logo-dark" src="/assets/brand/taaj-wordmark-en-dark.svg" alt="Taaj" width="54" height="30"></a>
-      <nav class="dash-nav" style="margin-block-start:var(--sp-5)">
+      <p class="dash-nav-label">القائمة</p>
+      <nav class="dash-nav" aria-label="القائمة">
         <a href="/lab-dashboard.html#overview">لوحة المعمل والإحصائيات</a>
-        <a href="/lab-orders.html" aria-current="page">الطلبات ومراحل الإنتاج</a>
+        <a href="/lab-orders.html" aria-current="page">الطلبات ومراحل الإنتاج<span class="nav-badge num" data-nav-count hidden></span></a>
         <a href="/lab-finance.html#dentists">الأطباء وكشف حساب كل طبيب</a>
         <a href="/lab-finance.html#wallet">المحفظة وسحب الأرباح</a>
         <a href="/lab-dashboard.html#pricelist">تعديل قائمة الأسعار (Pricelist)</a>
@@ -30,21 +32,48 @@
         <a href="/lab-finance.html#campaigns">الإعلانات الممولة وإحصائياتها</a>
         <a href="/labs" id="my-public-profile-link">ملف المعمل العام (معاينة)</a>
       </nav>
+      <p class="dash-nav-label">عام</p>
+      <nav class="dash-nav" aria-label="عام">
+        <a href="/contact.html"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg></span>المساعدة والدعم</a>
+        <a href="/"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>الموقع الرئيسي</a>
+        <button type="button" id="logout-btn"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></span>تسجيل الخروج</button>
+      </nav>
     </div>
-    <div class="dash-sidebar-foot">
-      <div id="sidebar-user-name">...</div>
-      <button class="btn btn-on-dark btn-sm" type="button" id="logout-btn">تسجيل الخروج</button>
+    <div class="dash-promo">
+      <span class="dash-promo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z"/></svg></span>
+      <p class="dash-promo-title">زوّد ظهور معملك</p>
+      <p class="dash-promo-text">حملة ممولة تضع معملك أول نتائج البحث.</p>
+      <a class="dash-promo-btn" href="/lab-finance.html#campaigns">إنشاء حملة</a>
     </div>
   </aside>
+  <button class="dash-scrim" type="button" aria-label="إغلاق القائمة" hidden></button>
 
   <main class="dash-main">
     <header class="dash-topbar">
+      <button class="dash-menu-btn" type="button" aria-controls="dash-sidebar" aria-expanded="false" aria-label="فتح القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
       <form class="dash-search" id="order-search-form">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input class="input" id="order-search-q" name="q" type="search" placeholder="ابحث برقم الطلب أو اسم الطبيب أو مرجع الحالة...">
+        <kbd class="dash-kbd">⌘ K</kbd>
         <button class="btn btn-primary btn-sm" type="submit">بحث</button>
       </form>
-      <div class="dash-user"><strong id="top-user-name">...</strong></div>
+      <div class="dash-top-actions">
+        <a class="dash-icon-btn" href="/lab-orders.html" aria-label="الرسائل والطلبات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></a>
+        <a class="dash-icon-btn" href="/lab-dashboard.html" aria-label="الإشعارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dash-icon-dot num" id="notif-count">0</span></a>
+        <div class="dash-profile"><span class="dash-avatar" id="top-user-avatar" aria-hidden="true">ت</span><span class="dash-profile-text"><strong id="top-user-name">...</strong><span id="top-user-email"></span></span></div>
+      </div>
     </header>
+
+    <div class="dash-pagehead">
+      <div>
+        <h1>الطلبات ومراحل الإنتاج</h1>
+        <p>استقبل الطلبات وحدّث مراحل التصنيع.</p>
+      </div>
+      <div class="dash-pagehead-actions">
+        <a class="pill-btn pill-btn-primary" href="/lab-dashboard.html#pricelist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>خدمة جديدة</a>
+        <a class="pill-btn pill-btn-outline" href="/lab-finance.html#wallet">المحفظة</a>
+      </div>
+    </div>
 
     <section class="card">
       <h2>جميع الطلبات الواردة للمعمل</h2>
@@ -57,7 +86,7 @@
     </section>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=13"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=14"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

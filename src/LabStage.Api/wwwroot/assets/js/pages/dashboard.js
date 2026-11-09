@@ -56,6 +56,8 @@ function enhanceDashboard3DAndIcons() {
     a.insertAdjacentHTML('afterbegin', `<span class="nav-ic" aria-hidden="true">${ic}</span>`);
   });
 
+  if (document.body.classList.contains('dash-v2')) return; // v2 layout: everything else is written in the HTML
+
   // 2. Replace plain emoji notification bell with custom SVG
   const notifPill = document.querySelector('.notif-pill');
   if (notifPill) {
@@ -200,6 +202,11 @@ async function ensureAuthenticated() {
   currentUser = user;
   document.getElementById('sidebar-user-name') && (document.getElementById('sidebar-user-name').textContent = `${user.fullName} (${user.email})`);
   document.getElementById('top-user-name') && (document.getElementById('top-user-name').textContent = user.fullName);
+  const emailEl = document.getElementById('top-user-email');
+  if (emailEl) emailEl.textContent = user.email;
+  const avatar = document.getElementById('top-user-avatar');
+  if (avatar) avatar.textContent = String(user.fullName || 'ت').replace(/^(د\.|م\.|Dr\.?)\s*/i, '').trim().charAt(0) || 'ت';
+  updateNavCount(user);
   document.getElementById('notif-count') && (document.getElementById('notif-count').textContent = fmt.format(user.unreadNotifications || 0));
   if (user.laboratorySlug && document.getElementById('my-public-profile-link')) {
     document.getElementById('my-public-profile-link').href = `/labs/${encodeURIComponent(user.laboratorySlug)}`;
@@ -211,6 +218,37 @@ document.getElementById('logout-btn')?.addEventListener('click', async () => {
   await fetch('/api/v1/auth/logout', { method: 'POST' });
   window.location.href = '/login.html';
 });
+
+/** Dark count pill on the orders link: open (not finished) orders. */
+async function updateNavCount(user) {
+  const badge = document.querySelector('[data-nav-count]');
+  if (!badge || user.role === 'Admin') return;
+  const res = await fetch('/api/v1/orders').catch(() => null);
+  if (!res?.ok) return;
+  const n = ((await res.json()).items || []).filter((o) => !['Completed', 'Rejected', 'Cancelled'].includes(o.status)).length;
+  badge.textContent = fmt.format(n);
+  badge.hidden = n === 0;
+}
+
+// Mobile drawer + keyboard shortcut for the top search (behaviour only; markup is in the HTML).
+(() => {
+  const btn = document.querySelector('.dash-menu-btn');
+  const scrim = document.querySelector('.dash-scrim');
+  const setOpen = (open) => {
+    document.body.classList.toggle('nav-open', open);
+    btn?.setAttribute('aria-expanded', String(open));
+    if (scrim) scrim.hidden = !open;
+  };
+  btn?.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open')));
+  scrim?.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      const q = document.querySelector('.dash-search input');
+      if (q) { e.preventDefault(); q.focus(); }
+    }
+  });
+})();
 
 async function loadNotifications() {
   const box = document.getElementById('notif-list');
