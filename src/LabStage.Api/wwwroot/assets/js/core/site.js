@@ -1,6 +1,6 @@
 // Shared public-site behaviour: header state, mobile nav, scroll reveals, counters.
 // Loaded as an ES module on every public page.
-import { initPreferences, mountPreferenceToggles, applyDomTranslations, getLang } from './i18n.js?v=8';
+import { initPreferences, mountPreferenceToggles, applyDomTranslations, getLang } from './i18n.js?v=10';
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 

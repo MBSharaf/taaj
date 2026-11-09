@@ -440,3 +440,6 @@ html[data-theme="dark"] .dash-v2 .cad-workstation .cad-field input[type="date"] 
 .dash-v2 .cad-workstation .order-submit { border-radius: 999px; background: var(--d-deep) !important; }
 .dash-v2 .cad-workstation .odontogram-stage { background: linear-gradient(160deg, #071648, var(--d-deep) 70%, #163FB0); border: 0; border-radius: var(--d-radius); }
 .dash-v2 .cad-workstation .odontogram-quick .cad-tool-btn { background: rgb(255 255 255 / .1); color: #fff; border-color: rgb(255 255 255 / .22); }
+/* Weekday letters under the bars: both written in the HTML, one shown per language */
+.dash-v2 .pill-day .day-en, html[lang="en"] .dash-v2 .pill-day .day-ar { display: none; }
+html[lang="en"] .dash-v2 .pill-day .day-en { display: inline; }

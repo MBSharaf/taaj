@@ -1,4 +1,4 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=9';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=11';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
