@@ -408,3 +408,35 @@ html[data-theme="dark"][lang="en"] .dash-v2 .dash-sidebar .brand .logo-en.logo-d
 /* KPI numbers (incl. money) stay on one line and scale with the card width */
 .dash-v2 .kpi-card { container-type: inline-size; }
 .dash-v2 .kpi-value { white-space: nowrap; font-size: clamp(1.5rem, 13cqi, 2.8rem); }
+
+/* ---- New-case form (doctor-orders) in the light v2 style; the tooth chart keeps a dark navy panel ---- */
+.dash-v2 .cad-workstation {
+  background: var(--d-card) !important; color: var(--d-ink) !important;
+  border: 1px solid var(--d-border) !important; border-radius: var(--d-radius) !important; box-shadow: none !important;
+}
+.dash-v2 .cad-workstation .cad-header { border-color: var(--d-border); }
+.dash-v2 .cad-workstation .cad-header h2 { color: var(--d-ink) !important; font-size: var(--fs-lg) !important; }
+.dash-v2 .cad-workstation .cad-created, .dash-v2 .cad-workstation .cad-file-name,
+.dash-v2 .cad-workstation .sum-note, .dash-v2 .cad-workstation .cad-stages legend { color: var(--d-ink-3) !important; }
+.dash-v2 .cad-workstation .cad-box { background: var(--d-panel) !important; border: 1px solid var(--d-border) !important; }
+.dash-v2 .cad-workstation .cad-field { background: var(--d-card); border-color: var(--d-border); }
+.dash-v2 .cad-workstation .cad-field:focus-within { border-color: var(--d-primary); box-shadow: 0 0 0 3px rgb(42 98 245 / .14); }
+.dash-v2 .cad-workstation .cad-field > label { background: var(--d-card); color: var(--d-ink-2); border-radius: 6px; }
+.dash-v2 .cad-workstation .cad-box .cad-field > label { background: var(--d-card); }
+.dash-v2 .cad-workstation .cad-field input, .dash-v2 .cad-workstation .cad-field select, .dash-v2 .cad-workstation .cad-field textarea { color: var(--d-ink) !important; }
+.dash-v2 .cad-workstation .cad-field select option { background: var(--d-card); color: var(--d-ink); }
+.dash-v2 .cad-workstation .cad-field input[type="date"] { color-scheme: light; }
+html[data-theme="dark"] .dash-v2 .cad-workstation .cad-field input[type="date"] { color-scheme: dark; }
+.dash-v2 .cad-workstation .cad-tool-btn { background: var(--d-card); color: var(--d-ink); border-color: var(--d-border); }
+.dash-v2 .cad-workstation .sum-grid > div { background: var(--d-card); border-color: var(--d-border); }
+.dash-v2 .cad-workstation .sum-grid dt { color: var(--d-ink-2); }
+.dash-v2 .cad-workstation .sum-grid dd { color: var(--d-ink); }
+.dash-v2 .cad-workstation .sum-grid dd small { color: var(--d-ink-3); }
+.dash-v2 .cad-workstation .sum-grid .sum-total { background: linear-gradient(150deg, #0A2266, var(--d-deep) 55%, #1A47C2); border-color: transparent; }
+.dash-v2 .cad-workstation .sum-grid .sum-total dt, .dash-v2 .cad-workstation .sum-grid .sum-total dd { color: #fff; }
+.dash-v2 .cad-workstation .sum-grid .sum-now { border-color: var(--d-primary); }
+.dash-v2 .cad-workstation .sum-grid .sum-now dd { color: var(--d-primary); }
+.dash-v2 .cad-workstation .cad-stage-chip { border-radius: 999px; }
+.dash-v2 .cad-workstation .order-submit { border-radius: 999px; background: var(--d-deep) !important; }
+.dash-v2 .cad-workstation .odontogram-stage { background: linear-gradient(160deg, #071648, var(--d-deep) 70%, #163FB0); border: 0; border-radius: var(--d-radius); }
+.dash-v2 .cad-workstation .odontogram-quick .cad-tool-btn { background: rgb(255 255 255 / .1); color: #fff; border-color: rgb(255 255 255 / .22); }
