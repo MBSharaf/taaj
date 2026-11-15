@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>إعدادات المالية | تاج</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="/assets/brand/taaj-icon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
+  <link rel="stylesheet" href="/assets/css/base.css?v=7">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=12">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=9">
+</head>
+<body class="page-dash dash-v2" data-dash-page="lab-settings">
+  <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
+  <aside class="dash-sidebar" id="dash-sidebar">
+    <div>
+      <a class="brand" href="/" aria-label="تاج — الصفحة الرئيسية"><img class="brand-rail-mark" src="/assets/brand/taaj-icon.svg" alt="" width="44" height="44"><img class="brand-logo logo-ar logo-light" src="/assets/brand/taaj-wordmark-ar-light.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-ar logo-dark" src="/assets/brand/taaj-wordmark-ar-dark.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-en logo-light" src="/assets/brand/taaj-wordmark-en-light.svg" alt="Taaj" width="54" height="30"><img class="brand-logo logo-en logo-dark" src="/assets/brand/taaj-wordmark-en-dark.svg" alt="Taaj" width="54" height="30"></a>
+      <button class="dash-pin" type="button" aria-pressed="false" aria-label="تثبيت القائمة مفتوحة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+      <p class="dash-nav-label">القائمة</p>
+      <nav class="dash-nav dash-nav-main" aria-label="القائمة">
+        <span class="rail-indicator" aria-hidden="true"></span>
+        <a href="/lab-dashboard.html#overview">لوحة المعمل والإحصائيات</a>
+        <a href="/lab-orders.html">الطلبات ومراحل الإنتاج<span class="nav-badge num" data-nav-count hidden></span></a>
+        <a href="/lab-dashboard.html#storefront">إدارة متجر وبروفايل المعمل</a>
+        <a href="/labs" id="my-public-profile-link">ملف المعمل العام (معاينة)</a>
+        <p class="nav-group"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>المالية</p>
+        <a href="/lab-finance.html#dentists">الأطباء وكشف حساب كل طبيب</a>
+        <a href="/lab-finance.html#wallet">المحفظة وسحب الأرباح</a>
+        <a href="/lab-dashboard.html#pricelist">تعديل قائمة الأسعار (Pricelist)</a>
+        <a href="/lab-finance.html#campaigns">الإعلانات الممولة وإحصائياتها</a>
+        <a href="/lab-settings.html" aria-current="page">إعدادات المالية وكلمة المرور</a>
+      </nav>
+      <p class="dash-nav-label">عام</p>
+      <nav class="dash-nav" aria-label="عام">
+        <a href="/contact.html"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg></span>المساعدة والدعم</a>
+        <a href="/"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>الموقع الرئيسي</a>
+        <button type="button" id="logout-btn"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg></span>تسجيل الخروج</button>
+      </nav>
+    </div>
+    <a class="dash-rail-plus" href="/lab-finance.html#campaigns" aria-label="إنشاء حملة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+    <div class="dash-promo">
+      <span class="dash-promo-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z"/></svg></span>
+      <p class="dash-promo-title">زوّد ظهور معملك</p>
+      <p class="dash-promo-text">حملة ممولة تضع معملك أول نتائج البحث.</p>
+      <a class="dash-promo-btn" href="/lab-finance.html#campaigns">إنشاء حملة</a>
+    </div>
+  </aside>
+    <nav class="dash-bottombar" aria-label="القائمة السريعة">
+    <span class="bb-indicator" aria-hidden="true"></span>
+    <a class="bb-item" href="/lab-dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg><span class="bb-label">الرئيسية</span></a>
+    <a class="bb-item" href="/lab-orders.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M7.5 4.5c2-1.6 3.4-1 4.5-.3 1.1-.7 2.5-1.3 4.5.3 2 1.7 1.6 5.2.6 7.9-.7 2-1 4.3-1.9 5.9-.6 1-1.7 1-2.1-.2l-.9-3.3c-.2-.8-1.5-.8-1.7 0l-.9 3.3c-.4 1.2-1.5 1.2-2.1.2-.9-1.6-1.2-3.9-1.9-5.9-1-2.7-1.4-6.2.6-7.9z"/></svg><span class="bb-label">الطلبات</span></a>
+    <a class="bb-plus" href="/lab-dashboard.html#pricelist" aria-label="خدمة جديدة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></a>
+    <a class="bb-item" href="/lab-finance.html#wallet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14.5h2"/></svg><span class="bb-label">المحفظة</span></a>
+    <button class="bb-item bb-more dash-menu-btn" type="button" aria-controls="dash-sidebar" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg><span class="bb-label">المزيد</span></button>
+  </nav>
+  <button class="dash-scrim" type="button" aria-label="إغلاق القائمة" hidden></button>
+
+  <main class="dash-main">
+    <header class="dash-topbar">
+      <button class="dash-menu-btn" type="button" aria-controls="dash-sidebar" aria-expanded="false" aria-label="فتح القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+      <form class="dash-search" id="order-search-form">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="input" id="order-search-q" name="q" type="search" placeholder="ابحث برقم الطلب أو اسم الطبيب أو مرجع الحالة...">
+        <kbd class="dash-kbd">⌘ K</kbd>
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="dash-top-actions">
+        <button class="fin-chip" type="button" data-fin-chip data-state="locked" hidden><span class="ic-locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><span class="ic-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.6-1.7"/></svg></span><span class="fin-chip-text"><span class="txt-locked">المالية مقفلة</span><span class="txt-open">قفل المالية الآن</span></span></button>
+        <a class="dash-icon-btn" href="/lab-orders.html" aria-label="الرسائل والطلبات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></a>
+        <a class="dash-icon-btn" href="/lab-dashboard.html" aria-label="الإشعارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dash-icon-dot num" id="notif-count">0</span></a>
+        <div class="dash-profile"><span class="dash-avatar" id="top-user-avatar" aria-hidden="true">ت</span><span class="dash-profile-text"><strong id="top-user-name">...</strong><span id="top-user-email"></span></span></div>
+      </div>
+    </header>
+
+    <div class="dash-pagehead">
+      <div>
+        <h1>إعدادات المالية</h1>
+        <p>كلمة مرور خاصة تحمي كل المبالغ والحسابات في لوحة المعمل.</p>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+      <section class="card">
+        <h2>كلمة مرور المالية</h2>
+        <div class="settings-status" id="fin-status-box"><span id="fin-status-text">جاري التحميل...</span></div>
+        <form class="settings-form" id="fin-setup-form" novalidate>
+          <label>كلمة مرور حسابك الحالية<input name="accountPassword" type="password" autocomplete="current-password" required></label>
+          <div class="row-2">
+            <label>كلمة مرور المالية الجديدة<input name="newPin" type="password" autocomplete="new-password" minlength="4" required></label>
+            <label>تأكيدها<input name="confirmPin" type="password" autocomplete="new-password" minlength="4" required></label>
+          </div>
+          <p class="settings-msg" id="fin-setup-msg" role="status"></p>
+          <div class="form-actions"><button class="btn btn-primary" type="submit" id="fin-setup-btn">حفظ كلمة مرور المالية</button></div>
+        </form>
+        <p class="muted" id="fin-staff-note" hidden>كلمة مرور المالية يحددها صاحب المعمل فقط. اطلب منه فتح المالية أو تغييرها.</p>
+      </section>
+      <section class="card">
+        <h2>كيف تعمل الحماية؟</h2>
+        <ul class="muted" style="line-height:2;padding-inline-start:18px;margin:0">
+          <li>كل المبالغ في الطلبات والحسابات والمحفظة والأسعار تظهر «••••» حتى إدخال كلمة المرور.</li>
+          <li>بعد الإدخال تبقى المالية مفتوحة 15 دقيقة على هذا الجهاز فقط.</li>
+          <li>زر «قفل المالية الآن» في الشريط العلوي يقفلها فورًا، وتسجيل الخروج يقفلها أيضًا.</li>
+          <li>بعد 5 محاولات خاطئة يتوقف الفتح 15 دقيقة.</li>
+          <li>إذا نسيت كلمة المرور تواصل مع إدارة المنصة لإعادة ضبطها.</li>
+        </ul>
+        <div class="form-actions" style="margin-block-start:var(--sp-4)"><button class="btn btn-outline" type="button" id="fin-lock-now">قفل المالية الآن</button></div>
+      </section>
+    </div>
+  </main>
+  <div class="fin-modal" id="fin-modal" role="dialog" aria-modal="true" aria-labelledby="fin-modal-title" hidden>
+    <div class="fin-dialog">
+      <div class="fin-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div>
+      <div class="fin-view" data-fin-view="unlock">
+        <h2 id="fin-modal-title">المالية محمية بكلمة مرور</h2>
+        <p>المبالغ والحسابات والمحفظة تظهر فقط بعد إدخال كلمة مرور المالية الخاصة بصاحب المعمل.</p>
+        <form data-fin-form="unlock" novalidate>
+          <label>كلمة مرور المالية<input class="fin-pin" name="pin" type="password" inputmode="text" autocomplete="off" required></label>
+          <p class="fin-error" role="alert"></p>
+          <div class="fin-actions"><button type="button" data-fin-cancel>رجوع</button><button type="submit">فتح المالية</button></div>
+        </form>
+        <p class="fin-note">تبقى المالية مفتوحة 15 دقيقة، وتُقفل تلقائيًا عند تسجيل الخروج.</p>
+      </div>
+      <div class="fin-view" data-fin-view="setup" hidden>
+        <h2>اختر كلمة مرور للمالية</h2>
+        <p>لحماية أرقام المعمل، حدّد كلمة مرور خاصة تُطلب قبل عرض أي مبالغ. لا يعرفها إلا أنت.</p>
+        <form data-fin-form="setup" novalidate>
+          <label>كلمة مرور حسابك (للتأكيد)<input name="accountPassword" type="password" autocomplete="current-password" required></label>
+          <label>كلمة مرور المالية الجديدة<input class="fin-pin" name="newPin" type="password" autocomplete="new-password" minlength="4" required></label>
+          <label>تأكيد كلمة مرور المالية<input class="fin-pin" name="confirmPin" type="password" autocomplete="new-password" minlength="4" required></label>
+          <p class="fin-error" role="alert"></p>
+          <div class="fin-actions"><button type="button" data-fin-cancel>رجوع</button><button type="submit">حفظ وفتح المالية</button></div>
+        </form>
+      </div>
+      <div class="fin-view" data-fin-view="nopin" hidden>
+        <h2>المالية مقفلة</h2>
+        <p>لم يحدد صاحب المعمل كلمة مرور المالية بعد. اطلب منه تحديدها من «إعدادات المالية».</p>
+        <div class="fin-actions"><button type="button" data-fin-cancel>رجوع</button><a href="/lab-orders.html">الطلبات</a></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/pages/dashboard.js?v=17"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

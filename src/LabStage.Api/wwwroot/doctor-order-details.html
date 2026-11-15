@@ -27,9 +27,10 @@
         <span class="rail-indicator" aria-hidden="true"></span>
         <a href="/doctor-dashboard.html">لوحة المتابعة</a>
         <a href="/doctor-orders.html" aria-current="page">الطلبات وإنشاء حالة<span class="nav-badge num" data-nav-count hidden></span></a>
-        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
-      
         <a href="/labs">استكشاف المعامل</a>
+        <a href="/doctor-settings.html">عياداتي</a>
+        <p class="nav-group"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>المالية</p>
+        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
       </nav>
       <p class="dash-nav-label">عام</p>
       <nav class="dash-nav" aria-label="عام">
@@ -87,6 +88,31 @@
 
     <section class="card" id="order-header-box">
       <p class="muted">جاري تحميل تفاصيل الطلب...</p>
+    </section>
+
+    <section class="card" id="order-track-card" hidden>
+      <h2>مسار الحالة</h2>
+      <ol class="track-steps" id="order-track-steps" style="--n:5">
+        <li data-track="sent">تم إرسال الطلب</li>
+        <li data-track="accepted">قبول المعمل</li>
+        <li data-track="production">التصنيع</li>
+        <li data-track="delivery">التوصيل</li>
+        <li data-track="completed">اكتملت</li>
+      </ol>
+      <div id="order-delivery-box">
+        <p style="margin:0;font-size:var(--fs-sm)"><strong>العيادة:</strong> <span id="order-clinic-name">—</span> · <span class="muted" id="order-clinic-address"></span></p>
+        <p class="muted" style="margin:4px 0 0;font-size:var(--fs-xs)"><span id="order-delivery-state"></span></p>
+        <span hidden data-dstate="NotRequested">التسليم من مقر المعمل.</span>
+        <span hidden data-dstate="PickupRequested">مطلوب مندوب لاستلام الطبعة من العيادة.</span>
+        <span hidden data-dstate="PickedUpFromClinic">استلم المندوب الطبعة من العيادة.</span>
+        <span hidden data-dstate="OutForDelivery">الحالة في الطريق إلى العيادة.</span>
+        <span hidden data-dstate="Delivered">تم تسليم الحالة للعيادة.</span>
+        <span hidden data-dstate="Completed">اكتملت الحالة وتم إغلاقها.</span>
+        <div class="delivery-actions" id="delivery-doc-actions" hidden>
+          <button class="btn btn-primary btn-sm" type="button" id="btn-confirm-receipt">تأكيد استلام الحالة</button>
+        </div>
+        <p class="muted" id="delivery-auto-note" hidden style="font-size:var(--fs-xs);margin-block-start:8px">إن لم تؤكد الاستلام، تكتمل الحالة تلقائيًا بعد <bdi class="num" id="delivery-auto-days">3</bdi> أيام من تسليمها.</p>
+      </div>
     </section>
 
     <section class="card">

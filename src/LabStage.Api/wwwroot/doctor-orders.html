@@ -27,8 +27,10 @@
         <span class="rail-indicator" aria-hidden="true"></span>
         <a href="/doctor-dashboard.html">لوحة المتابعة</a>
         <a href="/doctor-orders.html" aria-current="page">الطلبات وإنشاء حالة<span class="nav-badge num" data-nav-count hidden></span></a>
-        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
         <a href="/labs">استكشاف المعامل</a>
+        <a href="/doctor-settings.html">عياداتي</a>
+        <p class="nav-group"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>المالية</p>
+        <a href="/doctor-finance.html">المدفوعات والفواتير</a>
       </nav>
       <p class="dash-nav-label">عام</p>
       <nav class="dash-nav" aria-label="عام">
@@ -98,6 +100,13 @@
           <div class="cad-field">
             <label for="co-patient">اسم المريض</label>
             <input id="co-patient" name="patientName" type="text" placeholder="اكتب اسم المريض" autocomplete="off" maxlength="120" required>
+          </div>
+          <div class="cad-field">
+            <label for="co-clinic">العيادة</label>
+            <select id="co-clinic" name="clinicId">
+              <option value="">جاري تحميل عياداتك...</option>
+            </select>
+            <p class="form-hint-box">تُرسل الحالة باسم وعنوان العيادة المختارة · <a href="/doctor-settings.html">إدارة عياداتي</a></p>
           </div>
           <div class="cad-field">
             <label for="co-lab">المعمل</label>
@@ -180,15 +189,16 @@
         <div class="cad-field">
           <label for="co-service">نوع التركيبة</label>
           <select id="co-service" name="serviceName" required>
-            <option value="تاج زركونيا متعدد الطبقات" data-match="زركونيا متعدد" data-unit-price="1800">تاج زركونيا متعدد الطبقات</option>
-            <option value="تاج إيماكس" data-match="تاج إيماكس" data-unit-price="2200">تاج إيماكس</option>
-            <option value="فينير إيماكس" data-match="فينير" data-unit-price="2500">فينير إيماكس</option>
-            <option value="جسر زركونيا" data-match="جسر" data-unit-price="1750">جسر زركونيا (للوحدة)</option>
-            <option value="دعامة زرعة مخصصة" data-match="دعامة" data-unit-price="2700">دعامة زرعة مخصصة</option>
-            <option value="واقي ليلي رقمي" data-match="واقي" data-unit-price="950">واقي ليلي رقمي</option>
-            <option value="تاج PMMA مؤقت" data-match="PMMA" data-unit-price="650">تاج PMMA مؤقت</option>
+            <option value="">اختر المعمل أولًا</option>
           </select>
+          <p class="form-hint-box" id="co-service-hint">تظهر هنا الخدمات التي يقدمها المعمل المختار فقط.</p>
         </div>
+
+        <label class="mockup-toggle" id="co-mockup-wrap">
+          <input type="checkbox" id="co-mockup" name="isMockup">
+          <span><b>Mockup — تصميم فقط</b><small>تصميم رقمي للحالة بدون تصنيع (مرحلة التصميم فقط)، للمراجعة أو لعرضه على المريض. السعر من خدمة Mockup في قائمة أسعار المعمل.</small></span>
+        </label>
+        <p class="form-hint-box is-warn" id="co-mockup-none" hidden>هذا المعمل لا يقدم خدمة Mockup في قائمة أسعاره حاليًا.</p>
 
         <div class="odontogram-stage">
           <p class="odontogram-hint">اضغط على الأسنان المطلوبة · المحدد: <bdi class="ltr" id="cad-teeth-list">—</bdi></p>

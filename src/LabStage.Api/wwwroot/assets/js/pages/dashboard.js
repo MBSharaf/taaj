@@ -1,11 +1,14 @@
 import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=11';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker } from './dash-extra.js?v=1';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
 
 const fmt = new Intl.NumberFormat('ar-EG', { maximumFractionDigits: 2 });
-const fmtEgp = (v) => `${fmt.format(Number(v || 0))} ج.م`;
+// Lab money hidden by the finance lock arrives as null (numbers) or "•••• ج.م" (texts).
+const MONEY_MASK = '🔒 ••••';
+const fmtEgp = (v) => (v === null || (typeof v === 'string' && v.includes('••••'))) ? MONEY_MASK : `${fmt.format(Number(v || 0))} ج.م`;
 const page = document.body.dataset.dashPage || '';
 
 // Modern Duotone 3D Vector Icons
@@ -19,6 +22,8 @@ const ICONS = {
   layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2.5 21 7.5 12 12.5 3 7.5 12 2.5" fill="currentColor" fill-opacity=".25"/><polyline points="3 12.5 12 17.5 21 12.5"/><polyline points="3 17 12 22 21 17"/></svg>`,
   chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="8" rx="1" fill="currentColor" fill-opacity=".24"/><rect x="10" y="7" width="4" height="13" rx="1" fill="currentColor" fill-opacity=".24"/><rect x="17" y="3" width="4" height="17" rx="1" fill="currentColor" fill-opacity=".4"/></svg>`,
   bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="currentColor" fill-opacity=".22"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+  gear: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
+  clinic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12z" fill="currentColor" fill-opacity=".2"/><path d="M12 10v6M9 13h6M2.5 21h19"/></svg>`,
   spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4-2.4 6.1-2.4-6.1-6.1-2.4 6.1-2.4L12 2.5z" fill="currentColor" fill-opacity=".26"/></svg>`,
   crown3dWire: `<svg class="dash-3d-wire-fallback" viewBox="0 0 160 140" fill="none" aria-hidden="true">
     <defs>
@@ -46,7 +51,9 @@ function enhanceDashboard3DAndIcons() {
     if (a.querySelector('.nav-ic')) return;
     const href = a.getAttribute('href') || '';
     let ic = ICONS.grid;
-    if (href.includes('orders')) ic = ICONS.tooth;
+    if (href.includes('lab-settings')) ic = ICONS.gear;
+    else if (href.includes('doctor-settings')) ic = ICONS.clinic;
+    else if (href.includes('orders')) ic = ICONS.tooth;
     else if (href.includes('#dentists')) ic = ICONS.layers;
     else if (href.includes('#wallet') || href.includes('finance')) ic = ICONS.wallet;
     else if (href.includes('#pricelist')) ic = ICONS.chart;
@@ -177,8 +184,8 @@ const statusAr = {
   Accepted: 'مقبول ومثبّت السعر',
   Rejected: 'مرفوض',
   InProduction: 'قيد التصنيع',
-  ReadyForDelivery: 'جاهز للتسليم',
-  Completed: 'مكتمل ومسلّم',
+  ReadyForDelivery: 'جاهز للتوصيل',
+  Completed: 'اكتملت',
   NotStarted: 'لم تبدأ',
   InProgress: 'قيد التنفيذ',
   SubmittedForReview: 'مرفوعة لمراجعة الطبيب',
@@ -190,6 +197,13 @@ const statusAr = {
   Paid: 'مدفوعة ✓',
   Refunded: 'مستردة',
 };
+
+/** Order status in lists: the delivery step shows while the case is on its way. */
+function orderStatusText(o) {
+  if (o.status === 'ReadyForDelivery' && o.deliveryStatus === 'OutForDelivery') return 'في التوصيل';
+  if (o.status === 'ReadyForDelivery' && o.deliveryStatus === 'Delivered') return 'تم التسليم · بانتظار تأكيد الاستلام';
+  return statusAr[o.status] || o.status;
+}
 
 let currentUser = null;
 
@@ -475,19 +489,85 @@ async function initDoctorOrders() {
   deliverySelect?.addEventListener('change', syncDelivery);
   syncDelivery();
 
-  // Lab price lists (public API): unit price of the chosen restoration type at the chosen lab.
+  // Lab price lists (public API): only the chosen lab's own services can be ordered.
   const labServices = new Map();
   try {
     const res = await fetch('/api/v1/labs');
     if (res.ok) (await res.json()).items?.forEach((l) => labServices.set(l.slug, l.services || []));
-  } catch { /* keep the guide prices */ }
+  } catch { /* the server still checks the service */ }
+  const isMockupSvc = (sv) => sv.category === 'Mockup' || /mockup/i.test(String(sv.name));
+  const mockupBox = $('co-mockup');
+  const mockupWrap = $('co-mockup-wrap');
+  const mockupNone = $('co-mockup-none');
+  const placeholder = serviceSelect?.querySelector('option[value=""]');
+  const mockupService = () => (labServices.get(labSelect?.value) || []).find(isMockupSvc);
+
+  function fillServices() {
+    if (!serviceSelect) return;
+    const keep = serviceSelect.value || qs.get('service') || '';
+    const list = (labServices.get(labSelect?.value) || []).filter((sv) => !isMockupSvc(sv));
+    serviceSelect.querySelectorAll('option:not([value=""])').forEach((o) => o.remove());
+    list.forEach((sv) => {
+      const o = document.createElement('option');
+      o.value = sv.name;
+      o.textContent = sv.name;
+      o.dataset.unitPrice = String(sv.priceEgp);
+      serviceSelect.append(o);
+    });
+    if (placeholder) placeholder.hidden = list.length > 0;
+    serviceSelect.value = list.some((sv) => sv.name === keep) ? keep : (list[0]?.name || '');
+    // Mockup is only possible when this lab prices it.
+    const hasMockup = !!mockupService();
+    if (mockupBox) { mockupBox.disabled = !hasMockup; if (!hasMockup) mockupBox.checked = false; }
+    mockupWrap?.classList.toggle('is-disabled', !hasMockup);
+    if (mockupNone) mockupNone.hidden = hasMockup;
+    syncMockup();
+  }
+
+  // Mockup = design only: the Design stage alone, priced from the lab's Mockup service.
+  function syncMockup() {
+    const on = !!mockupBox?.checked;
+    createForm?.querySelectorAll('input[name="stage"]').forEach((i) => {
+      if (on) { i.dataset.was = i.checked ? '1' : ''; i.checked = i.value === 'Design'; }
+      else if (i.dataset.was !== undefined) { i.checked = i.dataset.was === '1'; delete i.dataset.was; }
+      i.disabled = on;
+    });
+    if (serviceSelect) serviceSelect.disabled = on;
+  }
 
   function unitPrice() {
+    if (mockupBox?.checked) {
+      const m = mockupService();
+      return { price: Number(m?.priceEgp || 0), fromLab: true, name: m?.name };
+    }
     const opt = serviceSelect?.selectedOptions?.[0];
-    const match = opt?.dataset.match || '';
-    const svc = (labServices.get(labSelect?.value) || []).find((s) => match && String(s.name).includes(match));
-    return svc ? { price: Number(svc.priceEgp), fromLab: true } : { price: Number(opt?.dataset.unitPrice || 0), fromLab: false };
+    return { price: Number(opt?.dataset.unitPrice || 0), fromLab: true };
   }
+
+  // Clinics: the default one is chosen; its address goes to the courier.
+  const clinicSelect = $('co-clinic');
+  let clinics = [];
+  try {
+    const r = await fetch('/api/v1/clinics');
+    if (r.ok) clinics = (await r.json()).items || [];
+  } catch { /* the server uses the default clinic */ }
+  if (clinicSelect) {
+    clinicSelect.innerHTML = '';
+    clinics.forEach((c) => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = [c.name, c.city].filter(Boolean).join(' — ');
+      clinicSelect.append(o);
+    });
+    clinicSelect.value = (clinics.find((c) => c.isDefault) || clinics[0])?.id || '';
+  }
+  const fillClinicAddress = () => {
+    const c = clinics.find((x) => x.id === clinicSelect?.value);
+    const addr = $('co-addr');
+    if (c && addr) addr.value = [c.address, c.city].filter(Boolean).join('، ');
+  };
+  clinicSelect?.addEventListener('change', fillClinicAddress);
+  fillClinicAddress();
 
   // ---- Tooth chart ----
   const selectedTeeth = new Set();
@@ -506,10 +586,10 @@ async function initDoctorOrders() {
     $('sum-now').textContent = fmt.format(now);
     $('sum-rest').textContent = fmt.format(total - now);
     $('sum-patient').textContent = patientInput?.value.trim() || '—';
-    $('sum-type').textContent = serviceSelect?.selectedOptions?.[0]?.textContent.trim() || '—';
+    $('sum-type').textContent = (mockupBox?.checked ? unitPrice().name : serviceSelect?.selectedOptions?.[0]?.value) || '—';
     $('sum-price-src-lab').hidden = !fromLab;
     $('sum-price-src-guide').hidden = fromLab;
-    const hasDesign = !!createForm?.querySelector('input[name="stage"][value="Design"]:checked');
+    const hasDesign = !!createForm?.querySelector('input[name="stage"][value="Design"]:checked') || !!mockupBox?.checked;
     $('sum-now-when-design').hidden = !hasDesign;
     $('sum-now-when-confirm').hidden = hasDesign;
     translate(createForm?.querySelector('.order-summary'));
@@ -548,7 +628,9 @@ async function initDoctorOrders() {
   });
 
   serviceSelect?.addEventListener('change', updateSummary);
-  labSelect?.addEventListener('change', updateSummary);
+  labSelect?.addEventListener('change', () => { fillServices(); updateSummary(); });
+  mockupBox?.addEventListener('change', () => { syncMockup(); updateSummary(); });
+  fillServices();
   patientInput?.addEventListener('input', updateSummary);
   createForm?.querySelectorAll('input[name="stage"]').forEach((i) => i.addEventListener('change', updateSummary));
   syncTeeth();
@@ -576,7 +658,7 @@ async function initDoctorOrders() {
         <td>${esc(o.laboratoryName)}</td>
         <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}: ${esc(statusAr[s.status] || s.status)}`).join(' · ')}</td>
         <td class="num">${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
-        <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
+        <td><span class="badge">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/doctor-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">فتح الحالة</a></td>
       </tr>`).join('') : `<tr><td colspan="8" class="muted">لا توجد طلبات مطابقة.</td></tr>`;
     translate(tbody);
@@ -598,7 +680,9 @@ async function initDoctorOrders() {
     if (!patient) { fail('اكتب اسم المريض.'); patientInput?.focus(); return; }
     const teethStr = teethInput?.value.trim() || '';
     if (!teethStr) { fail('حدد سنًا واحدًا على الأقل من مخطط الأسنان.'); return; }
-    const stages = [...createForm.querySelectorAll('input[name="stage"]:checked')].map((i) => i.value);
+    const mockup = !!mockupBox?.checked;
+    if (!mockup && !serviceSelect?.value) { fail('اختر نوع التركيبة من خدمات المعمل المختار.'); serviceSelect?.focus(); return; }
+    const stages = mockup ? ['Design'] : [...createForm.querySelectorAll('input[name="stage"]:checked')].map((i) => i.value);
     if (!stages.length) { fail('اختر مرحلة تصنيع واحدة على الأقل.'); return; }
     const total = Number(priceInput?.value || 0);
     if (!(total > 0)) { fail('تعذّر حساب التكلفة. اختر نوع التركيبة والأسنان.'); return; }
@@ -617,7 +701,9 @@ async function initDoctorOrders() {
       // The patient's name is stored as the case name: it is what the doctor searches by later.
       patientName: patient,
       caseReference: patient,
-      serviceName: serviceSelect.value,
+      serviceName: mockup ? (unitPrice().name || 'Mockup') : serviceSelect.value,
+      clinicId: clinicSelect?.value || null,
+      isMockup: mockup,
       toothNumbers: teethStr,
       shade: createForm.shade.value,
       instructions,
@@ -692,10 +778,10 @@ async function initOrderDetails(isLabView) {
     document.getElementById('order-header-box').innerHTML = `
       <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-4);align-items:flex-start">
         <div>
-          <span class="badge">${esc(statusAr[o.status] || o.status)}</span>
-          <h1 style="font-size:var(--fs-2xl);margin-block-top:var(--sp-2)">طلب <span class="ltr mono">${esc(o.orderNumber)}</span> — ${esc(o.serviceName)}</h1>
+          <span class="badge">${esc(orderStatusText(o))}</span>
+          <h1 style="font-size:var(--fs-2xl);margin-block-top:var(--sp-2)">طلب <span class="ltr mono">${esc(o.orderNumber)}</span> — ${esc(o.serviceName)}${o.isMockup ? '<span class="mockup-tag">Mockup · تصميم فقط</span>' : ''}</h1>
           <p class="muted">اسم المريض: <strong>${esc(o.patientName || o.caseReference)}</strong> · الأسنان: <bdi class="ltr">${esc(o.toothNumbers)}</bdi> · اللون: <bdi class="ltr">${esc(o.shade)}</bdi></p>
-          <p class="muted" style="font-size:var(--fs-sm)">الطبيب: ${esc(o.dentist?.name)} · المعمل: ${esc(o.laboratory?.name)}</p>
+          <p class="muted" style="font-size:var(--fs-sm)">الطبيب: ${esc(o.dentist?.name)} · المعمل: ${esc(o.laboratory?.name)}${o.clinic ? ` · العيادة: ${esc(o.clinic.name)}` : ''}</p>
           ${o.instructions ? `<p style="margin-block-top:var(--sp-2);font-size:var(--fs-sm)"><strong>ملاحظات الحالة:</strong> ${esc(o.instructions)}</p>` : ''}
         </div>
         <div style="text-align:end">
@@ -734,6 +820,8 @@ async function initOrderDetails(isLabView) {
       const r = await fetch(`/api/v1/orders/${encodeURIComponent(orderNumber)}/approve-price`, { method: 'POST' });
       if (r.ok) { showMsg('تم اعتماد السعر النهائي وتثبيت الشروط التجارية.'); refresh(); }
     });
+
+    renderTracker(o, isLabView, { orderNumber, showMsg, refresh });
 
     // Stages Timeline
     const timeline = document.getElementById('order-stages-timeline');
@@ -990,7 +1078,7 @@ async function initLabDashboard() {
         <td><strong>${esc(o.dentistName)}</strong></td>
         <td>${esc(o.serviceName)}</td>
         <td>${(o.stages || []).map((st) => `${esc(stageAr[st.stage] || st.stage)}`).join(' ← ')}</td>
-        <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
+        <td><span class="badge">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">إدارة المراحل</a></td>
       </tr>`).join('') : `<tr><td colspan="6" class="muted">لا توجد طلبات بعد.</td></tr>`;
   }
@@ -1262,7 +1350,7 @@ async function initLabOrders() {
         <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})</td>
         <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}: ${esc(statusAr[s.status] || s.status)}`).join(' · ')}</td>
         <td class="num">${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
-        <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
+        <td><span class="badge">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">إدارة الحالة</a></td>
       </tr>`).join('') : `<tr><td colspan="8" class="muted">لا توجد طلبات مطابقة.</td></tr>`;
   }
@@ -1316,7 +1404,7 @@ async function initLabFinance() {
           <td class="ltr mono"><a href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}"><strong>${esc(o.orderNumber)}</strong></a></td>
           <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">مرجع: ${esc(o.patientName || o.caseReference)} · لون ${esc(o.shade)}</div></td>
           <td class="ltr">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-EG') : '—'}</td>
-          <td><span class="badge">${esc(statusAr[o.status] || o.status)}</span></td>
+          <td><span class="badge">${esc(orderStatusText(o))}</span></td>
           <td class="num">${fmtEgp(o.totalEgp)}</td>
           <td class="num">${fmtEgp(o.paidEgp)}</td>
           <td class="num">${fmtEgp(o.remainingEgp)}</td>
@@ -1716,6 +1804,7 @@ async function initAdminDashboard() {
   initPreferences();
   const user = await ensureAuthenticated();
   if (!user) return;
+  await installFinanceGate(user, page);
   if (page === 'doctor-dashboard') await initDoctorDashboard();
   else if (page === 'doctor-orders') await initDoctorOrders();
   else if (page === 'doctor-order-details') await initOrderDetails(false);
@@ -1725,6 +1814,8 @@ async function initAdminDashboard() {
   else if (page === 'lab-order-details') await initOrderDetails(true);
   else if (page === 'lab-finance') await initLabFinance();
   else if (page === 'admin-dashboard') await initAdminDashboard();
+  else if (page === 'lab-settings') await initLabSettings();
+  else if (page === 'doctor-settings') await initDoctorSettings();
   if (getLang() === 'en') applyDomTranslations(document.body);
 })();
 
