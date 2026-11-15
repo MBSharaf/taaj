@@ -222,6 +222,9 @@ public sealed class Phase0HardeningTests(WebApplicationFactory<Program> baseFact
         }
 
         var lab2 = await SignedIn(f, "lab@labstage.eg", "Lab@12345");
+        // Money actions need the owner's finance password: set it in one session, enter it in the other.
+        Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync("/api/v1/labs/my/finance-lock/setup", new { accountPassword = "Lab@12345", newPin = "2468" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await lab2.PostAsJsonAsync("/api/v1/labs/my/finance-lock/unlock", new { pin = "2468" })).StatusCode);
         var body = new { payoutMethod = "InstaPay", accountDestination = "test" };
         var results = await Task.WhenAll(
             lab.PostAsJsonAsync("/api/v1/finance/lab/withdraw", body),

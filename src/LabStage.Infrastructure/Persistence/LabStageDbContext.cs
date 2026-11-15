@@ -7,6 +7,7 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
 {
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
+    public DbSet<Clinic> Clinics => Set<Clinic>();
     public DbSet<Laboratory> Laboratories => Set<Laboratory>();
     public DbSet<LaboratoryStaff> LaboratoryStaff => Set<LaboratoryStaff>();
     public DbSet<LaboratoryService> LaboratoryServices => Set<LaboratoryService>();
@@ -37,6 +38,15 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<Clinic>(e =>
+        {
+            e.Property(x => x.Name).HasMaxLength(160);
+            e.Property(x => x.Phone).HasMaxLength(40);
+            e.HasIndex(x => x.DoctorUserId);
+            e.HasOne(x => x.DoctorUser).WithMany().HasForeignKey(x => x.DoctorUserId).OnDelete(DeleteBehavior.Cascade);
+        });
+        b.Entity<Order>().HasOne(o => o.Clinic).WithMany().HasForeignKey(o => o.ClinicId).OnDelete(DeleteBehavior.SetNull);
+
         b.Entity<AppUser>(e =>
         {
             e.HasIndex(u => u.NormalizedEmail).IsUnique();

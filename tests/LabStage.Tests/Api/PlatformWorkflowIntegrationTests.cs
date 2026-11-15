@@ -64,13 +64,15 @@ public sealed class PlatformWorkflowIntegrationTests : IClassFixture<WebApplicat
         Assert.Equal(HttpStatusCode.OK, (await lab1Client.PostAsJsonAsync("/api/v1/auth/login", new { email = "lab@labstage.eg", password = "Lab@12345" })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await lab2Client.PostAsJsonAsync("/api/v1/auth/login", new { email = "nile@labstage.eg", password = "Lab@12345" })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await adminClient.PostAsJsonAsync("/api/v1/auth/login", new { email = "admin@labstage.eg", password = "Admin@12345" })).StatusCode);
+        // Lab 1's owner sets the finance password (this also unlocks money for their session).
+        Assert.Equal(HttpStatusCode.OK, (await lab1Client.PostAsJsonAsync("/api/v1/labs/my/finance-lock/setup", new { accountPassword = "Lab@12345", newPin = "2468" })).StatusCode);
 
         // 2. Dentist creates an EGP 9,000 order with Design + Glazing at Lab 1
         var createRes = await dentistClient.PostAsJsonAsync("/api/v1/orders", new
         {
             laboratorySlug = "cairo-digital-dental-lab",
             caseReference = "CASE-TEST-10",
-            serviceName = "جسر زركونيا",
+            serviceName = "تاج زركونيا متعدد الطبقات",
             toothNumbers = "11, 21",
             shade = "A1",
             instructions = "اختبار دورة العمل الكاملة",

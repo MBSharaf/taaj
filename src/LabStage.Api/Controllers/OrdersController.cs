@@ -1,3 +1,4 @@
+using LabStage.Api.Security;
 using System.Security.Cryptography;
 using LabStage.Api.Hubs;
 using LabStage.Application.Files;
@@ -18,7 +19,9 @@ namespace LabStage.Api.Controllers;
 public sealed class OrdersController(
     LabStageDbContext db,
     IWebHostEnvironment env,
-    IHubContext<OrderHub> hub) : ControllerBase
+    IHubContext<OrderHub> hub,
+    FinanceGate financeGate,
+    IConfiguration config) : ControllerBase
 {
     public sealed record CreateOrderRequest(
         string LaboratorySlug,
@@ -32,7 +35,9 @@ public sealed class OrdersController(
         DeliveryMethod DeliveryMethod,
         string? PickupAddress,
         DateTimeOffset? RequiredDeliveryDate,
-        string? PatientName = null);
+        string? PatientName = null,
+        Guid? ClinicId = null,
+        bool IsMockup = false);
 
     [Authorize(Roles = AppRoles.Dentist)]
     [HttpPost]
@@ -40,13 +45,12 @@ public sealed class OrdersController(
     {
         if (string.IsNullOrWhiteSpace(req.LaboratorySlug) || string.IsNullOrWhiteSpace(req.ServiceName))
             return Problem("المعمل ونوع الخدمة مطلوبان.", statusCode: StatusCodes.Status400BadRequest);
-        if (req.Stages is null || req.Stages.Count == 0)
+        if (!req.IsMockup && (req.Stages is null || req.Stages.Count == 0))
             return Problem("يجب اختيار مرحلة تصنيع واحدة على الأقل.", statusCode: StatusCodes.Status400BadRequest);
-        if (req.EstimatedPriceEgp <= 0)
-            return Problem("قيمة الطلب التقديرية يجب أن تكون أكبر من صفر.", statusCode: StatusCodes.Status400BadRequest);
 
         var lab = await db.Laboratories
             .Include(l => l.Subscriptions)
+            .Include(l => l.Services)
             .FirstOrDefaultAsync(l => l.Slug == req.LaboratorySlug, ct);
         if (lab is null)
             return Problem("المعمل غير موجود.", statusCode: StatusCodes.Status404NotFound);
@@ -58,10 +62,43 @@ public sealed class OrdersController(
             return Problem("اشتراك هذا المعمل غير نشط لاستقبال طلبات جديدة حاليًا.", statusCode: StatusCodes.Status400BadRequest);
 
         var userId = User.GetUserId();
+
+        // The restoration type must be one of this lab's active services; the guide price comes from its price list.
+        var activeServices = lab.Services.Where(sv => sv.IsActive).ToList();
+        LaboratoryService? service;
+        if (req.IsMockup)
+        {
+            service = activeServices.FirstOrDefault(IsMockupService);
+            if (service is null)
+                return Problem("هذا المعمل لا يقدم خدمة Mockup (تصميم فقط) في قائمة أسعاره.", statusCode: StatusCodes.Status400BadRequest);
+        }
+        else
+        {
+            service = activeServices.FirstOrDefault(sv => string.Equals(sv.Name.Trim(), req.ServiceName.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (service is null)
+                return Problem("نوع التركيبة المختار غير متاح لدى هذا المعمل. اختر من خدمات المعمل.", statusCode: StatusCodes.Status400BadRequest);
+        }
+        var units = Math.Max(1, (req.ToothNumbers ?? string.Empty).Split([',', '،', ' '], StringSplitOptions.RemoveEmptyEntries).Length);
+        var estimated = service.PricePiastres > 0
+            ? new Money(service.PricePiastres * units)
+            : req.EstimatedPriceEgp > 0 ? Money.FromDecimal(req.EstimatedPriceEgp) : new Money(0);
+        if (estimated.Piastres <= 0)
+            return Problem("قيمة الطلب التقديرية يجب أن تكون أكبر من صفر.", statusCode: StatusCodes.Status400BadRequest);
+
+        // Clinic: the chosen one (must be the dentist's), otherwise the default clinic.
+        var clinics = await db.Clinics.Where(c => c.DoctorUserId == userId).ToListAsync(ct);
+        var clinic = req.ClinicId is { } cid ? clinics.FirstOrDefault(c => c.Id == cid) : clinics.FirstOrDefault(c => c.IsDefault) ?? clinics.FirstOrDefault();
+        if (req.ClinicId is not null && clinic is null)
+            return Problem("العيادة المختارة غير موجودة.", statusCode: StatusCodes.Status400BadRequest);
+        var pickupAddress = !string.IsNullOrWhiteSpace(req.PickupAddress) ? req.PickupAddress.Trim()
+            : clinic is null ? string.Empty : string.Join("، ", new[] { clinic.Address, clinic.City }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
         var count = await db.Orders.CountAsync(ct);
         var orderNumber = $"LS-{(count + 188):D6}";
-        var estimated = Money.FromDecimal(req.EstimatedPriceEgp);
-        var distinctStages = req.Stages.Distinct().OrderBy(s => s).ToList();
+        var distinctStages = req.IsMockup ? [ProductionStage.Design] : req.Stages!.Distinct().OrderBy(s => s).ToList();
+        var instructions = req.Instructions?.Trim() ?? string.Empty;
+        if (req.IsMockup)
+            instructions = $"Mockup (تصميم فقط) — {req.ServiceName.Trim()}" + (instructions.Length > 0 ? $" — {instructions}" : "");
 
         var order = new Order
         {
@@ -71,14 +108,16 @@ public sealed class OrdersController(
             PatientName = string.IsNullOrWhiteSpace(req.PatientName) ? null : req.PatientName.Trim(),
             CaseReference = !string.IsNullOrWhiteSpace(req.CaseReference) ? req.CaseReference.Trim()
                 : !string.IsNullOrWhiteSpace(req.PatientName) ? req.PatientName.Trim() : orderNumber,
-            ServiceName = req.ServiceName.Trim(),
+            ServiceName = service.Name.Trim(),
+            IsMockup = req.IsMockup,
+            ClinicId = clinic?.Id,
             ToothNumbers = req.ToothNumbers?.Trim() ?? string.Empty,
             Shade = string.IsNullOrWhiteSpace(req.Shade) ? "A2" : req.Shade.Trim(),
-            Instructions = req.Instructions?.Trim() ?? string.Empty,
+            Instructions = instructions,
             EstimatedPricePiastres = estimated.Piastres,
             DeliveryMethod = req.DeliveryMethod,
             DeliveryStatus = req.DeliveryMethod == DeliveryMethod.LabCourier ? DeliveryStatus.PickupRequested : DeliveryStatus.NotRequested,
-            PickupAddress = req.PickupAddress?.Trim() ?? string.Empty,
+            PickupAddress = pickupAddress,
             RequiredDeliveryDate = req.RequiredDeliveryDate ?? DateTimeOffset.UtcNow.AddDays(4),
             Status = OrderStatus.PendingLabReview,
             Stages = distinctStages.Select(s => new OrderStage
@@ -141,6 +180,7 @@ public sealed class OrdersController(
         var query = db.Orders
             .Include(o => o.Laboratory)
             .Include(o => o.DentistUser)
+            .Include(o => o.Clinic)
             .Include(o => o.Stages)
             .Include(o => o.Milestones)
             .AsQueryable();
@@ -224,6 +264,12 @@ public sealed class OrdersController(
             order.RequiredDeliveryDate,
             order.CreatedAt,
             order.FinalizedAt,
+            order.CompletedAt,
+            order.IsMockup,
+            DeliveredAt = await db.DeliveryTrackingEvents.Where(e => e.OrderId == order.Id && e.Status == DeliveryStatus.Delivered)
+                .OrderByDescending(e => e.CreatedAt).Select(e => (DateTimeOffset?)e.CreatedAt).FirstOrDefaultAsync(ct),
+            AutoCompleteDays = OrderAutoCompleter.Days(config),
+            Clinic = order.Clinic is null ? null : new { order.Clinic.Id, order.Clinic.Name, order.Clinic.Address, order.Clinic.City, order.Clinic.Phone },
             Dentist = new { order.DentistUserId, Name = order.DentistUser?.FullName, Phone = order.DentistUser?.Phone },
             Laboratory = new { order.LaboratoryId, Name = order.Laboratory?.Name, Slug = order.Laboratory?.Slug },
             Stages = order.Stages.OrderBy(s => s.Stage).Select(s => new
@@ -361,6 +407,7 @@ public sealed class OrdersController(
         if (req.ProposedPriceEgp <= 0 || string.IsNullOrWhiteSpace(req.Note))
             return Problem("السعر المقترح ومبرر التعديل مطلوبان.", statusCode: StatusCodes.Status400BadRequest);
 
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var order = await LoadAuthorizedOrderAsync(orderNumber, ct);
         if (order is null) return NotFound();
         if (order.Status != OrderStatus.PendingLabReview)
@@ -516,17 +563,14 @@ public sealed class OrdersController(
     {
         var order = await LoadAuthorizedOrderAsync(orderNumber, ct);
         if (order is null) return NotFound();
-
+        if (User.GetRole() is not (AppRoles.LaboratoryOwner or AppRoles.LaboratoryStaff or AppRoles.Admin))
+            return Problem("تحديث التوصيل من المعمل. استخدم «تأكيد الاستلام» لإنهاء الحالة.", statusCode: StatusCodes.Status403Forbidden);
+        if (req.Status is DeliveryStatus.OutForDelivery or DeliveryStatus.Delivered && order.Status != OrderStatus.ReadyForDelivery)
+            return Problem("يبدأ التوصيل بعد اكتمال كل مراحل التصنيع.", statusCode: StatusCodes.Status400BadRequest);
         if (req.Status == DeliveryStatus.Delivered && order.Milestones.Any(m => m.Status != MilestoneStatus.Paid))
             return Problem("لا يمكن إغلاق التسليم النهائي قبل سداد جميع دفعات الطلب.", statusCode: StatusCodes.Status400BadRequest);
 
         order.DeliveryStatus = req.Status;
-        if (req.Status == DeliveryStatus.Delivered)
-        {
-            order.Status = OrderStatus.Completed;
-            order.CompletedAt = DateTimeOffset.UtcNow;
-        }
-
         db.DeliveryTrackingEvents.Add(new DeliveryTrackingEvent
         {
             OrderId = order.Id,
@@ -539,11 +583,46 @@ public sealed class OrdersController(
             OrderId = order.Id,
             ActorUserId = User.GetUserId(),
             ActorRole = User.GetRole(),
-            Action = $"تحديث التوصيل إلى {req.Status}",
+            Action = req.Status switch
+            {
+                DeliveryStatus.OutForDelivery => "خرجت الحالة للتوصيل",
+                DeliveryStatus.Delivered => "تم تسليم الحالة للعيادة",
+                _ => $"تحديث التوصيل إلى {req.Status}",
+            },
             Reason = req.Note?.Trim(),
         });
+        if (req.Status is DeliveryStatus.OutForDelivery or DeliveryStatus.Delivered)
+        {
+            db.Notifications.Add(new Notification
+            {
+                UserId = order.DentistUserId,
+                Type = "Delivery",
+                Title = req.Status == DeliveryStatus.Delivered ? $"تم تسليم الحالة {order.OrderNumber}" : $"الحالة {order.OrderNumber} في الطريق إليك",
+                Body = req.Status == DeliveryStatus.Delivered ? "أكّد الاستلام من صفحة الحالة لإنهائها." : "خرجت الحالة من المعمل للتوصيل.",
+                LinkUrl = $"/doctor-order-details.html?orderNumber={order.OrderNumber}",
+            });
+        }
         await db.SaveChangesAsync(ct);
         return Ok(new { order.OrderNumber, DeliveryStatus = order.DeliveryStatus.ToString(), OrderStatus = order.Status.ToString() });
+    }
+
+    /// <summary>Dentist confirms the case arrived: the order becomes Completed ("اكتملت").</summary>
+    [Authorize(Roles = AppRoles.Dentist)]
+    [HttpPost("{orderNumber}/confirm-receipt")]
+    public async Task<IActionResult> ConfirmReceipt([FromRoute] string orderNumber, CancellationToken ct)
+    {
+        var order = await LoadAuthorizedOrderAsync(orderNumber, ct);
+        if (order is null) return NotFound();
+        if (order.Status == OrderStatus.Completed)
+            return Ok(new { order.OrderNumber, Status = order.Status.ToString() });
+        if (order.DeliveryStatus is not (DeliveryStatus.OutForDelivery or DeliveryStatus.Delivered))
+            return Problem("يمكن تأكيد الاستلام بعد خروج الحالة للتوصيل.", statusCode: StatusCodes.Status400BadRequest);
+        if (order.Milestones.Any(m => m.Status != MilestoneStatus.Paid))
+            return Problem("سدّد كل دفعات الحالة قبل تأكيد الاستلام.", statusCode: StatusCodes.Status400BadRequest);
+
+        OrderAutoCompleter.Complete(db, order, User.GetUserId(), AppRoles.Dentist, "أكّد الطبيب استلام الحالة");
+        await db.SaveChangesAsync(ct);
+        return Ok(new { order.OrderNumber, Status = order.Status.ToString() });
     }
 
     [HttpPost("{orderNumber}/files")]
@@ -668,6 +747,11 @@ public sealed class OrdersController(
         await db.SaveChangesAsync(ct);
     }
 
+    /// <summary>A lab's design-only (mockup) service: named or categorised "Mockup" / "موك أب".</summary>
+    public static bool IsMockupService(LaboratoryService sv) =>
+        new[] { sv.Name, sv.Category }.Any(t => t is not null &&
+            (t.Contains("mockup", StringComparison.OrdinalIgnoreCase) || t.Contains("mock-up", StringComparison.OrdinalIgnoreCase) || t.Contains("موك")));
+
     private async Task<Order?> LoadAuthorizedOrderAsync(string orderNumber, CancellationToken ct)
     {
         var order = await db.Orders
@@ -676,6 +760,7 @@ public sealed class OrdersController(
             .Include(o => o.Stages)
             .Include(o => o.Milestones)
             .Include(o => o.Files)
+            .Include(o => o.Clinic)
             .Include(o => o.History)
             .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber, ct);
 
@@ -705,6 +790,9 @@ public sealed class OrdersController(
         o.Shade,
         Status = o.Status.ToString(),
         DeliveryStatus = o.DeliveryStatus.ToString(),
+        o.IsMockup,
+        ClinicName = o.Clinic?.Name,
+        o.CompletedAt,
         EstimatedPriceEgp = o.EstimatedPricePiastres / 100m,
         ProposedPriceEgp = o.ProposedPricePiastres.HasValue ? o.ProposedPricePiastres.Value / 100m : (decimal?)null,
         ConfirmedPriceEgp = o.ConfirmedPricePiastres.HasValue ? o.ConfirmedPricePiastres.Value / 100m : (decimal?)null,

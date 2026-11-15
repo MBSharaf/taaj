@@ -1,3 +1,4 @@
+using LabStage.Api.Security;
 using System.Net;
 using System.Text.Json;
 using LabStage.Domain.Entities;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace LabStage.Api.Controllers;
 
 [ApiController]
-public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env) : ControllerBase
+public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env, FinanceGate financeGate) : ControllerBase
 {
     [HttpGet("api/v1/labs")]
     public async Task<IActionResult> SearchLabs(
@@ -310,6 +311,7 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
     [HttpPost("api/v1/labs/my/services")]
     public async Task<IActionResult> AddService([FromBody] UpsertServiceRequest req, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var lab = await ResolveMyLabAsync(ct);
         if (lab is null) return NotFound();
         if (string.IsNullOrWhiteSpace(req.Name) || req.PriceEgp <= 0)
@@ -334,6 +336,7 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
     [HttpPut("api/v1/labs/my/services/{id:guid}")]
     public async Task<IActionResult> UpdateService([FromRoute] Guid id, [FromBody] UpsertServiceRequest req, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var lab = await ResolveMyLabAsync(ct);
         if (lab is null) return NotFound();
         var srv = await db.LaboratoryServices.FirstOrDefaultAsync(s => s.Id == id && s.LaboratoryId == lab.Id, ct);
@@ -354,6 +357,7 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
     [HttpDelete("api/v1/labs/my/services/{id:guid}")]
     public async Task<IActionResult> DeleteService([FromRoute] Guid id, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var lab = await ResolveMyLabAsync(ct);
         if (lab is null) return NotFound();
         var srv = await db.LaboratoryServices.FirstOrDefaultAsync(s => s.Id == id && s.LaboratoryId == lab.Id, ct);

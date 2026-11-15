@@ -108,7 +108,9 @@ builder.Services.AddRateLimiter(o =>
             }));
 });
 
-builder.Services.AddControllers();
+builder.Services.AddScoped<LabStage.Api.Security.FinanceGate>();
+builder.Services.AddHostedService<LabStage.Api.Security.OrderAutoCompleter>();
+builder.Services.AddControllers(o => o.Filters.Add<LabStage.Api.Security.LabMoneyMaskFilter>());
 builder.Services.AddOpenApi("v1");
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();

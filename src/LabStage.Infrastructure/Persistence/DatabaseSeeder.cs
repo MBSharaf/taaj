@@ -104,6 +104,7 @@ public static class DatabaseSeeder
         if (await db.Users.AnyAsync(ct))
         {
             await MigrateExistingSeededMilestonesAsync(db, ct);
+            await EnsureDemoExtrasAsync(db, ct);
             return;
         }
 
@@ -480,6 +481,37 @@ public static class DatabaseSeeder
             new Notification { UserId = labOwner1.Id, Type = "PaymentConfirmed", Title = "تم تأكيد الدفعة الأولى (20%)", Body = "تم تحصيل 2,000 ج.م للطلب LS-000187 (صافي مستحقات المعمل 1,960 ج.م بعد عمولة 2%).", LinkUrl = $"/lab-order-details.html?orderNumber={order1.OrderNumber}" }
         );
 
+        await db.SaveChangesAsync(ct);
+        await EnsureDemoExtrasAsync(db, ct);
+    }
+
+    /// <summary>
+    /// Development demo data added after the first release: every demo dentist has a default clinic (the demo dentist
+    /// a second one), and every demo lab offers a "Mockup" (design-only) service. Safe to run repeatedly.
+    /// </summary>
+    private static async Task EnsureDemoExtrasAsync(LabStageDbContext db, CancellationToken ct)
+    {
+        var profiles = await db.DoctorProfiles.Include(p => p.User).ToListAsync(ct);
+        var clinicOwners = (await db.Clinics.Select(c => c.DoctorUserId).ToListAsync(ct)).ToHashSet();
+        foreach (var p in profiles.Where(p => !clinicOwners.Contains(p.UserId) && p.ClinicName.Length > 0))
+        {
+            db.Clinics.Add(new Clinic { DoctorUserId = p.UserId, Name = p.ClinicName, Address = p.Address, City = p.City, Governorate = p.Governorate, Phone = p.User?.Phone ?? string.Empty, IsDefault = true });
+            if (p.User?.Email == "doctor@labstage.eg")
+                db.Clinics.Add(new Clinic { DoctorUserId = p.UserId, Name = "عيادة النور — فرع التجمع الخامس", Address = "شارع التسعين الشمالي، مول بوينت 90", City = "القاهرة الجديدة", Governorate = "القاهرة", Phone = "01011113333" });
+        }
+        await db.SaveChangesAsync(ct);
+        await db.Database.ExecuteSqlRawAsync(@"UPDATE o SET o.[ClinicId] = c.[Id] FROM [Orders] o JOIN [Clinics] c ON c.[DoctorUserId] = o.[DentistUserId] AND c.[IsDefault] = 1 WHERE o.[ClinicId] IS NULL", ct);
+
+        var labs = await db.Laboratories.Include(l => l.Services).ToListAsync(ct);
+        foreach (var lab in labs.Where(l => !l.Services.Any(sv => sv.Name.Contains("Mockup", StringComparison.OrdinalIgnoreCase))))
+        {
+            db.LaboratoryServices.Add(new LaboratoryService
+            {
+                LaboratoryId = lab.Id, Category = "Mockup", Name = "تصميم Mockup (تصميم فقط)",
+                Description = "تصميم رقمي للحالة بدون تصنيع، للمراجعة أو لعرضه على المريض.",
+                PricePiastres = 40_000, EstimatedDays = 2, SupportedStagesCsv = "Design",
+            });
+        }
         await db.SaveChangesAsync(ct);
     }
 

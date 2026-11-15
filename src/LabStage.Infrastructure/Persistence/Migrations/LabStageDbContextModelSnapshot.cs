@@ -152,6 +152,50 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("LabStage.Domain.Entities.Clinic", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DoctorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Governorate")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorUserId");
+
+                    b.ToTable("Clinics");
+                });
+
             modelBuilder.Entity("LabStage.Domain.Entities.CommissionEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -317,6 +361,12 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FinancePinHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("FinancePinSetAt")
+                        .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Governorate")
                         .IsRequired()
@@ -670,6 +720,9 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("ClinicId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("CommissionRateBpsSnapshot")
                         .HasColumnType("int");
 
@@ -700,6 +753,9 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                     b.Property<string>("Instructions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsMockup")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("LaboratoryId")
                         .HasColumnType("uniqueidentifier");
@@ -744,6 +800,8 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClinicId");
 
                     b.HasIndex("DentistUserId");
 
@@ -1190,6 +1248,17 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LabStage.Domain.Entities.Clinic", b =>
+                {
+                    b.HasOne("LabStage.Domain.Entities.AppUser", "DoctorUser")
+                        .WithMany()
+                        .HasForeignKey("DoctorUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DoctorUser");
+                });
+
             modelBuilder.Entity("LabStage.Domain.Entities.DoctorProfile", b =>
                 {
                     b.HasOne("LabStage.Domain.Entities.AppUser", "User")
@@ -1277,6 +1346,11 @@ namespace LabStage.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("LabStage.Domain.Entities.Order", b =>
                 {
+                    b.HasOne("LabStage.Domain.Entities.Clinic", "Clinic")
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LabStage.Domain.Entities.AppUser", "DentistUser")
                         .WithMany()
                         .HasForeignKey("DentistUserId")
@@ -1288,6 +1362,8 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                         .HasForeignKey("LaboratoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Clinic");
 
                     b.Navigation("DentistUser");
 

@@ -1,3 +1,4 @@
+using LabStage.Api.Security;
 using LabStage.Domain.Entities;
 using LabStage.Domain.Finance;
 using LabStage.Infrastructure.Persistence;
@@ -10,12 +11,13 @@ namespace LabStage.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1")]
-public sealed class AdminAndMonetizationController(LabStageDbContext db) : ControllerBase
+public sealed class AdminAndMonetizationController(LabStageDbContext db, FinanceGate financeGate) : ControllerBase
 {
     [Authorize(Roles = $"{AppRoles.LaboratoryOwner},{AppRoles.LaboratoryStaff}")]
     [HttpGet("subscriptions/my")]
     public async Task<IActionResult> GetMySubscriptions(CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var userId = User.GetUserId();
         var lab = await db.Laboratories
             .Include(l => l.Subscriptions)
@@ -78,6 +80,7 @@ public sealed class AdminAndMonetizationController(LabStageDbContext db) : Contr
     [HttpPut("campaigns/{id:guid}")]
     public async Task<IActionResult> UpdateSponsoredCampaign([FromRoute] Guid id, [FromBody] UpdateCampaignRequest req, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var userId = User.GetUserId();
         var lab = await db.Laboratories
             .Include(l => l.Campaigns)
@@ -120,6 +123,7 @@ public sealed class AdminAndMonetizationController(LabStageDbContext db) : Contr
     [HttpPost("subscriptions/renew")]
     public async Task<IActionResult> RenewSubscription(CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var userId = User.GetUserId();
         var lab = await db.Laboratories.Include(l => l.Subscriptions).FirstOrDefaultAsync(l => l.OwnerUserId == userId, ct);
         if (lab is null) return NotFound();
@@ -169,6 +173,7 @@ public sealed class AdminAndMonetizationController(LabStageDbContext db) : Contr
     [HttpPost("campaigns")]
     public async Task<IActionResult> CreateSponsoredCampaign([FromBody] CreateCampaignRequest req, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         if (string.IsNullOrWhiteSpace(req.Title) || req.BudgetEgp <= 0 || req.DurationDays <= 0)
             return Problem("عنوان الحملة والميزانية والمدة مطلوبة.", statusCode: StatusCodes.Status400BadRequest);
 

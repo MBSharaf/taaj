@@ -64,6 +64,8 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
                 Governorate = req.Governorate.Trim(),
                 City = req.Governorate.Trim(),
             });
+            // The registration clinic becomes the dentist's first (default) clinic.
+            db.Clinics.Add(new Clinic { DoctorUserId = user.Id, Name = req.EntityName.Trim(), Governorate = req.Governorate.Trim(), City = req.Governorate.Trim(), Phone = user.Phone, IsDefault = true });
         }
         else
         {
@@ -165,6 +167,7 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        LabStage.Api.Security.FinanceGate.Lock(HttpContext);
         return Ok(new { loggedOut = true });
     }
 

@@ -1,3 +1,4 @@
+using LabStage.Api.Security;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -17,7 +18,8 @@ namespace LabStage.Api.Controllers;
 public sealed class FinanceController(
     LabStageDbContext db,
     IPaymentGateway paymentGateway,
-    IWebHostEnvironment env) : ControllerBase
+    IWebHostEnvironment env,
+    FinanceGate financeGate) : ControllerBase
 {
     public sealed record CreateCheckoutRequest(string OrderNumber, int MilestoneSequence);
 
@@ -401,6 +403,7 @@ public sealed class FinanceController(
     [HttpGet("finance/lab")]
     public async Task<IActionResult> GetLabFinance([FromQuery] string? q, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var userId = User.GetUserId();
         var lab = await db.Laboratories.FirstOrDefaultAsync(l => l.OwnerUserId == userId || l.Staff.Any(s => s.UserId == userId), ct);
         if (lab is null) return NotFound();
@@ -549,6 +552,7 @@ public sealed class FinanceController(
     [HttpPost("finance/lab/withdraw")]
     public async Task<IActionResult> RequestLabWithdrawal([FromBody] LabWithdrawalRequest req, CancellationToken ct)
     {
+        if (await financeGate.IsLockedAsync(HttpContext, ct)) return FinanceGate.LockedResult();
         var userId = User.GetUserId();
         var lab = await db.Laboratories.FirstOrDefaultAsync(l => l.OwnerUserId == userId || l.Staff.Any(s => s.UserId == userId), ct);
         if (lab is null) return NotFound();

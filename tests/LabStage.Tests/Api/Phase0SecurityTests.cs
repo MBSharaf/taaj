@@ -62,7 +62,7 @@ public sealed class Phase0SecurityTests(WebApplicationFactory<Program> baseFacto
         {
             laboratorySlug = "cairo-digital-dental-lab",
             caseReference = $"CASE-P0-{Guid.NewGuid():N}"[..20],
-            serviceName = "تاج زركونيا",
+            serviceName = "تاج زركونيا متعدد الطبقات",
             toothNumbers = "11",
             shade = "A1",
             instructions = "Phase 0 test",
@@ -74,7 +74,7 @@ public sealed class Phase0SecurityTests(WebApplicationFactory<Program> baseFacto
         Assert.Equal(HttpStatusCode.OK, createRes.StatusCode);
         var orderNumber = (await createRes.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("orderNumber").GetString()!;
 
-        Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync($"/api/v1/orders/{orderNumber}/accept", new { confirmedPriceEgp = 10000m })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync($"/api/v1/orders/{orderNumber}/accept", new { })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync($"/api/v1/orders/{orderNumber}/stages/Design/transition", new { targetStatus = StageStatus.InProgress })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync($"/api/v1/orders/{orderNumber}/stages/Design/transition", new { targetStatus = StageStatus.SubmittedForReview })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await dentist.PostAsJsonAsync($"/api/v1/orders/{orderNumber}/stages/Design/transition", new { targetStatus = StageStatus.Approved })).StatusCode);

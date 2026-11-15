@@ -67,7 +67,7 @@ public sealed class Phase1MigrationsTests(WebApplicationFactory<Program> baseFac
 
         var res = await dentist.PostAsJsonAsync("/api/v1/orders", new
         {
-            laboratorySlug = "cairo-digital-dental-lab", caseReference = "", patientName = "ليلى حسن", serviceName = "تاج زركونيا",
+            laboratorySlug = "cairo-digital-dental-lab", caseReference = "", patientName = "ليلى حسن", serviceName = "تاج زركونيا متعدد الطبقات",
             toothNumbers = "11", shade = "A2", instructions = "", stages = new[] { ProductionStage.Design }, estimatedPriceEgp = 1800m,
             deliveryMethod = 0, pickupAddress = (string?)null,
         });

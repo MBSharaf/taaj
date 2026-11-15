@@ -122,6 +122,21 @@ public sealed class DoctorProfile
     public string SyndicateNumber { get; set; } = string.Empty;
 }
 
+/// <summary>One of a dentist's clinics (a dentist may work in several).</summary>
+public sealed class Clinic
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid DoctorUserId { get; set; }
+    public AppUser? DoctorUser { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string Governorate { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public bool IsDefault { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
 public sealed class Laboratory
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -144,6 +159,10 @@ public sealed class Laboratory
     public decimal AverageRating { get; set; }
     public int ReviewCount { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>Owner's separate finance password (PBKDF2 hash). Lab money stays hidden until it is entered.</summary>
+    public string? FinancePinHash { get; set; }
+    public DateTimeOffset? FinancePinSetAt { get; set; }
 
     public List<LaboratoryStaff> Staff { get; set; } = [];
     public List<LaboratoryService> Services { get; set; } = [];
@@ -240,6 +259,11 @@ public sealed class Order
     public DeliveryMethod DeliveryMethod { get; set; } = DeliveryMethod.LabCourier;
     public DeliveryStatus DeliveryStatus { get; set; } = DeliveryStatus.NotRequested;
     public string PickupAddress { get; set; } = string.Empty;
+    /// <summary>The dentist's clinic this case belongs to (delivery address). Null for orders created before clinics existed.</summary>
+    public Guid? ClinicId { get; set; }
+    public Clinic? Clinic { get; set; }
+    /// <summary>Mockup = design only (the Design stage, priced with the lab's mockup service).</summary>
+    public bool IsMockup { get; set; }
 
     public OrderStatus Status { get; set; } = OrderStatus.PendingLabReview;
     public string? RejectionReason { get; set; }
