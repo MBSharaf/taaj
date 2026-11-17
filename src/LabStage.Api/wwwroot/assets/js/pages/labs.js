@@ -56,7 +56,7 @@ function renderLabCards(items) {
   grid.innerHTML = items.map((lab) => {
     const initials = escapeHtml(getArabicMonogram(lab.name));
     const services = (lab.services || []).slice(0, 2).map((s) =>
-      `<div><span>${escapeHtml(s.name)}</span><b class="num">${fmt.format(s.priceEgp)} ج.م</b></div>`).join('');
+      `<div><span>${escapeHtml(s.name)}</span>${s.priceEgp == null ? '<b aria-hidden="true">🔒</b>' : `<b class="num">${fmt.format(s.priceEgp)} ج.م</b>`}</div>`).join('');
     const dist = lab.distanceKm != null ? ` · <span class="num">${lab.distanceKm.toFixed(1)} كم</span>` : '';
     return `
       <article class="card lab-card card-lift card-3d-tilt ${lab.isSponsored ? 'is-sponsored' : ''}" data-lab-slug="${escapeHtml(lab.slug)}">
@@ -275,7 +275,9 @@ if (profileServicesRoot) {
       attach3DTilt(portGrid);
     }
 
-    // Price list
+    // Price list (prices are shown to signed-in dentists only)
+    const loginNote = document.getElementById('price-login-note');
+    if (loginNote) loginNote.hidden = !lab.pricesHidden;
     if (Array.isArray(lab.services) && lab.services.length) {
       const groups = new Map();
       for (const s of lab.services) {
@@ -292,7 +294,7 @@ if (profileServicesRoot) {
               <span>${escapeHtml(s.name)}</span>
               <span class="price-sheet-meta">${fmt.format(s.estimatedDays || 3)} أيام</span>
             </div>
-            <span class="price-sheet-val num">${fmt.format(s.priceEgp)} ج.م</span>
+            ${s.priceEgp == null ? '<span class="price-sheet-val price-locked" aria-hidden="true">🔒</span>' : `<span class="price-sheet-val num">${fmt.format(s.priceEgp)} ج.م</span>`}
           </div>`).join('');
         return `
           <div class="price-sheet-group">

@@ -28,6 +28,8 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
         CancellationToken ct)
     {
         var now = DateTimeOffset.UtcNow;
+        var (allPrices, ownLabId) = await PriceViewerAsync(ct);
+        if (!allPrices) { maxPrice = null; if (sort == "priceAsc") sort = null; } // prices are not public
         var query = db.Laboratories
             .Include(l => l.Services)
             .Include(l => l.Campaigns)
@@ -108,13 +110,14 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
                 l.AverageRating,
                 l.ReviewCount,
                 DistanceKm = dist,
-                MinPriceEgp = l.Services.Count > 0 ? l.Services.Min(s => s.PricePiastres) / 100m : 0m,
+                MinPriceEgp = !(allPrices || l.Id == ownLabId) ? (decimal?)null : l.Services.Count > 0 ? l.Services.Min(s => s.PricePiastres) / 100m : 0m,
+                PricesHidden = !(allPrices || l.Id == ownLabId),
                 Services = l.Services.Where(s => s.IsActive).Select(s => new
                 {
                     s.Id,
                     s.Name,
                     s.Category,
-                    PriceEgp = s.PricePiastres / 100m,
+                    PriceEgp = (allPrices || l.Id == ownLabId) ? s.PricePiastres / 100m : (decimal?)null,
                     s.EstimatedDays,
                     Stages = s.SupportedStagesCsv.Split(',', StringSplitOptions.RemoveEmptyEntries),
                 }).ToList(),
@@ -144,6 +147,8 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
             .FirstOrDefaultAsync(l => l.Slug == slug, ct);
 
         if (lab is null) return NotFound();
+        var (allPrices, ownLabId) = await PriceViewerAsync(ct);
+        var showPrices = allPrices || lab.Id == ownLabId;
 
         var now = DateTimeOffset.UtcNow;
         foreach (var c in lab.Campaigns.Where(c => c.IsActive && c.StartsAt <= now && c.EndsAt >= now))
@@ -170,13 +175,14 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
             lab.OffersCourier,
             lab.AverageRating,
             lab.ReviewCount,
+            PricesHidden = !showPrices,
             Services = lab.Services.Where(s => s.IsActive).Select(s => new
             {
                 s.Id,
                 s.Category,
                 s.Name,
                 s.Description,
-                PriceEgp = s.PricePiastres / 100m,
+                PriceEgp = showPrices ? s.PricePiastres / 100m : (decimal?)null,
                 s.EstimatedDays,
                 Stages = s.SupportedStagesCsv.Split(',', StringSplitOptions.RemoveEmptyEntries),
             }),
@@ -191,6 +197,17 @@ public sealed class LabsController(LabStageDbContext db, IWebHostEnvironment env
                 r.CreatedAt,
             }),
         });
+    }
+
+    /// <summary>
+    /// Lab price lists are shown to signed-in dentists and admins only; a lab sees its own prices. Visitors and other labs do not.
+    /// </summary>
+    private async Task<(bool All, Guid? OwnLabId)> PriceViewerAsync(CancellationToken ct)
+    {
+        if (User.Identity?.IsAuthenticated != true) return (false, null);
+        if (User.IsInRole(AppRoles.Dentist) || User.IsInRole(AppRoles.Admin)) return (true, null);
+        var lab = await financeGate.LabForUserAsync(User.GetUserId(), ct);
+        return (false, lab?.Id);
     }
 
     public sealed record UpdateLabProfileRequest(

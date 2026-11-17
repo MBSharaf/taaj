@@ -200,6 +200,28 @@ public sealed class Batch1115Tests(WebApplicationFactory<Program> baseFactory) :
         Assert.Equal(HttpStatusCode.BadRequest, (await CreateOrder(dentist, new { isMockup = true })).StatusCode);
     }
 
+    [Fact]
+    public async Task Lab_prices_are_shown_to_signed_in_dentists_only()
+    {
+        using var f = Factory();
+        static bool AnyPrice(JsonElement lab) => lab.GetProperty("services").EnumerateArray().Any(sv => sv.GetProperty("priceEgp").ValueKind == JsonValueKind.Number);
+        var visitor = f.CreateClient();
+        var pub = await Get(visitor, "/api/v1/labs/cairo-digital-dental-lab");
+        Assert.True(pub.GetProperty("pricesHidden").GetBoolean());
+        Assert.False(AnyPrice(pub));
+        Assert.All((await Get(visitor, "/api/v1/labs")).GetProperty("items").EnumerateArray(), l => Assert.False(AnyPrice(l)));
+
+        var dentist = await SignedIn(f, "doctor@labstage.eg", "Doctor@12345");
+        Assert.True(AnyPrice(await Get(dentist, "/api/v1/labs/cairo-digital-dental-lab")));
+
+        // Another lab does not see them; the lab itself does (once its finance password is entered).
+        var lab = await SignedIn(f, "lab@labstage.eg", "Lab@12345");
+        var other = (await Get(lab, "/api/v1/labs")).GetProperty("items").EnumerateArray().First(l => l.GetProperty("slug").GetString() != "cairo-digital-dental-lab");
+        Assert.False(AnyPrice(other));
+        Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync("/api/v1/labs/my/finance-lock/setup", new { accountPassword = "Lab@12345", newPin = "2468" })).StatusCode);
+        Assert.True(AnyPrice(await Get(lab, "/api/v1/labs/cairo-digital-dental-lab")));
+    }
+
     // ---------------- delivery and completion ----------------
 
     [Fact]
