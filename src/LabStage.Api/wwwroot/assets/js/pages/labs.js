@@ -1,4 +1,4 @@
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=10';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=12';
 
 // Progressive enhancement for /labs and /lab-profile.html connected to /api/v1/labs.
 const grid = document.getElementById('labs-grid');
@@ -303,5 +303,6 @@ if (profileServicesRoot) {
           </div>`;
       }).join('');
     }
+    if (getLang() === 'en') applyDomTranslations(document.querySelector('main') || document.body);
   });
 }

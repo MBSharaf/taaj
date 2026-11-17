@@ -1,4 +1,4 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=11';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=12';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
 import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker } from './dash-extra.js?v=1';
 

@@ -47,7 +47,24 @@
     }
     save();
   }
-  const ready = load();
+
+  /* Demo data added with the 2026-11 batch: clinics, a Mockup service per lab, the lab finance password. */
+  function ensureExtras() {
+    if (state.extras >= 1) return;
+    const me = state.users.doctor.get['/api/v1/auth/me'] || {};
+    state.users.doctor.clinics ||= [
+      { id: uuid(), name: me.clinicName || 'عيادة النور لتجميل وزراعة الأسنان', address: 'شارع عباس العقاد', city: 'مدينة نصر', governorate: 'القاهرة', phone: me.phone || '', isDefault: true },
+      { id: uuid(), name: 'عيادة النور — فرع التجمع الخامس', address: 'شارع التسعين الشمالي، مول بوينت 90', city: 'القاهرة الجديدة', governorate: 'القاهرة', phone: '01011113333', isDefault: false },
+    ];
+    const mock = () => ({ id: uuid(), category: 'Mockup', name: 'تصميم Mockup (تصميم فقط)', description: 'تصميم رقمي للحالة بدون تصنيع، للمراجعة أو لعرضه على المريض.', priceEgp: 400, estimatedDays: 2, stages: ['Design'] });
+    const addMock = (list) => { if (Array.isArray(list) && !list.some((x) => /mockup/i.test(x.name))) list.push(mock()); };
+    state.public['/api/v1/labs'].items.forEach((l) => { addMock(l.services); addMock(state.public[`/api/v1/labs/${l.slug}`]?.services); });
+    addMock(state.users.lab.get['/api/v1/labs/my']?.services);
+    state.fin ||= { pin: null, unlockedUntil: 0, fails: 0 };
+    state.extras = 1;
+    save();
+  }
+  const ready = load().then(ensureExtras);
 
   /* ---------------- helpers ---------------- */
   const session = () => { try { return JSON.parse(localStorage.getItem(SESSION) || 'null'); } catch { return null; } };
@@ -83,7 +100,7 @@
     if (!d0) return;
     const { paid, due } = paidDue(d0);
     for (const [, it] of listItems(orderNumber)) {
-      Object.assign(it, { status: d0.status, proposedPriceEgp: d0.proposedPriceEgp, confirmedPriceEgp: d0.confirmedPriceEgp, caseReference: d0.caseReference, paidEgp: paid, dueEgp: due });
+      Object.assign(it, { status: d0.status, deliveryStatus: d0.deliveryStatus, isMockup: !!d0.isMockup, proposedPriceEgp: d0.proposedPriceEgp, confirmedPriceEgp: d0.confirmedPriceEgp, caseReference: d0.caseReference, paidEgp: paid, dueEgp: due });
       it.stages = d0.stages.map((s) => ({ stage: s.stage, status: s.status }));
     }
     const lf = state.users.lab.get['/api/v1/finance/lab'];
@@ -159,6 +176,26 @@
     })[k] === true;
   }
 
+  /* ---------------- lab finance lock ---------------- */
+  const finOpen = () => state.fin.unlockedUntil > Date.now();
+  const locked = () => json({ title: 'Locked', status: 423, detail: 'المالية مقفلة. أدخل كلمة مرور المالية.' }, 423);
+  const MONEY = /(\d[\d,٬.]*\s*ج\.م|\d[\d,٬.]*\s*EGP)/g;
+  function maskMoney(o) {
+    if (Array.isArray(o)) { o.forEach(maskMoney); return o; }
+    if (o && typeof o === 'object') {
+      for (const [k, v] of Object.entries(o)) {
+        if (/(Egp|Piastres)$/.test(k) && typeof v === 'number') o[k] = null;
+        else if (typeof v === 'string' && MONEY.test(v)) o[k] = v.replace(MONEY, '•••• ج.م');
+        else maskMoney(v);
+        MONEY.lastIndex = 0;
+      }
+    }
+    return o;
+  }
+  const withMask = (body) => (role() === 'lab' && !finOpen() ? { ...maskMoney(clone(body)), financeLocked: true } : body);
+  const hidePrices = (lab) => { lab.pricesHidden = true; lab.minPriceEgp = null; (lab.services || []).forEach((sv) => { sv.priceEgp = null; }); return lab; };
+  const pricesFor = (slug) => role() === 'doctor' || role() === 'admin' || (role() === 'lab' && slug === labSlug() && finOpen());
+
   /* ---------------- routes ---------------- */
   async function handle(method, url, body, form) {
     await ready;
@@ -175,7 +212,7 @@
       localStorage.setItem(SESSION, JSON.stringify({ role: hit[0] }));
       return json(hit[1].login);
     }
-    if (p === '/api/v1/auth/logout') { localStorage.removeItem(SESSION); return json({ ok: true }); }
+    if (p === '/api/v1/auth/logout') { localStorage.removeItem(SESSION); state.fin.unlockedUntil = 0; save(); return json({ ok: true }); }
     if (p === '/api/v1/auth/register') return problem('إنشاء حساب جديد غير متاح في نسخة العرض. استخدم أحد الحسابات التجريبية في صفحة الدخول.');
 
     // ---- public ----
@@ -191,15 +228,67 @@
       if (q.get('courierOnly') === 'true') items = items.filter((l) => l.offersCourier);
       if (q.get('sort') === 'priceAsc') items.sort((a, b) => a.minPriceEgp - b.minPriceEgp);
       if (q.get('sort') === 'ratingDesc') items.sort((a, b) => b.averageRating - a.averageRating);
+      items.forEach((l) => { if (!pricesFor(l.slug)) hidePrices(l); else l.pricesHidden = false; });
       return json({ ...all, total: items.length, items });
     }
     if (seg[2] === 'labs' && seg.length === 4 && seg[3] !== 'my' && method === 'GET') {
       const lab = state.public[`/api/v1/labs/${seg[3]}`];
-      return lab ? json(lab) : problem('المعمل غير موجود.', 404);
+      if (!lab) return problem('المعمل غير موجود.', 404);
+      const out = clone(lab);
+      if (!pricesFor(seg[3])) hidePrices(out); else out.pricesHidden = false;
+      return json(out);
     }
 
     if (!r) return json({ title: 'Unauthorized', status: 401 }, 401);
     const G = U(r).get;
+
+    // ---- lab finance password ----
+    if (p.startsWith('/api/v1/labs/my/finance-lock') && r === 'lab') {
+      const st = () => ({ hasPin: !!state.fin.pin, unlocked: finOpen(), unlockedUntil: finOpen() ? new Date(state.fin.unlockedUntil).toISOString() : null, isOwner: true });
+      if (method === 'GET') return json(st());
+      if (p.endsWith('/lock')) { state.fin.unlockedUntil = 0; save(); return json({ unlocked: false }); }
+      if (p.endsWith('/setup')) {
+        const pin = String(body?.newPin || '').trim();
+        if (pin.length < 4) return problem('كلمة مرور المالية يجب أن تكون من 4 إلى 64 حرفًا أو رقمًا.');
+        if (body?.accountPassword !== state.users.lab.password) return problem('كلمة مرور الحساب غير صحيحة.', 401);
+        if (pin === state.users.lab.password) return problem('اختر كلمة مرور للمالية مختلفة عن كلمة مرور الدخول.');
+        Object.assign(state.fin, { pin, fails: 0, unlockedUntil: Date.now() + 15 * 60000 }); save();
+        return json(st());
+      }
+      if (p.endsWith('/unlock')) {
+        if (!state.fin.pin) return problem('لم يحدد صاحب المعمل كلمة مرور المالية بعد.', 409);
+        if (state.fin.fails >= 5) return problem('تم إيقاف فتح المالية مؤقتًا بعد محاولات خاطئة متكررة. حاول بعد 15 دقيقة.', 429);
+        if (String(body?.pin || '').trim() !== state.fin.pin) { state.fin.fails += 1; save(); return problem('كلمة مرور المالية غير صحيحة.', 401); }
+        Object.assign(state.fin, { fails: 0, unlockedUntil: Date.now() + 15 * 60000 }); save();
+        return json(st());
+      }
+    }
+    if (r === 'lab' && !finOpen()) {
+      if (method === 'GET' && ['/api/v1/finance/lab', '/api/v1/subscriptions/my'].includes(p)) return locked();
+      if (method !== 'GET' && (/^\/api\/v1\/(finance\/lab|subscriptions|campaigns|labs\/my\/services)/.test(p) || /\/propose-price$/.test(p))) return locked();
+    }
+
+    // ---- doctor clinics ----
+    if (p.startsWith('/api/v1/clinics') && r === 'doctor') {
+      const list = U('doctor').clinics;
+      const id = seg[3];
+      const fields = (b) => ({ name: String(b?.name || '').trim(), address: b?.address || '', city: b?.city || '', governorate: b?.governorate || '', phone: b?.phone || '' });
+      const makeDefault = (c) => { list.forEach((x) => { x.isDefault = x === c; }); };
+      if (method === 'GET') return json({ items: [...list].sort((a, b) => b.isDefault - a.isDefault) });
+      if (method === 'POST') {
+        if (!String(body?.name || '').trim()) return problem('اسم العيادة مطلوب.');
+        const c = { id: uuid(), ...fields(body), isDefault: false }; list.push(c);
+        if (body.isDefault || list.length === 1) makeDefault(c);
+        save(); return json(c);
+      }
+      const c = list.find((x) => x.id === id);
+      if (!c) return problem('العيادة غير موجودة.', 404);
+      if (method === 'PUT') { if (!String(body?.name || '').trim()) return problem('اسم العيادة مطلوب.'); Object.assign(c, fields(body)); if (body.isDefault) makeDefault(c); save(); return json(c); }
+      if (method === 'DELETE') {
+        if (list.length === 1) return problem('لا يمكن حذف العيادة الوحيدة.');
+        list.splice(list.indexOf(c), 1); if (c.isDefault) list[0].isDefault = true; save(); return json({ ok: true });
+      }
+    }
 
     // ---- simple GETs (recorded, kept up to date by the actions below) ----
     if (method === 'GET') {
@@ -208,7 +297,7 @@
         const all = clone(G['/api/v1/orders']);
         if (term) all.items = all.items.filter((o) => [o.orderNumber, o.caseReference, o.patientName, o.serviceName, o.laboratoryName, o.dentistName].some((x) => String(x || '').includes(term)));
         all.total = all.items.length;
-        return json(all);
+        return json(withMask(all));
       }
       if (p === '/api/v1/finance/lab' && q.get('q')) {
         const term = q.get('q').trim(); const f = clone(G['/api/v1/finance/lab']);
@@ -217,7 +306,7 @@
         return json(f);
       }
       if (/^\/api\/v1\/orders\/[^/]+\/files\//.test(p)) return new Response(new Blob(['ملف تجريبي — Taaj demo file'], { type: 'text/plain' }), { status: 200 });
-      if (G[p]) return json(G[p]);
+      if (G[p]) return json(/^\/api\/v1\/(orders\/|labs\/my$|notifications)/.test(p) ? withMask(G[p]) : G[p]);
       return problem('غير متاح في نسخة العرض.', 404);
     }
 
@@ -228,14 +317,25 @@
       const lab = state.public['/api/v1/labs'].items.find((l) => l.slug === body.laboratorySlug);
       if (!lab) return problem('المعمل غير موجود.', 404);
       const me = G['/api/v1/auth/me'];
-      const stages = (body.stages || []).map((s) => (typeof s === 'number' ? STAGES[s - 1] : s)).filter(Boolean);
+      const isMock = (sv) => sv.category === 'Mockup' || /mockup/i.test(sv.name);
+      const svc = body.isMockup ? lab.services.find(isMock) : lab.services.find((sv) => !isMock(sv) && sv.name.trim() === String(body.serviceName || '').trim());
+      if (!svc) return problem(body.isMockup ? 'هذا المعمل لا يقدم خدمة Mockup (تصميم فقط) في قائمة أسعاره.' : 'نوع التركيبة المختار غير متاح لدى هذا المعمل. اختر من خدمات المعمل.');
+      const stages = body.isMockup ? ['Design'] : (body.stages || []).map((s) => (typeof s === 'number' ? STAGES[s - 1] : s)).filter(Boolean);
       if (!stages.length) return problem('يجب اختيار مرحلة تصنيع واحدة على الأقل.');
+      const clinics = U('doctor').clinics || [];
+      const clinic = body.clinicId ? clinics.find((c) => c.id === body.clinicId) : clinics.find((c) => c.isDefault);
+      if (body.clinicId && !clinic) return problem('العيادة المختارة غير موجودة.');
+      const units = Math.max(1, String(body.toothNumbers || '').split(/[,،\s]+/).filter(Boolean).length);
+      body.estimatedPriceEgp = svc.priceEgp * units;
+      body.serviceName = svc.name;
+      if (!body.pickupAddress && clinic) body.pickupAddress = [clinic.address, clinic.city].filter(Boolean).join('، ');
       const created = now();
       const detail = {
         id: uuid(), orderNumber, caseReference: body.caseReference || body.patientName || orderNumber, patientName: body.patientName || body.caseReference || null, serviceName: body.serviceName, toothNumbers: body.toothNumbers,
-        shade: body.shade, instructions: body.instructions || '', status: 'PendingLabReview', rejectionReason: null, priceRevisionNote: null,
+        shade: body.shade, instructions: body.instructions || '', status: 'PendingLabReview', isMockup: !!body.isMockup, autoCompleteDays: 3, completedAt: null,
+        clinic: clinic ? { id: clinic.id, name: clinic.name, address: clinic.address, city: clinic.city, phone: clinic.phone } : null, rejectionReason: null, priceRevisionNote: null,
         estimatedPriceEgp: Number(body.estimatedPriceEgp), proposedPriceEgp: null, confirmedPriceEgp: null, commissionRateBpsSnapshot: null,
-        dentistCommissionPercent: null, labCommissionPercent: null, deliveryMethod: body.deliveryMethod === 0 ? 'Pickup' : 'LabCourier', deliveryStatus: 'NotRequested',
+        dentistCommissionPercent: null, labCommissionPercent: null, deliveryMethod: body.deliveryMethod === 0 ? 'Pickup' : 'LabCourier', deliveryStatus: body.deliveryMethod === 0 ? 'NotRequested' : 'PickupRequested',
         pickupAddress: body.pickupAddress || null, requiredDeliveryDate: body.requiredDeliveryDate || null, createdAt: created, finalizedAt: null,
         dentist: { dentistUserId: me.id, name: me.fullName, phone: me.phone }, laboratory: { laboratoryId: lab.id, name: lab.name, slug: lab.slug },
         stages: stages.map((s) => ({ id: uuid(), stage: s, status: 'NotStarted', requiresDentistReview: s === 'Design', notes: '', lastRevisionReason: null, startedAt: null, submittedForReviewAt: null, approvedAt: null, completedAt: null })),
@@ -335,7 +435,20 @@
         save();
         return json(meta);
       } else if (action === 'delivery') {
-        for (const [, x] of views) x.deliveryStatus = typeof body?.status === 'number' ? ['NotRequested', 'Requested', 'PickedUp', 'OutForDelivery', 'Delivered'][body.status] || x.deliveryStatus : body?.status || x.deliveryStatus;
+        if (r !== 'lab') return problem('تحديث التوصيل من المعمل. استخدم «تأكيد الاستلام» لإنهاء الحالة.', 403);
+        const to = typeof body?.status === 'number' ? ['NotRequested', 'PickupRequested', 'PickedUpFromClinic', 'OutForDelivery', 'Delivered'][body.status] : body?.status;
+        if (['OutForDelivery', 'Delivered'].includes(to) && d.status !== 'ReadyForDelivery') return problem('يبدأ التوصيل بعد اكتمال كل مراحل التصنيع.');
+        if (to === 'Delivered' && d.milestones.some((m) => m.status !== 'Paid')) return problem('لا يمكن إغلاق التسليم النهائي قبل سداد جميع دفعات الطلب.');
+        for (const [, x] of views) x.deliveryStatus = to || x.deliveryStatus;
+        history(n, to === 'Delivered' ? 'تم تسليم الحالة للعيادة' : 'خرجت الحالة للتوصيل', null);
+        notify('doctor', 'Delivery', to === 'Delivered' ? `تم تسليم الحالة ${n}` : `الحالة ${n} في الطريق إليك`, to === 'Delivered' ? 'أكّد الاستلام من صفحة الحالة لإنهائها.' : 'خرجت الحالة من المعمل للتوصيل.', orderLink('doctor', n));
+      } else if (action === 'confirm-receipt' && r === 'doctor') {
+        if (!['OutForDelivery', 'Delivered'].includes(d.deliveryStatus)) return problem('يمكن تأكيد الاستلام بعد خروج الحالة للتوصيل.');
+        if (d.milestones.some((m) => m.status !== 'Paid')) return problem('سدّد كل دفعات الحالة قبل تأكيد الاستلام.');
+        const t = now();
+        for (const [, x] of views) Object.assign(x, { deliveryStatus: 'Delivered', status: 'Completed', completedAt: t });
+        history(n, 'أكّد الطبيب استلام الحالة', null);
+        notify('lab', 'OrderCompleted', `اكتملت الحالة ${n}`, 'أكّد الطبيب الاستلام.', orderLink('lab', n));
       } else {
         return problem('غير متاح في نسخة العرض.', 404);
       }

@@ -30,7 +30,7 @@ LIT = re.compile(r'''(["'`(])(/(?:assets/|legal/|labs\b|[A-Za-z0-9_-]+\.(?:html|
 
 def rewrite(text):
     # JS template links to a lab page: /labs/${slug} -> /lab-profile.html?slug=${slug} (prefixed below)
-    text = re.sub(r'/labs/(\$\{[^}]*\})', lambda m: '/lab-profile.html?slug=' + m.group(1), text)
+    text = re.sub(r'(?<!/api/v1)/labs/(\$\{[^}]*\})', lambda m: '/lab-profile.html?slug=' + m.group(1), text)
     text = ATTR.sub(lambda m: m.group(1) + m.group(2) + map_path(m.group(3)) + m.group(2), text)
     text = LIT.sub(lambda m: m.group(1) + map_path(m.group(2)), text)
     return text
@@ -45,7 +45,7 @@ for f in OUT.rglob('*'):
         t = rewrite(s)
         if f.suffix == '.html':
             # In-browser demo API (Pages only): a classic script that runs before the page's modules.
-            tag = f'<script src="{P}assets/js/demo/mock-api.js?v=2"></script>'
+            tag = f'<script src="{P}assets/js/demo/mock-api.js?v=3"></script>'
             t = t.replace('<meta charset="utf-8">', '<meta charset="utf-8">' + chr(10) + '  ' + tag, 1)
         if t != s:
             f.write_text(t, encoding='utf-8')

@@ -719,3 +719,7 @@ html[data-theme="dark"] body.dash-v2 { --d-rail: #0B1A45; }
   .track-steps li::after { inset-block-start: 36px; inset-inline-start: 14px; inline-size: 2px; block-size: calc(100% - 24px); }
 }
 .delivery-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block-start: 8px; }
+.fin-dialog, .fin-dialog * { box-sizing: border-box; }
+.fin-dialog form, .fin-dialog label, .fin-dialog .fin-view { min-inline-size: 0; inline-size: 100%; }
+.fin-dialog input { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; margin: 0; }
+.fin-dialog .fin-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
