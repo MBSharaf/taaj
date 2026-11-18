@@ -1,6 +1,6 @@
 // Lab finance lock (password modal + top-bar chip), lab finance settings, doctor clinics, order tracker.
 // Behaviour only: every text shown here is written in the HTML (hidden until needed).
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=14';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=15';
 
 const translate = (el) => { if (el && getLang() === 'en') applyDomTranslations(el); };
 const LAB_ROLES = ['LaboratoryOwner', 'LaboratoryStaff'];
@@ -417,4 +417,80 @@ export async function initAccountPage(user) {
     loadStaff();
   });
   await loadStaff();
+}
+
+// ---- PDF documents: any [data-doc] button downloads the file (lab copies ask for the finance password first) ----
+export function installDocLinks() {
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-doc]');
+    if (!btn) return;
+    e.preventDefault();
+    btn.disabled = true;
+    try {
+      let r = await rawFetch(btn.dataset.doc);
+      if (r.status === 423 && await askFinancePin()) r = await rawFetch(btn.dataset.doc);
+      if (!r.ok) {
+        const msg = await problemText(r, 'تعذّر تحميل المستند.');
+        window.alert(getLang() === 'en' ? 'The document could not be downloaded.' : msg);
+        return;
+      }
+      const blob = await r.blob();
+      const name = (r.headers.get('Content-Disposition') || '').match(/filename="?([^";]+)"?/)?.[1] || 'taaj.pdf';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      document.body.append(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+// ---- Admin: reconciliation with the payment gateway ----
+export async function initReconciliation() {
+  const form = document.getElementById('rec-form');
+  if (!form) return;
+  const tbody = document.getElementById('rec-tbody');
+  const stateText = (k) => document.querySelector(`#rec-states [data-state="${k}"]`)?.textContent || k;
+  const money = (v) => (v === null || v === undefined ? '—' : `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)} ج.م`);
+  const today = new Date();
+  form.to.value = today.toISOString().slice(0, 10);
+  form.from.value = new Date(today.getTime() - 30 * 86400000).toISOString().slice(0, 10);
+  const load = async () => {
+    const q = new URLSearchParams({ from: new Date(`${form.from.value}T00:00:00`).toISOString(), to: new Date(`${form.to.value}T23:59:59`).toISOString() });
+    const r = await rawFetch(`/api/v1/admin/reconciliation?${q}`);
+    if (!r.ok) return;
+    const d = await r.json();
+    const s = d.summary;
+    document.getElementById('rec-matched').textContent = String(s.matched);
+    document.getElementById('rec-issues').textContent = String(s.issues);
+    document.getElementById('rec-collected').textContent = `${money(s.collectedEgp)} / ${money(s.gatewayCollectedEgp)}`;
+    document.getElementById('rec-refunded').textContent = `${money(s.refundedEgp)} / ${money(s.gatewayRefundedEgp)}`;
+    document.getElementById('rec-commission').textContent = money(s.commissionEgp);
+    document.getElementById('rec-fees').textContent = money(s.gatewayFeesEgp);
+    tbody.innerHTML = '';
+    if (!d.items.length) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="7" class="muted"></td>';
+      tr.firstElementChild.textContent = stateText('none');
+      tbody.append(tr);
+    }
+    d.items.forEach((it) => {
+      const tr = document.createElement('tr');
+      const bad = ['MissingAtGateway', 'AmountMismatch', 'PaidAtGatewayOnly'].includes(it.state);
+      const cells = [it.orderNumber || '—', stateText(it.state), it.status, money(it.amountEgp), money(it.gatewayAmountEgp), it.providerTransactionRef || '—', new Date(it.createdAt).toLocaleString('en-GB')];
+      cells.forEach((c, i) => {
+        const td = document.createElement('td');
+        if (i === 1) { const b = document.createElement('span'); b.className = `badge ${bad ? 'is-danger' : 'is-warning'}`; b.textContent = c; td.append(b); } else td.textContent = c;
+        if ([0, 5, 6].includes(i)) td.className = 'ltr mono';
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+    translate(document.getElementById('reconciliation'));
+  };
+  form.addEventListener('submit', (e) => { e.preventDefault(); load(); });
+  await load();
 }

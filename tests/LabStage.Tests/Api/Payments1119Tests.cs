@@ -189,5 +189,8 @@ public sealed class Payments1119Tests(WebApplicationFactory<Program> baseFactory
         Assert.Equal(HttpStatusCode.OK, (await lab.PostAsJsonAsync("/api/v1/labs/my/finance-lock/setup", new { accountPassword = "Lab@12345", newPin = "2468" })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await lab.GetAsync($"/api/v1/orders/{n}/invoice.pdf")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await lab.GetAsync($"/api/v1/orders/{n}/milestones/1/receipt.pdf")).StatusCode);
+        // Lab copy: 2% of the full order (1,800 -> 36.00) and the lab net on the whole order.
+        var invoice = LabStage.Infrastructure.Documents.FinanceDocuments.Invoice(new("Lab", "x", DateTimeOffset.UtcNow, n, "p", "d", "c", "l", [], 1800m, [], 360m, 1440m, 36m, 2, 1764m, false));
+        Assert.True(invoice.Length > 3000);
     }
 }

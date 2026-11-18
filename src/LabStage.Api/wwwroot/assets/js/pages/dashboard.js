@@ -1,6 +1,6 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=14';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=15';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage } from './dash-extra.js?v=3';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=4';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -57,6 +57,7 @@ function enhanceDashboard3DAndIcons() {
     else if (href.endsWith('admin-dashboard.html#labs')) ic = ICONS.shield;
     else if (href.endsWith('admin-dashboard.html#settlements')) ic = ICONS.wallet;
     else if (href.endsWith('admin-dashboard.html#audit')) ic = ICONS.layers;
+    else if (href.endsWith('admin-dashboard.html#reconciliation')) ic = ICONS.chart;
     else if (href.includes('-account')) ic = ICONS.user;
     else if (href.includes('lab-settings')) ic = ICONS.gear;
     else if (href.includes('doctor-settings')) ic = ICONS.clinic;
@@ -843,6 +844,8 @@ async function initOrderDetails(isLabView) {
     });
 
     renderTracker(o, isLabView, { orderNumber, showMsg, refresh });
+    const invBtn = document.getElementById('order-invoice-btn');
+    if (invBtn) invBtn.dataset.doc = `/api/v1/orders/${encodeURIComponent(orderNumber)}/invoice.pdf`;
 
     // Stages Timeline
     const timeline = document.getElementById('order-stages-timeline');
@@ -909,7 +912,7 @@ async function initOrderDetails(isLabView) {
           <strong>الدفعة ${m.sequence} (${pct}%) — <span class="num">${fmtEgp(m.amountEgp)}</span></strong>
           <div class="muted" style="font-size:var(--fs-xs)">${esc(statusAr[m.status] || m.status)}</div>
         </div>
-        ${(!isLabView && m.status === 'Due') ? `<button class="btn btn-primary btn-sm" data-pay-seq="${m.sequence}">ادفع الآن (${fmtEgp(m.amountEgp)})</button>` : `<span class="badge">${esc(statusAr[m.status] || m.status)}</span>`}
+        ${(!isLabView && m.status === 'Due') ? `<button class="btn btn-primary btn-sm" data-pay-seq="${m.sequence}">ادفع الآن (${fmtEgp(m.amountEgp)})</button>` : `<span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="badge ${toneOf(m.status)}">${esc(statusAr[m.status] || m.status)}</span>${m.status === 'Paid' ? `<button class="btn btn-ghost btn-sm" type="button" data-doc="/api/v1/orders/${encodeURIComponent(orderNumber)}/milestones/${m.sequence}/receipt.pdf">الإيصال PDF</button>` : ''}</span>`}
       </div>`;
     }).join('') : `<p class="muted" style="font-size:var(--fs-xs)">يتم إنشاء جدول الدفعتين (20% دفعة أولى + 80% دفعة نهائية) فور تثبيت السعر النهائي للطلب.</p>`;
 
@@ -924,12 +927,9 @@ async function initOrderDetails(isLabView) {
         });
         const chk = await chkRes.json().catch(() => ({}));
         if (!chkRes.ok) { btn.classList.remove('is-loading'); showMsg(chk.detail || 'تعذّر بدء الدفع.', false); return; }
-        const confirmRes = await fetch(`/api/v1/payments/sandbox-confirm/${encodeURIComponent(chk.checkoutId)}`, { method: 'POST' });
-        btn.classList.remove('is-loading');
-        if (confirmRes.ok) {
-          showMsg(`تم تأكيد سداد الدفعة ${seq} عبر Webhook الخادم بنجاح.`);
-          refresh();
-        }
+        // The payment page of the gateway (or the local test checkout); the order is marked paid only by the
+        // gateway's signed confirmation, never by coming back to this page.
+        window.location.href = chk.checkoutUrl;
       });
     });
 
@@ -987,6 +987,12 @@ async function initOrderDetails(isLabView) {
   });
 
   await refresh();
+  // Back from the payment page: the gateway's confirmation may take a moment.
+  if (new URLSearchParams(location.search).get('payment')) {
+    const paidNote = document.getElementById('payment-return-note');
+    if (paidNote) paidNote.hidden = false;
+    setTimeout(refresh, 2500);
+  }
 }
 
 // ---- Doctor Finance ----
@@ -1010,11 +1016,11 @@ async function initDoctorFinance() {
       const dFee = o.dentistCommissionEgp ?? (Number(o.confirmedPriceEgp || 0) * 0.01);
       return `
         <tr>
-          <td class="ltr mono"><a href="/doctor-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">${esc(o.orderNumber)}</a></td>
+          <td class="ltr mono"><a href="/doctor-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">${esc(o.orderNumber)}</a><div><button class="link-btn" type="button" data-doc="/api/v1/orders/${encodeURIComponent(o.orderNumber)}/invoice.pdf">الفاتورة PDF</button></div></td>
           <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">${esc(o.laboratoryName)}</div></td>
           <td class="num">${fmtEgp(o.confirmedPriceEgp)} <div class="muted" style="font-size:11px">+ ${fmtEgp(dFee)} عمولة 1%</div></td>
-          <td>${m1 ? `<span class="num">${fmtEgp(m1.amountEgp)} (20%)</span> · <span class="badge">${esc(statusAr[m1.status] || m1.status)}</span>` : '—'}</td>
-          <td>${m2 ? `<span class="num">${fmtEgp(m2.amountEgp)} (80%)</span> · <span class="badge">${esc(statusAr[m2.status] || m2.status)}</span>` : '—'}</td>
+          <td>${m1 ? `<span class="num">${fmtEgp(m1.amountEgp)} (20%)</span> · <span class="badge ${toneOf(m1.status)}">${esc(statusAr[m1.status] || m1.status)}</span>${m1.status === 'Paid' ? ` <button class="link-btn" type="button" data-doc="/api/v1/orders/${encodeURIComponent(o.orderNumber)}/milestones/1/receipt.pdf">إيصال</button>` : ''}` : '—'}</td>
+          <td>${m2 ? `<span class="num">${fmtEgp(m2.amountEgp)} (80%)</span> · <span class="badge ${toneOf(m2.status)}">${esc(statusAr[m2.status] || m2.status)}</span>${m2.status === 'Paid' ? ` <button class="link-btn" type="button" data-doc="/api/v1/orders/${encodeURIComponent(o.orderNumber)}/milestones/2/receipt.pdf">إيصال</button>` : ''}` : '—'}</td>
           <td>${dueM ? `<button class="btn btn-primary btn-sm" data-pay-order="${esc(o.orderNumber)}" data-pay-seq="${dueM.sequence}">سداد الدفعة ${dueM.sequence} (${fmtEgp(dueM.amountEgp)})</button>` : '<span class="muted">لا توجد دفعة مستحقة</span>'}</td>
         </tr>`;
     }).join('');
@@ -1030,11 +1036,8 @@ async function initDoctorFinance() {
           body: JSON.stringify({ orderNumber, milestoneSequence }),
         });
         const chk = await chkRes.json().catch(() => ({}));
-        if (chkRes.ok) {
-          await fetch(`/api/v1/payments/sandbox-confirm/${encodeURIComponent(chk.checkoutId)}`, { method: 'POST' });
-          if (alertBox) { alertBox.textContent = `تم سداد الدفعة ${milestoneSequence} للطلب ${orderNumber} بنجاح.`; alertBox.hidden = false; }
-          await load();
-        }
+        if (chkRes.ok) { window.location.href = chk.checkoutUrl; return; }
+        if (alertBox) { alertBox.textContent = chk.detail || 'تعذّر بدء الدفع.'; alertBox.hidden = false; }
         btn.classList.remove('is-loading');
       });
     });
@@ -1422,7 +1425,7 @@ async function initLabFinance() {
       const dOrders = st.orders || [];
       tbody.innerHTML = dOrders.length ? dOrders.map((o) => `
         <tr>
-          <td class="ltr mono"><a href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}"><strong>${esc(o.orderNumber)}</strong></a></td>
+          <td class="ltr mono"><a href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}"><strong>${esc(o.orderNumber)}</strong></a><div><button class="link-btn" type="button" data-doc="/api/v1/orders/${encodeURIComponent(o.orderNumber)}/invoice.pdf">الفاتورة PDF</button></div></td>
           <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">مرجع: ${esc(o.patientName || o.caseReference)} · لون ${esc(o.shade)}</div></td>
           <td class="ltr">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-EG') : '—'}</td>
           <td><span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span></td>
@@ -1827,6 +1830,7 @@ async function initAdminDashboard() {
   if (!user) return;
   await installFinanceGate(user, page);
   initVerifyBanner(user);
+  installDocLinks();
   if (page === 'doctor-dashboard') await initDoctorDashboard();
   else if (page === 'doctor-orders') await initDoctorOrders();
   else if (page === 'doctor-order-details') await initOrderDetails(false);
@@ -1835,7 +1839,7 @@ async function initAdminDashboard() {
   else if (page === 'lab-orders') await initLabOrders();
   else if (page === 'lab-order-details') await initOrderDetails(true);
   else if (page === 'lab-finance') await initLabFinance();
-  else if (page === 'admin-dashboard') { await initAdminDashboard(); initAdminSearch(); }
+  else if (page === 'admin-dashboard') { await initAdminDashboard(); initAdminSearch(); initReconciliation(); }
   else if (page === 'lab-settings') await initLabSettings();
   else if (page === 'doctor-settings') await initDoctorSettings();
   else if (page.endsWith('-account')) { await initAccountPage(user); if (page === 'admin-account') initAdminSearch(); }

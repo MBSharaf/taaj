@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=14">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=12">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=15">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=13">
 </head>
 <body class="page-dash dash-v2" data-dash-page="lab-order-details">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -156,6 +156,12 @@
         </section>
 
         <section class="card">
+          <h2>المستندات</h2>
+          <p class="muted" style="font-size:var(--fs-xs);margin-block:4px 10px">فاتورة الطلب بصيغة PDF، وإيصال كل دفعة مدفوعة من «حالة الدفعات».</p>
+          <button class="btn btn-ghost btn-sm" type="button" id="order-invoice-btn">تحميل الفاتورة PDF</button>
+        </section>
+
+        <section class="card">
           <h2>حالة الدفعات والمندوب</h2>
           <div id="order-milestones-box" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-3)"></div>
         </section>
@@ -199,7 +205,7 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=20"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=21"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

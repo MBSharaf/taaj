@@ -326,3 +326,12 @@ body:has(.page-hero) .site-header:not(.is-scrolled) .btn-primary,
   .page-auth .auth-art { order: 1 !important; }
   .page-auth .auth-art .auth-scene { display: none; }
 }
+/* Test checkout page */
+.pay-test-badge { background: #FDF0D8 !important; color: #9A5B00 !important; border: 0 !important; }
+.pay-amount { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-radius: 16px; background: rgb(42 98 245 / .07); }
+.pay-amount b { font-size: 22px; color: var(--g-900, #0B1A45); }
+html[data-theme="dark"] .pay-amount b { color: #F3F7FF; }
+.pay-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pay-test-cards { display: grid; gap: 6px; font-size: 13px; }
+.pay-test-cards p { margin: 0; color: var(--ink-2, #5A6785); }
+.pay-test-cards button { text-align: start; padding: 8px 12px; border-radius: 12px; border: 1px dashed rgb(42 98 245 / .45); background: transparent; color: inherit; font: inherit; cursor: pointer; }

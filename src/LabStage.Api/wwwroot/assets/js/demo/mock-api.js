@@ -342,6 +342,30 @@
       }
     }
 
+    // ---- test checkout page (simulated gateway) ----
+    const tg = p.match(/^\/api\/v1\/payments\/test-gateway\/([^/]+)(\/pay)?$/);
+    if (tg && r === 'doctor') {
+      const id = decodeURIComponent(tg[1]);
+      const c = state.checkouts?.[id] || state.paidCheckouts?.[id];
+      if (!c) return problem('عملية الدفع غير موجودة.', 404);
+      const m = G[`/api/v1/orders/${c.orderNumber}`]?.milestones?.find((x) => x.sequence === c.sequence);
+      if (method === 'GET') return json({ checkoutId: id, orderNumber: c.orderNumber, amountEgp: m?.amountEgp || 0, currency: 'EGP', milestoneSequence: c.sequence, status: state.paidCheckouts?.[id] ? 'Succeeded' : 'Pending' });
+      if (String(body?.cardNumber || '').replace(/\D/g, '') !== '4242424242424242') return json({ status: 'Failed', orderNumber: c.orderNumber });
+      const out = await handle('POST', `/api/v1/payments/sandbox-confirm/${encodeURIComponent(id)}`, null, null);
+      if (!out.ok) return out;
+      state.paidCheckouts = { ...(state.paidCheckouts || {}), [id]: c }; save();
+      return json({ status: 'Succeeded', orderNumber: c.orderNumber });
+    }
+    // ---- PDF invoices / receipts: the demo serves sample documents produced by the real server ----
+    if (/\/invoice\.pdf$/.test(p) || /\/receipt\.pdf$/.test(p)) {
+      if (r === 'lab' && !finOpen()) return locked();
+      return realFetch(`${BASE}/assets/js/demo/samples/${/receipt/.test(p) ? 'receipt' : 'invoice'}${r === 'doctor' ? '' : '-lab'}.pdf`);
+    }
+    if (p === '/api/v1/admin/reconciliation' && r === 'admin') {
+      const pays = state.users.doctor.get['/api/v1/finance/doctor']?.payments || [];
+      const collected = pays.reduce((a, x) => a + Number(x.amountEgp || 0), 0);
+      return json({ summary: { payments: pays.length, matched: pays.length, issues: 0, collectedEgp: r2(collected), gatewayCollectedEgp: r2(collected), refundedEgp: 0, gatewayRefundedEgp: 0, commissionEgp: r2(collected * pct().lab / 100), labNetEgp: r2(collected * (100 - pct().lab) / 100), gatewayFeesEgp: r2(collected * 0.015) }, items: [] });
+    }
     // ---- simple GETs (recorded, kept up to date by the actions below) ----
     if (method === 'GET') {
       if (p === '/api/v1/orders') {
@@ -518,7 +542,7 @@
       const checkoutId = `chk_demo_${uuid().replace(/-/g, '')}`;
       state.checkouts = { ...(state.checkouts || {}), [checkoutId]: { orderNumber: d.orderNumber, sequence: m.sequence } };
       save();
-      return json({ id: uuid(), provider: 'Sandbox', checkoutId, checkoutUrl: null, amountEgp: m.amountEgp, currency: 'EGP' });
+      return json({ id: uuid(), provider: 'Sandbox', checkoutId, checkoutUrl: `${BASE}/payment-test.html?checkout=${checkoutId}`, amountEgp: m.amountEgp, currency: 'EGP', testMode: true });
     }
     if (p.startsWith('/api/v1/payments/sandbox-confirm/') && r === 'doctor') {
       const c = state.checkouts?.[decodeURIComponent(seg[4] || '')];

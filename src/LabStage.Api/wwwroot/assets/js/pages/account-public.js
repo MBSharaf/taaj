@@ -1,6 +1,6 @@
 // Forgot password, set a new password (reset or staff invitation) and email confirmation pages.
 // Behaviour only: every text is written in the HTML; views are shown/hidden here.
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=14';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=15';
 
 const $ = (sel) => document.querySelector(sel);
 const qs = new URLSearchParams(location.search);

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>document.documentElement.classList.add('js')</script>
+  <title>صفحة الدفع التجريبية | تاج</title>
+  <meta name="description" content="سجّل الدخول إلى حسابك في تاج لمتابعة طلباتك ومراحل التصنيع والمدفوعات.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="/assets/brand/taaj-icon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
+  <link rel="stylesheet" href="/assets/css/base.css?v=7">
+  <link rel="stylesheet" href="/assets/css/auth.css?v=6">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=15">
+</head>
+<body class="page-auth">
+  <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
+  <main class="auth-frame" aria-labelledby="acc-title">
+    <section class="auth-pane">
+      <div class="auth-top">
+        <a class="brand" href="/" aria-label="تاج — الصفحة الرئيسية"><img class="brand-logo logo-ar logo-light" src="/assets/brand/taaj-wordmark-ar-light.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-ar logo-dark" src="/assets/brand/taaj-wordmark-ar-dark.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-en logo-light" src="/assets/brand/taaj-wordmark-en-light.svg" alt="Taaj" width="54" height="30"><img class="brand-logo logo-en logo-dark" src="/assets/brand/taaj-wordmark-en-dark.svg" alt="Taaj" width="54" height="30"></a>
+        <a class="btn btn-ghost btn-sm" href="/">العودة للرئيسية</a>
+      </div>
+
+      <div class="auth-body">
+        <div data-view="loading"><h1 id="acc-title">جاري تحميل صفحة الدفع...</h1></div>
+        <div data-view="form" hidden>
+          <div>
+            <span class="badge pay-test-badge">وضع الاختبار — لا تُخصم أموال حقيقية</span>
+            <h1>إتمام الدفع</h1>
+            <p class="auth-sub">طلب <bdi class="ltr mono" id="pay-order">—</bdi> · <span id="pay-milestone-1" hidden>الدفعة الأولى (20%)</span><span id="pay-milestone-2" hidden>الدفعة النهائية (80%)</span></p>
+          </div>
+          <div class="pay-amount"><span>المبلغ المطلوب</span><b><bdi class="num ltr" id="pay-amount">—</bdi> ج.م</b></div>
+          <div id="acc-alert" class="alert alert-error" role="alert" hidden></div>
+          <form id="pay-form" class="auth-form" novalidate>
+            <div class="field">
+              <label for="card">رقم البطاقة</label>
+              <input class="input input-ltr" id="card" name="card" inputmode="numeric" autocomplete="cc-number" placeholder="4242 4242 4242 4242" maxlength="23" required>
+            </div>
+            <div class="row-2 pay-row">
+              <div class="field"><label for="exp">تاريخ الانتهاء</label><input class="input input-ltr" id="exp" name="exp" placeholder="12/30" maxlength="5" autocomplete="cc-exp"></div>
+              <div class="field"><label for="cvc">CVC</label><input class="input input-ltr" id="cvc" name="cvc" placeholder="123" maxlength="4" inputmode="numeric" autocomplete="cc-csc"></div>
+            </div>
+            <button class="btn btn-primary btn-lg" type="submit">ادفع الآن</button>
+          </form>
+          <div class="pay-test-cards">
+            <p>بطاقات الاختبار:</p>
+            <button type="button" data-card="4242 4242 4242 4242"><bdi class="ltr mono">4242 4242 4242 4242</bdi> — عملية ناجحة</button>
+            <button type="button" data-card="4000 0000 0000 0002"><bdi class="ltr mono">4000 0000 0000 0002</bdi> — بطاقة مرفوضة</button>
+          </div>
+        </div>
+        <div data-view="success" hidden>
+          <div>
+            <h1>تم الدفع بنجاح ✓</h1>
+            <p class="auth-sub">أكدت بوابة الدفع العملية وتم تسجيل الدفعة على الطلب. يمكنك تحميل الإيصال من صفحة الطلب.</p>
+          </div>
+          <a class="btn btn-primary btn-lg" id="pay-back" href="/doctor-orders.html">العودة إلى الطلب</a>
+        </div>
+        <div data-view="failed" hidden>
+          <div>
+            <h1>تم رفض البطاقة</h1>
+            <p class="auth-sub">لم تتم العملية ولم يُخصم أي مبلغ. جرّب بطاقة أخرى أو ارجع للطلب وابدأ الدفع من جديد.</p>
+          </div>
+          <a class="btn btn-primary btn-lg" id="pay-retry" href="/doctor-orders.html">العودة إلى الطلب</a>
+        </div>
+        <div data-view="unavailable" hidden>
+          <div>
+            <h1>صفحة الدفع غير متاحة</h1>
+            <p class="auth-sub">انتهت جلسة الدفع أو لا تخص حسابك. ارجع لصفحة الطلب وابدأ الدفع من جديد.</p>
+          </div>
+          <a class="btn btn-primary btn-lg" href="/doctor-orders.html">طلباتي</a>
+        </div>
+      </div>
+
+      <p class="auth-foot">بيانات البطاقة لا تُحفظ على تاج. في التشغيل الفعلي يتم الدفع على صفحة بوابة الدفع الآمنة.</p>
+    </section>
+
+    <aside class="auth-art" aria-label="مميزات المنصة">
+      <div>
+        <span class="badge">منصة معامل الأسنان في مصر</span>
+        <h2>تتبّع كل مرحلة من التصميم حتى الجليز في لوحة واحدة</h2>
+        <p>ربط مباشر بين العيادة والمعمل مع محادثة خاصة لكل حالة ودفع آمن على دفعتين.</p>
+      </div>
+
+      <div class="auth-scene" aria-hidden="true">
+        <div class="auth-scene-head">
+          <strong>حالة <bdi class="ltr mono">LS-000187</bdi></strong>
+          <span>تاج زركونيا · 3 مراحل</span>
+        </div>
+        <div class="auth-scene-bars">
+          <div class="is-done"><b>01</b><span>التصميم ✓</span></div>
+          <div class="is-done"><b>02</b><span>التفريز ✓</span></div>
+          <div><b>03</b><span>الطبقات</span></div>
+          <div><b>04</b><span>الجليز</span></div>
+        </div>
+      </div>
+
+      <ul class="auth-points" role="list">
+        <li><span></span>مقارنة فورية للمعامل الموثّقة وقوائم الأسعار الموحدة</li>
+        <li><span></span>سداد مرن (20% بعد اعتماد التصميم و80% عند الإتمام)</li>
+        <li><span></span>ملفات الحالات والحسابات محمية بخصوصية كاملة لكل طرف</li>
+      </ul>
+    </aside>
+  </main>
+
+  <script src="/assets/vendor/gsap/gsap.min.js?v=6" defer></script>
+<script src="/assets/vendor/gsap/ScrollTrigger.min.js?v=6" defer></script>
+<script type="module" src="/assets/js/core/site.js?v=16"></script>
+  <script type="module" src="/assets/js/pages/payment-test.js?v=1"></script>
+<script type="module" src="/assets/js/core/glass.js?v=6"></script>
+</body>
+</html>

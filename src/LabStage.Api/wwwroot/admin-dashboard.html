@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=14">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=12">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=15">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=13">
 </head>
 <body class="page-dash dash-v2" data-dash-page="admin-dashboard">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -32,6 +32,7 @@
         <a href="/admin-account.html">حسابي</a>
         <p class="nav-group"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>المالية</p>
         <a href="/admin-dashboard.html#settlements" data-admin-nav="settlements">التسويات البنكية للمعامل</a>
+        <a href="/admin-dashboard.html#reconciliation" data-admin-nav="reconciliation">مطابقة الحسابات</a>
         <a href="/admin-dashboard.html#settings" data-admin-nav="settings">قواعد العمل والعمولة</a>
       </nav>
       <p class="dash-nav-label">عام</p>
@@ -217,9 +218,46 @@
         <div id="ad-audit-list" style="display:grid;gap:var(--sp-2);margin-block-start:var(--sp-3);font-size:var(--fs-xs);max-block-size:280px;overflow-y:auto"></div>
       </section>
     </div>
+
+    <section class="card" id="reconciliation" style="margin-block-start:var(--sp-5)">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--sp-3)">
+        <div>
+          <h2>مطابقة الحسابات مع بوابة الدفع</h2>
+          <p class="muted" style="font-size:var(--fs-xs);margin:4px 0 0">مقارنة كل دفعة مسجلة عندنا بما أكدته بوابة الدفع، مع المبالغ المستردة والعمولات خلال الفترة.</p>
+        </div>
+        <form class="settings-form" id="rec-form" style="display:flex;flex-wrap:wrap;gap:8px;align-items:end">
+          <label>من<input type="date" name="from" class="ltr"></label>
+          <label>إلى<input type="date" name="to" class="ltr"></label>
+          <button class="btn btn-primary btn-sm" type="submit">تحديث</button>
+        </form>
+      </div>
+      <div class="rec-kpis" style="margin-block:var(--sp-4)">
+        <div><span>دفعات مطابقة</span><b class="num" id="rec-matched">—</b></div>
+        <div><span>فروقات تحتاج مراجعة</span><b class="num" id="rec-issues">—</b></div>
+        <div><span>المحصّل (عندنا / البوابة)</span><b class="num" id="rec-collected">—</b></div>
+        <div><span>المسترد (عندنا / البوابة)</span><b class="num" id="rec-refunded">—</b></div>
+        <div><span>عمولة المنصة</span><b class="num" id="rec-commission">—</b></div>
+        <div><span>رسوم بوابة الدفع</span><b class="num" id="rec-fees">—</b></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>الحالة عند المطابقة</th><th>حالة الدفعة</th><th>المبلغ عندنا</th><th>المبلغ عند البوابة</th><th>مرجع العملية</th><th>التاريخ</th></tr></thead>
+          <tbody id="rec-tbody"><tr><td colspan="7" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+      <div hidden id="rec-states">
+        <span data-state="MissingAtGateway">مسجلة كمدفوعة ولم تؤكدها البوابة</span>
+        <span data-state="AmountMismatch">المبلغ مختلف عن البوابة</span>
+        <span data-state="PaidAtGatewayOnly">مدفوعة عند البوابة فقط</span>
+        <span data-state="AbandonedCheckout">صفحة دفع لم تكتمل</span>
+        <span data-state="Failed">مرفوضة</span>
+        <span data-state="Pending">قيد الانتظار</span>
+        <span data-state="none">كل الدفعات مطابقة في هذه الفترة ✓</span>
+      </div>
+    </section>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=20"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=21"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

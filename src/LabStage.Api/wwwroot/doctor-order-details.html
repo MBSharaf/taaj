@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=14">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=12">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=15">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=13">
 </head>
 <body class="page-dash dash-v2" data-dash-page="doctor-order-details">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -90,6 +90,7 @@
       </div>
     </div>
 
+    <p class="alert alert-info" id="payment-return-note" hidden>جاري تأكيد الدفع من بوابة الدفع... ستتحدث حالة الدفعة خلال لحظات.</p>
     <div id="order-action-alert" class="alert alert-info" hidden></div>
 
     <section class="card" id="order-header-box">
@@ -149,6 +150,12 @@
         </section>
 
         <section class="card">
+          <h2>المستندات</h2>
+          <p class="muted" style="font-size:var(--fs-xs);margin-block:4px 10px">فاتورة الطلب بصيغة PDF، وإيصال كل دفعة مدفوعة من «حالة الدفعات».</p>
+          <button class="btn btn-ghost btn-sm" type="button" id="order-invoice-btn">تحميل الفاتورة PDF</button>
+        </section>
+
+        <section class="card">
           <h2>دفعات الحالة (20% دفعة أولى / 80% دفعة نهائية)</h2>
           <div id="order-milestones-box" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-3)"></div>
         </section>
@@ -161,7 +168,7 @@
     </div>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=20"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=21"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

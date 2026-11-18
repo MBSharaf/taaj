@@ -29,9 +29,9 @@ public sealed class DocumentsController(LabStageDbContext db, FinanceGate financ
         decimal? commission = null, net = null; int? pct = null;
         if (party == "Lab")
         {
-            var entries = await db.CommissionEntries.Where(c => c.OrderId == order.Id).ToListAsync(ct);
+            // The invoice covers the whole order: commission on the full total (receipts show what each payment booked).
             pct = (int)Math.Round(order.CommissionRateBpsSnapshot / 100m);
-            commission = entries.Count > 0 ? entries.Sum(c => c.CommissionPiastres - c.ReversedCommissionPiastres) / 100m : Math.Round(total * order.CommissionRateBpsSnapshot / 10000m, 2);
+            commission = Math.Round(total * order.CommissionRateBpsSnapshot / 10000m, 2);
             net = total - commission;
         }
         var data = new InvoiceData(
