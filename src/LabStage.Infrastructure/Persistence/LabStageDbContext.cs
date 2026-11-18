@@ -6,6 +6,7 @@ namespace LabStage.Infrastructure.Persistence;
 public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> options) : DbContext(options)
 {
     public DbSet<AppUser> Users => Set<AppUser>();
+    public DbSet<UserToken> UserTokens => Set<UserToken>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
     public DbSet<Clinic> Clinics => Set<Clinic>();
     public DbSet<Laboratory> Laboratories => Set<Laboratory>();
@@ -54,6 +55,16 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
             e.Property(u => u.NormalizedEmail).HasMaxLength(256);
             e.Property(u => u.FullName).HasMaxLength(200);
             e.Property(u => u.Role).HasMaxLength(64);
+            e.Property(u => u.SecurityStamp).HasMaxLength(64);
+        });
+
+        b.Entity<UserToken>(e =>
+        {
+            e.HasIndex(t => t.TokenHash).IsUnique();
+            e.HasIndex(t => new { t.UserId, t.Purpose });
+            e.Property(t => t.Purpose).HasMaxLength(32);
+            e.Property(t => t.TokenHash).HasMaxLength(64);
+            e.HasOne(t => t.User).WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         b.Entity<DoctorProfile>(e =>

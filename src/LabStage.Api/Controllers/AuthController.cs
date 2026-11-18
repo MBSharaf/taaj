@@ -14,7 +14,7 @@ namespace LabStage.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/auth")]
-public sealed class AuthController(LabStageDbContext db) : ControllerBase
+public sealed class AuthController(LabStageDbContext db, LabStage.Application.Email.IEmailSender email, IConfiguration config) : ControllerBase
 {
     public sealed record RegisterRequest(
         string Role,
@@ -119,9 +119,10 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
         });
 
         await db.SaveChangesAsync(ct);
+        await AccountController.SendConfirmationAsync(db, email, config, HttpContext, user, ct);
         await SignInCookieAsync(user, true);
 
-        return Ok(new { user.Id, user.Email, user.FullName, user.Role });
+        return Ok(new { user.Id, user.Email, user.FullName, user.Role, EmailConfirmed = false });
     }
 
     /// <summary>Failed sign-ins allowed per account before a temporary lockout.</summary>
@@ -196,10 +197,16 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
             LaboratoryName = user.OwnedLaboratory?.Name,
             LaboratorySlug = user.OwnedLaboratory?.Slug,
             UnreadNotifications = unreadNotifications,
+            EmailConfirmed = user.EmailConfirmedAt != null,
         });
     }
 
-    private async Task SignInCookieAsync(AppUser user, bool isPersistent)
+    private Task SignInCookieAsync(AppUser user, bool isPersistent) => SignInAsync(HttpContext, user, isPersistent);
+
+    /// <summary>Claim carrying the account's security stamp: a password change or reset signs out older sessions.</summary>
+    public const string StampClaim = "taaj:stamp";
+
+    public static async Task SignInAsync(HttpContext ctx, AppUser user, bool isPersistent)
     {
         var claims = new List<Claim>
         {
@@ -207,9 +214,10 @@ public sealed class AuthController(LabStageDbContext db) : ControllerBase
             new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Name, user.FullName),
             new(ClaimTypes.Role, user.Role),
+            new(StampClaim, user.SecurityStamp),
         };
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await HttpContext.SignInAsync(
+        await ctx.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity),
             // "Remember me": 14 days; otherwise the cookie options apply (8 idle hours, sliding).

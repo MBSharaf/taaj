@@ -37,6 +37,8 @@ else if (!isDevelopment && (webhookSecret == LegacyDevWebhookSecret || webhookSe
 
 builder.Services.AddDbContext<LabStageDbContext>(o => o.UseSqlServer(connStr));
 builder.Services.AddScoped<IPaymentGateway, SandboxPaymentGateway>();
+builder.Services.AddSingleton<LabStage.Application.Email.IEmailSender>(sp => LabStage.Infrastructure.Email.EmailSenderFactory.Create(
+    builder.Configuration, builder.Environment.ContentRootPath, isDevelopment, sp.GetRequiredService<ILoggerFactory>()));
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -55,8 +57,10 @@ builder.Services
         {
             var id = ctx.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var db = ctx.HttpContext.RequestServices.GetRequiredService<LabStageDbContext>();
+            // ...and a password change/reset signs out every session issued before it (security stamp).
+            var stamp = ctx.Principal?.FindFirst(LabStage.Api.Controllers.AuthController.StampClaim)?.Value;
             var active = Guid.TryParse(id, out var userId) &&
-                         await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && !u.IsSuspended, ctx.HttpContext.RequestAborted);
+                         await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && !u.IsSuspended && stamp != null && u.SecurityStamp == stamp, ctx.HttpContext.RequestAborted);
             if (!active)
             {
                 ctx.RejectPrincipal();

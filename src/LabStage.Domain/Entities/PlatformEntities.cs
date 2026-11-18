@@ -105,9 +105,32 @@ public sealed class AppUser
     public bool IsSuspended { get; set; }
     public string? SuspensionReason { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <summary>When the email address was confirmed (null = not yet).</summary>
+    public DateTimeOffset? EmailConfirmedAt { get; set; }
+    /// <summary>When the phone number was confirmed (reserved for SMS/WhatsApp verification).</summary>
+    public DateTimeOffset? PhoneConfirmedAt { get; set; }
+    /// <summary>Changes with every password change/reset; sessions signed with an older value are signed out.</summary>
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
 
     public DoctorProfile? DoctorProfile { get; set; }
     public Laboratory? OwnedLaboratory { get; set; }
+}
+
+/// <summary>One-time link token (password reset, email confirmation, staff invitation). Only a hash is stored.</summary>
+public sealed class UserToken
+{
+    public const string ResetPassword = "ResetPassword";
+    public const string ConfirmEmail = "ConfirmEmail";
+    public const string StaffInvite = "StaffInvite";
+
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public AppUser? User { get; set; }
+    public string Purpose { get; set; } = string.Empty;
+    public string TokenHash { get; set; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset ExpiresAt { get; set; }
+    public DateTimeOffset? UsedAt { get; set; }
 }
 
 public sealed class DoctorProfile

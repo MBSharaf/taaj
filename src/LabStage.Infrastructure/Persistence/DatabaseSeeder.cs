@@ -45,6 +45,7 @@ public static class DatabaseSeeder
             PasswordHash = PasswordHasher.Hash(options.BootstrapAdminPassword),
             FullName = "مدير المنصة",
             Role = AppRoles.Admin,
+            EmailConfirmedAt = DateTimeOffset.UtcNow, // set by the operator, not self-registered
         });
         await db.SaveChangesAsync(ct);
     }
@@ -491,6 +492,9 @@ public static class DatabaseSeeder
     /// </summary>
     private static async Task EnsureDemoExtrasAsync(LabStageDbContext db, CancellationToken ct)
     {
+        // Demo accounts are known addresses: treat them as confirmed.
+        await db.Users.Where(u => u.EmailConfirmedAt == null && u.NormalizedEmail.EndsWith("@LABSTAGE.EG"))
+            .ExecuteUpdateAsync(x => x.SetProperty(u => u.EmailConfirmedAt, u => u.CreatedAt), ct);
         var profiles = await db.DoctorProfiles.Include(p => p.User).ToListAsync(ct);
         var clinicOwners = (await db.Clinics.Select(c => c.DoctorUserId).ToListAsync(ct)).ToHashSet();
         foreach (var p in profiles.Where(p => !clinicOwners.Contains(p.UserId) && p.ClinicName.Length > 0))
