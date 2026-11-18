@@ -348,7 +348,7 @@
       for (const [vr, extra] of views) {
         state.users[vr].get[`/api/v1/orders/${orderNumber}`] = { ...clone(detail), ...extra };
         const list = state.users[vr].get['/api/v1/orders'];
-        list.items.unshift({ id: detail.id, orderNumber, caseReference: detail.caseReference, patientName: detail.patientName, serviceName: detail.serviceName, toothNumbers: detail.toothNumbers, shade: detail.shade, status: detail.status, deliveryStatus: detail.deliveryStatus, estimatedPriceEgp: detail.estimatedPriceEgp, proposedPriceEgp: null, confirmedPriceEgp: null, dentistName: me.fullName, laboratoryName: lab.name, laboratorySlug: lab.slug, createdAt: created, stages: detail.stages.map((s) => ({ stage: s.stage, status: s.status })), paidEgp: 0, dueEgp: 0 });
+        list.items.unshift({ id: detail.id, isMockup: detail.isMockup, clinicName: detail.clinic?.name || null, orderNumber, caseReference: detail.caseReference, patientName: detail.patientName, serviceName: detail.serviceName, toothNumbers: detail.toothNumbers, shade: detail.shade, status: detail.status, deliveryStatus: detail.deliveryStatus, estimatedPriceEgp: detail.estimatedPriceEgp, proposedPriceEgp: null, confirmedPriceEgp: null, dentistName: me.fullName, laboratoryName: lab.name, laboratorySlug: lab.slug, createdAt: created, stages: detail.stages.map((s) => ({ stage: s.stage, status: s.status })), paidEgp: 0, dueEgp: 0 });
         list.total = list.items.length;
       }
       const lf = state.users.lab.get['/api/v1/finance/lab'];

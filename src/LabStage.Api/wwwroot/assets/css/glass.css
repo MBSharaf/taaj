@@ -261,11 +261,11 @@ html[data-theme="dark"] .page-dash .data-table .muted { color: var(--ink-3); }
 html:not([lang="en"]) .brand .logo-ar.logo-light,
 html[lang="en"] .brand .logo-en.logo-light { display: block; }
 :is(html[data-theme="dark"] .brand, .page-home .site-header:not(.is-scrolled) .brand, .dash-sidebar .brand,
-    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand) .logo-light { display: none !important; }
+    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand, body:has(.page-hero) .site-header:not(.is-scrolled) .brand) .logo-light { display: none !important; }
 html:not([lang="en"]) :is(html[data-theme="dark"] .brand, .page-home .site-header:not(.is-scrolled) .brand, .dash-sidebar .brand,
-    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand) .logo-ar.logo-dark,
+    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand, body:has(.page-hero) .site-header:not(.is-scrolled) .brand) .logo-ar.logo-dark,
 html[lang="en"] :is(html[data-theme="dark"] .brand, .page-home .site-header:not(.is-scrolled) .brand, .dash-sidebar .brand,
-    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand) .logo-en.logo-dark { display: block; }
+    .site-footer .brand, body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand, body:has(.page-hero) .site-header:not(.is-scrolled) .brand) .logo-en.logo-dark { display: block; }
 .brand-suffix { font-family: var(--font-display); font-size: var(--fs-sm); font-weight: 600; line-height: 1; opacity: .8; }
 .page-dash .dash-sidebar .brand .brand-logo { block-size: 30px; }
 .page-dash .dash-sidebar .brand .brand-logo.logo-en { block-size: 24px; }
@@ -301,3 +301,20 @@ html[lang="en"] :is(html[data-theme="dark"] .brand, .page-home .site-header:not(
   border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--fs-sm); cursor: pointer; text-align: start; }
 .demo-accounts-list button:hover { border-color: var(--primary); }
 .demo-accounts-list .ltr { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--ink-2); }
+
+/* ==========================================================================
+   One button language everywhere (Taaj design system, 2026-11-18):
+   primary = solid Taaj blue pill, no rainbow gradient or glow; dashboards use deep navy (see dash-v2.css).
+   ========================================================================== */
+.btn-primary {
+  background: #2A62F5 !important; color: #fff !important; border: 0 !important;
+  box-shadow: 0 8px 20px -10px rgb(42 98 245 / .7) !important; filter: none !important;
+}
+.btn-primary:hover { background: #1740B0 !important; box-shadow: 0 10px 24px -10px rgb(23 64 176 / .75) !important; }
+html[data-theme="dark"] .btn-primary { background: #2A62F5 !important; }
+html[data-theme="dark"] .btn-primary:hover { background: #4C7DF7 !important; }
+body:has(.page-hero) .site-header:not(.is-scrolled) .btn-primary,
+.page-home .site-header:not(.is-scrolled) .btn-primary { background: #fff !important; color: #0D2A78 !important; box-shadow: none !important; }
+/* Phone menu only: the sign-in link inside the open menu (all public pages) */
+.nav-mobile-only { display: none; }
+@media (max-width: 900px) { .nav-main.is-open .nav-mobile-only { display: block; } }

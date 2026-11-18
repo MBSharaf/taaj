@@ -626,6 +626,12 @@ const EXACT_AR_TO_EN = {
   "يرفع المعمل مخرجات مرحلة التصميم ليراجعها الطبيب ويعتمدها أو يطلب تعديلًا بسبب مسجل. بعد الاعتماد تُستحق الدفعة الأولى (20%). إذا لم تتضمن الحالة مرحلة التصميم، تُستحق الدفعة الأولى عند تأكيد الطلب.": "The lab uploads the design for the dentist to approve or send back with a recorded reason. After approval the first payment (20%) is due. Without a design stage, it is due when the order is confirmed.",
   "التنفيذ، الجليز، والدفعة النهائية (80%)": "Production, glazing and the final payment (80%)",
   "يتابع المعمل المراحل المختارة بالترتيب دون تخطي أي مرحلة مطلوبة. عند اكتمال آخر مرحلة مطلوبة (مثل الجليز) تُستحق الدفعة النهائية (80%) ويتم التسليم أو إرسال مندوب المعمل.": "The lab works through the chosen stages in order without skipping any. When the last one (such as glazing) is done, the final payment (80%) is due and the case is delivered or sent with the lab courier.",
+  "ابحث عن معمل أو طبيب أو رقم طلب...": "Search for a lab, dentist or order number...",
+  "فترة تجريبية": "Trial",
+  "متأخر السداد": "Past due",
+  "منتهي": "Expired",
+  "مسودة": "Draft",
+  "أُرسلت للبنك": "Sent to bank",
   // Governorates & Badges
   'الكل': 'All',
   'القاهرة الكبرى': 'Greater Cairo',
@@ -1381,6 +1387,8 @@ export function mountPreferenceToggles() {
     document.querySelector('.site-header .nav-actions'),
     document.querySelector('.dash-topbar > div:last-child'),
     document.querySelector('.auth-top'),
+    // phones: the dashboard top bar has no room, so the side menu carries them too
+    document.querySelector('.dash-v2 .dash-sidebar > div:first-child'),
   ].filter(Boolean);
 
   targets.forEach((container) => {
@@ -1397,7 +1405,8 @@ export function mountPreferenceToggles() {
     wrap.querySelector('[data-pref-lang]').addEventListener('click', () => {
       setLang(getLang() === 'en' ? 'ar' : 'en');
     });
-    container.prepend(wrap);
+    const brand = container.querySelector(':scope > .brand');
+    if (brand) brand.after(wrap); else container.prepend(wrap);
   });
 
   updateToggleButtons();

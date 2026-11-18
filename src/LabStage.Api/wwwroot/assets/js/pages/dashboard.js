@@ -1,6 +1,6 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=12';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=13';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker } from './dash-extra.js?v=1';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker } from './dash-extra.js?v=2';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -51,7 +51,12 @@ function enhanceDashboard3DAndIcons() {
     if (a.querySelector('.nav-ic')) return;
     const href = a.getAttribute('href') || '';
     let ic = ICONS.grid;
-    if (href.includes('lab-settings')) ic = ICONS.gear;
+    if (href.endsWith('admin-dashboard.html#overview')) ic = ICONS.grid;
+    else if (href.endsWith('admin-dashboard.html#settings')) ic = ICONS.gear;
+    else if (href.endsWith('admin-dashboard.html#labs')) ic = ICONS.shield;
+    else if (href.endsWith('admin-dashboard.html#settlements')) ic = ICONS.wallet;
+    else if (href.endsWith('admin-dashboard.html#audit')) ic = ICONS.layers;
+    else if (href.includes('lab-settings')) ic = ICONS.gear;
     else if (href.includes('doctor-settings')) ic = ICONS.clinic;
     else if (href.includes('orders')) ic = ICONS.tooth;
     else if (href.includes('#dentists')) ic = ICONS.layers;
@@ -196,7 +201,21 @@ const statusAr = {
   Due: 'مستحقة السداد الآن',
   Paid: 'مدفوعة ✓',
   Refunded: 'مستردة',
+  // labs, subscriptions and settlements (admin)
+  Pending: 'بانتظار المراجعة',
+  Verified: 'موثّق',
+  Suspended: 'موقوف',
+  TrialActive: 'فترة تجريبية',
+  Active: 'نشط',
+  PastDue: 'متأخر السداد',
+  Expired: 'منتهي',
+  Draft: 'مسودة',
+  Submitted: 'أُرسلت للبنك',
 };
+/** Badge colour for a status: done = green, waiting = amber, stopped = red. */
+const toneOf = (st) => (['Verified', 'Active', 'Paid', 'Completed', 'Approved'].includes(st) ? 'is-success'
+  : ['Pending', 'TrialActive', 'Due', 'Draft', 'Submitted', 'PastDue', 'PendingLabReview', 'PriceRevisionProposed'].includes(st) ? 'is-warning'
+    : ['Rejected', 'Suspended', 'Expired', 'Blocked'].includes(st) ? 'is-danger' : '');
 
 /** Order status in lists: the delivery step shows while the case is on its way. */
 function orderStatusText(o) {
@@ -654,11 +673,11 @@ async function initDoctorOrders() {
       <tr>
         <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
         <td>${esc(o.patientName || o.caseReference)}</td>
-        <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})</td>
+        <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})${o.isMockup ? '<span class="mockup-tag">Mockup · تصميم فقط</span>' : ''}</td>
         <td>${esc(o.laboratoryName)}</td>
         <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}: ${esc(statusAr[s.status] || s.status)}`).join(' · ')}</td>
         <td class="num">${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
-        <td><span class="badge">${esc(orderStatusText(o))}</span></td>
+        <td><span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/doctor-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">فتح الحالة</a></td>
       </tr>`).join('') : `<tr><td colspan="8" class="muted">لا توجد طلبات مطابقة.</td></tr>`;
     translate(tbody);
@@ -778,7 +797,7 @@ async function initOrderDetails(isLabView) {
     document.getElementById('order-header-box').innerHTML = `
       <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-4);align-items:flex-start">
         <div>
-          <span class="badge">${esc(orderStatusText(o))}</span>
+          <span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span>
           <h1 style="font-size:var(--fs-2xl);margin-block-top:var(--sp-2)">طلب <span class="ltr mono">${esc(o.orderNumber)}</span> — ${esc(o.serviceName)}${o.isMockup ? '<span class="mockup-tag">Mockup · تصميم فقط</span>' : ''}</h1>
           <p class="muted">اسم المريض: <strong>${esc(o.patientName || o.caseReference)}</strong> · الأسنان: <bdi class="ltr">${esc(o.toothNumbers)}</bdi> · اللون: <bdi class="ltr">${esc(o.shade)}</bdi></p>
           <p class="muted" style="font-size:var(--fs-sm)">الطبيب: ${esc(o.dentist?.name)} · المعمل: ${esc(o.laboratory?.name)}${o.clinic ? ` · العيادة: ${esc(o.clinic.name)}` : ''}</p>
@@ -1078,7 +1097,7 @@ async function initLabDashboard() {
         <td><strong>${esc(o.dentistName)}</strong></td>
         <td>${esc(o.serviceName)}</td>
         <td>${(o.stages || []).map((st) => `${esc(stageAr[st.stage] || st.stage)}`).join(' ← ')}</td>
-        <td><span class="badge">${esc(orderStatusText(o))}</span></td>
+        <td><span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">إدارة المراحل</a></td>
       </tr>`).join('') : `<tr><td colspan="6" class="muted">لا توجد طلبات بعد.</td></tr>`;
   }
@@ -1345,12 +1364,12 @@ async function initLabOrders() {
     tbody.innerHTML = data.items?.length ? data.items.map((o) => `
       <tr>
         <td class="ltr mono"><strong>${esc(o.orderNumber)}</strong></td>
-        <td>${esc(o.dentistName)}</td>
+        <td>${esc(o.dentistName)}${o.clinicName ? `<div class="muted" style="font-size:var(--fs-xs)">${esc(o.clinicName)}</div>` : ''}</td>
         <td>${esc(o.patientName || o.caseReference)}</td>
-        <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})</td>
+        <td>${esc(o.serviceName)} (${esc(o.toothNumbers)})${o.isMockup ? '<span class="mockup-tag">Mockup · تصميم فقط</span>' : ''}</td>
         <td>${(o.stages || []).map((s) => `${esc(stageAr[s.stage] || s.stage)}: ${esc(statusAr[s.status] || s.status)}`).join(' · ')}</td>
         <td class="num">${fmtEgp(o.confirmedPriceEgp ?? o.estimatedPriceEgp)}</td>
-        <td><span class="badge">${esc(orderStatusText(o))}</span></td>
+        <td><span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">إدارة الحالة</a></td>
       </tr>`).join('') : `<tr><td colspan="8" class="muted">لا توجد طلبات مطابقة.</td></tr>`;
   }
@@ -1404,7 +1423,7 @@ async function initLabFinance() {
           <td class="ltr mono"><a href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}"><strong>${esc(o.orderNumber)}</strong></a></td>
           <td>${esc(o.serviceName)} <div class="muted" style="font-size:var(--fs-xs)">مرجع: ${esc(o.patientName || o.caseReference)} · لون ${esc(o.shade)}</div></td>
           <td class="ltr">${o.createdAt ? new Date(o.createdAt).toLocaleDateString('ar-EG') : '—'}</td>
-          <td><span class="badge">${esc(orderStatusText(o))}</span></td>
+          <td><span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span></td>
           <td class="num">${fmtEgp(o.totalEgp)}</td>
           <td class="num">${fmtEgp(o.paidEgp)}</td>
           <td class="num">${fmtEgp(o.remainingEgp)}</td>
@@ -1710,8 +1729,8 @@ async function initAdminDashboard() {
       <tr>
         <td><strong>${esc(l.name)}</strong></td>
         <td>${esc(l.governorate)}</td>
-        <td><span class="badge">${esc(l.verificationStatus)}</span></td>
-        <td><span class="badge">${esc(l.subscriptionStatus)}</span></td>
+        <td><span class="badge ${toneOf(l.verificationStatus)}">${esc(statusAr[l.verificationStatus] || l.verificationStatus)}</span></td>
+        <td><span class="badge ${toneOf(l.subscriptionStatus)}">${esc(statusAr[l.subscriptionStatus] || l.subscriptionStatus)}</span></td>
         <td style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" data-verify-lab="${l.id}">توثيق ✓</button>
           <button class="btn btn-ghost btn-sm" data-settle-lab="${l.id}">إنشاء دفعة تسوية</button>
@@ -1751,7 +1770,7 @@ async function initAdminDashboard() {
         <td class="num">${fmtEgp(s.grossEgp)}</td>
         <td class="num">${fmtEgp(s.commissionEgp)}</td>
         <td class="num"><strong>${fmtEgp(s.netPayableEgp)}</strong></td>
-        <td><span class="badge">${esc(s.status)}</span></td>
+        <td><span class="badge ${toneOf(s.status)}">${esc(statusAr[s.status] || s.status)}</span></td>
         <td>${s.status === 'Paid' ? `<span class="ltr mono">${esc(s.externalBankTransferRef)}</span>` : `<button class="btn btn-primary btn-sm" data-mark-paid="${s.id}">تأكيد تحويل بنكي</button>`}</td>
       </tr>`).join('') : `<tr><td colspan="5" class="muted">لا توجد دفعات تسوية بعد.</td></tr>`;
 
@@ -1813,11 +1832,31 @@ async function initAdminDashboard() {
   else if (page === 'lab-orders') await initLabOrders();
   else if (page === 'lab-order-details') await initOrderDetails(true);
   else if (page === 'lab-finance') await initLabFinance();
-  else if (page === 'admin-dashboard') await initAdminDashboard();
+  else if (page === 'admin-dashboard') { await initAdminDashboard(); initAdminSearch(); }
   else if (page === 'lab-settings') await initLabSettings();
   else if (page === 'doctor-settings') await initDoctorSettings();
   if (getLang() === 'en') applyDomTranslations(document.body);
 })();
+
+// ---- Admin: the top search filters the tables and lists on the page ----
+function initAdminSearch() {
+  const form = document.getElementById('admin-search-form');
+  const input = document.getElementById('admin-search-q');
+  if (!form || !input) return;
+  const apply = () => {
+    const q = input.value.trim().toLowerCase();
+    document.querySelectorAll('.dash-main tbody tr, #ad-audit-list > *, #home-list li, #home-team li').forEach((row) => {
+      row.hidden = !!q && !row.textContent.toLowerCase().includes(q);
+    });
+  };
+  input.addEventListener('input', apply);
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    apply();
+    const hit = document.querySelector('.dash-main tbody tr:not([hidden])');
+    hit?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  });
+}
 
 // ---- Phones: each table cell carries its column title, so CSS can show rows as cards ----
 // Behaviour only: copies the existing <th> text onto the cells (also after re-renders and translation).

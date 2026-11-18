@@ -723,3 +723,28 @@ html[data-theme="dark"] body.dash-v2 { --d-rail: #0B1A45; }
 .fin-dialog form, .fin-dialog label, .fin-dialog .fin-view { min-inline-size: 0; inline-size: 100%; }
 .fin-dialog input { inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; margin: 0; }
 .fin-dialog .fin-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* ==========================================================================
+   Consistency pass 2026-11-18: lab, admin and doctor pages share one look
+   ========================================================================== */
+/* Buttons inside dashboards follow the deep-navy pill of the page header buttons */
+.dash-v2 .btn { border-radius: 999px; }
+html body.dash-v2 .btn-primary { background: var(--d-deep) !important; color: #fff !important; box-shadow: none !important; }
+html body.dash-v2 .btn-primary:hover { background: var(--d-deep-2) !important; }
+.dash-v2 .btn-ghost, .dash-v2 .btn-outline { background: var(--d-card) !important; color: var(--d-ink) !important; border: 1px solid var(--d-border) !important; box-shadow: none !important; }
+.dash-v2 .btn-ghost:hover, .dash-v2 .btn-outline:hover { border-color: var(--d-ink) !important; }
+.dash-v2 .btn-mint { background: var(--d-soft) !important; color: var(--d-primary) !important; box-shadow: none !important; }
+/* Older sections written with the site palette: remap it so dark mode stays readable */
+html[data-theme="dark"] .dash-v2 { --g-900: var(--d-ink); --g-950: var(--d-ink); --g-800: var(--d-ink); --ink: var(--d-ink); --ink-2: var(--d-ink-2); --bg: var(--d-panel); --line: var(--d-border); --surface: var(--d-card); }
+.dash-v2 :is(h2, h3, h4) { color: var(--d-ink); }
+/* Status badges: one soft style for every role */
+.dash-v2 .badge { background: var(--d-soft); color: var(--d-primary); border: 0; border-radius: 999px; font-weight: 600; }
+.dash-v2 .badge.is-success, .dash-v2 .badge-success { background: var(--d-ok-bg) !important; color: var(--d-ok) !important; }
+.dash-v2 .badge.is-warning, .dash-v2 .badge-warning { background: var(--d-wip-bg) !important; color: var(--d-wip) !important; }
+.dash-v2 .badge.is-danger, .dash-v2 .badge-danger { background: var(--d-bad-bg) !important; color: var(--d-bad) !important; }
+/* Theme / language buttons: in the top bar, and inside the side menu on small phones */
+.dash-v2 .dash-sidebar .pref-toggles { display: none; }
+@media (max-width: 480px) {
+  .dash-v2 .dash-sidebar .pref-toggles { display: flex; gap: 8px; margin: 6px 8px 10px; }
+  .dash-v2 .dash-sidebar .pref-toggles .pref-btn { flex: 1 1 0; }
+}
