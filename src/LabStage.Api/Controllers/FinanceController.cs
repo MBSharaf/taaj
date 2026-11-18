@@ -19,7 +19,9 @@ public sealed class FinanceController(
     LabStageDbContext db,
     IPaymentGateway paymentGateway,
     IWebHostEnvironment env,
-    FinanceGate financeGate) : ControllerBase
+    FinanceGate financeGate,
+    IConfiguration config,
+    ILogger<FinanceController> log) : ControllerBase
 {
     public sealed record CreateCheckoutRequest(string OrderNumber, int MilestoneSequence);
 
@@ -44,47 +46,41 @@ public sealed class FinanceController(
 
         // One open checkout per milestone: a second click returns the same session instead of opening
         // another one that could also be paid.
-        var open = await db.Payments.FirstOrDefaultAsync(
+        var payment = await db.Payments.FirstOrDefaultAsync(
             p => p.MilestoneId == milestone.Id && p.PayerDentistUserId == userId && p.Status == PaymentStatus.Pending, ct);
-        if (open is not null)
+        var reused = payment is not null;
+        if (payment is null)
         {
-            var again = await paymentGateway.CreateCheckoutSessionAsync(
-                open.Id, order.OrderNumber, milestone.Sequence, open.AmountPiastres, order.DentistUser?.Email ?? "dentist@labstage.eg", ct);
-            return Ok(new
+            payment = new Payment
             {
-                open.Id,
-                Provider = open.Provider,
-                CheckoutId = open.ProviderCheckoutId,
-                again.CheckoutUrl,
-                AmountEgp = open.AmountPiastres / 100m,
-                again.Currency,
-                Reused = true,
-            });
+                OrderId = order.Id,
+                MilestoneId = milestone.Id,
+                PayerDentistUserId = userId,
+                LaboratoryId = order.LaboratoryId,
+                Provider = paymentGateway.ProviderName,
+                ProviderCheckoutId = $"chk_{Guid.NewGuid():N}",
+                AmountPiastres = milestone.AmountPiastres,
+                Status = PaymentStatus.Pending,
+            };
+            db.Payments.Add(payment);
         }
 
-        var payment = new Payment
+        var baseUrl = AccountEmails.BaseUrl(HttpContext, config);
+        CheckoutSessionResult session;
+        try
         {
-            OrderId = order.Id,
-            MilestoneId = milestone.Id,
-            PayerDentistUserId = userId,
-            LaboratoryId = order.LaboratoryId,
-            Provider = paymentGateway.ProviderName,
-            ProviderCheckoutId = $"chk_{Guid.NewGuid():N}",
-            AmountPiastres = milestone.AmountPiastres,
-            Status = PaymentStatus.Pending,
-        };
-
-        var session = await paymentGateway.CreateCheckoutSessionAsync(
-            payment.Id,
-            order.OrderNumber,
-            milestone.Sequence,
-            milestone.AmountPiastres,
-            order.DentistUser?.Email ?? "dentist@labstage.eg",
-            ct);
-
-        payment.ProviderCheckoutId = session.CheckoutId;
-        db.Payments.Add(payment);
-        await db.SaveChangesAsync(ct);
+            session = await paymentGateway.CreateCheckoutSessionAsync(new CheckoutRequest(
+                payment.Id, payment.ProviderCheckoutId, order.OrderNumber, milestone.Sequence, payment.AmountPiastres,
+                order.DentistUser?.Email ?? string.Empty, order.DentistUser?.FullName ?? string.Empty, order.DentistUser?.Phone ?? string.Empty,
+                ReturnUrl: $"{baseUrl}/doctor-order-details.html?orderNumber={Uri.EscapeDataString(order.OrderNumber)}&payment=return",
+                NotificationUrl: $"{baseUrl}/api/v1/payments/webhooks/{paymentGateway.ProviderName.ToLowerInvariant()}"), ct);
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "Checkout creation failed for order {Order}", order.OrderNumber);
+            return Problem("تعذّر فتح صفحة الدفع الآن. حاول بعد قليل.", statusCode: StatusCodes.Status502BadGateway);
+        }
+        if (!reused) await db.SaveChangesAsync(ct);
 
         return Ok(new
         {
@@ -94,41 +90,43 @@ public sealed class FinanceController(
             session.CheckoutUrl,
             AmountEgp = session.AmountPiastres / 100m,
             session.Currency,
+            Reused = reused,
+            TestMode = paymentGateway.IsTestSimulator,
         });
     }
 
-    public sealed record WebhookEventDto(
-        string EventId,
-        string CheckoutId,
-        string TransactionRef,
-        long AmountPiastres,
-        string Currency,
-        bool Succeeded);
-
     /// <summary>
-    /// Server-side verified payment webhook. Validates HMAC signature, currency, exact piastres,
-    /// and EventId idempotency before writing commission, lab net payable, and platform gateway fee expense.
+    /// Gateway callbacks. The ONLY place where a payment becomes paid: the signature is verified by the active gateway
+    /// (HMAC-SHA256 for the test simulator, HMAC-SHA512 for Paymob), then amount, currency and event idempotency are checked.
     /// </summary>
     [AllowAnonymous]
-    [HttpPost("payments/webhooks/sandbox")]
-    public async Task<IActionResult> ProcessSandboxWebhook([FromBody] WebhookEventDto dto, CancellationToken ct)
+    [HttpPost("payments/webhooks/{provider}")]
+    public async Task<IActionResult> ProcessWebhook([FromRoute] string provider, CancellationToken ct)
     {
-        var raw = JsonSerializer.Serialize(dto);
-        var signature = Request.Headers["X-Webhook-Signature"].ToString();
-        if (!paymentGateway.VerifySignature(raw, signature))
+        if (!string.Equals(provider, paymentGateway.ProviderName, StringComparison.OrdinalIgnoreCase))
+            return NotFound();
+        Request.EnableBuffering();
+        string raw;
+        using (var reader = new StreamReader(Request.Body, Encoding.UTF8, leaveOpen: true)) raw = await reader.ReadToEndAsync(ct);
+        var query = Request.Query.ToDictionary(q => q.Key, q => q.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+        var headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+        var evt = paymentGateway.VerifyWebhook(raw, query, headers);
+        if (evt is null)
             return Problem("توقيع Webhook غير صالح.", statusCode: StatusCodes.Status401Unauthorized);
+        return await ApplyVerifiedPaymentAsync(evt, raw, ct);
+    }
 
+    /// <summary>Books a verified gateway result: milestone paid, commission, lab payable, ledger, notifications.</summary>
+    private async Task<IActionResult> ApplyVerifiedPaymentAsync(VerifiedWebhookPayload dto, string raw, CancellationToken ct)
+    {
         if (dto.Currency != Money.Currency)
             return Problem("العملة غير مدعومة (يجب أن تكون EGP).", statusCode: StatusCodes.Status400BadRequest);
 
         // Idempotency check on (Provider, EventId)
-        if (await db.PaymentProviderEvents.AnyAsync(e => e.Provider == paymentGateway.ProviderName && e.EventId == dto.EventId, ct))
-        {
+        if (await db.PaymentProviderEvents.AnyAsync(e => e.Provider == dto.Provider && e.EventId == dto.EventId, ct))
             return Ok(new { status = "duplicate_ignored", dto.EventId });
-        }
 
-        var payment = await db.Payments.FirstOrDefaultAsync(
-            p => p.Provider == paymentGateway.ProviderName && p.ProviderCheckoutId == dto.CheckoutId, ct);
+        var payment = await db.Payments.FirstOrDefaultAsync(p => p.Provider == dto.Provider && p.ProviderCheckoutId == dto.CheckoutId, ct);
         if (payment is null)
             return Problem("جلسة الدفع غير معروفة.", statusCode: StatusCodes.Status404NotFound);
 
@@ -138,14 +136,19 @@ public sealed class FinanceController(
         await using var tx = await db.Database.BeginTransactionAsync(ct);
         // Only one webhook at a time may book a given milestone.
         await DbLocks.AcquireAsync(db, $"milestone:{payment.MilestoneId}", ct);
-        if (await db.PaymentProviderEvents.AnyAsync(e => e.Provider == paymentGateway.ProviderName && e.EventId == dto.EventId, ct))
+        if (await db.PaymentProviderEvents.AnyAsync(e => e.Provider == dto.Provider && e.EventId == dto.EventId, ct))
             return Ok(new { status = "duplicate_ignored", dto.EventId });
 
         db.PaymentProviderEvents.Add(new PaymentProviderEvent
         {
-            Provider = paymentGateway.ProviderName,
+            Provider = dto.Provider,
             EventId = dto.EventId,
             PayloadHash = Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(raw))),
+            Kind = "Payment",
+            CheckoutId = dto.CheckoutId,
+            TransactionRef = dto.TransactionRef,
+            AmountPiastres = dto.AmountPiastres,
+            Succeeded = dto.Succeeded,
         });
 
         if (!dto.Succeeded)
@@ -186,19 +189,21 @@ public sealed class FinanceController(
         if (milestone.Status != MilestoneStatus.Due)
         {
             // The milestone was already settled by another payment (or is not due): never book it twice.
-            // The money from this payment goes back to the dentist; no commission or lab payable is created.
-            // Sandbox: recorded as refunded here. A real gateway adapter (P0-8) must also call the provider's refund API.
+            // The money goes back to the dentist through the gateway; no commission or lab payable is created.
+            var back = await paymentGateway.RefundAsync(dto.TransactionRef, payment.AmountPiastres, ct);
             payment.Status = PaymentStatus.Refunded;
             payment.RefundedPiastres = payment.AmountPiastres;
             db.AuditLogs.Add(new AuditLog
             {
                 ActorUserId = payment.PayerDentistUserId,
                 ActorRole = AppRoles.Dentist,
-                Action = "DuplicateMilestonePaymentRefunded",
+                Action = back.Accepted ? "DuplicateMilestonePaymentRefunded" : "DuplicateMilestonePaymentRefundFailed",
                 EntityType = nameof(Payment),
                 EntityId = payment.Id.ToString(),
-                Details = $"Order={order.OrderNumber}, Milestone={milestone.Sequence}, MilestoneStatus={milestone.Status}, AmountEgp={payment.AmountPiastres / 100m:0.00}",
+                Details = $"Order={order.OrderNumber}, Milestone={milestone.Sequence}, MilestoneStatus={milestone.Status}, AmountEgp={payment.AmountPiastres / 100m:0.00}, GatewayRefund={back.RefundRef ?? back.Error}",
             });
+            if (back.Accepted)
+                db.PaymentProviderEvents.Add(new PaymentProviderEvent { Provider = dto.Provider, EventId = $"rfd_{back.RefundRef}", Kind = "Refund", CheckoutId = dto.CheckoutId, TransactionRef = back.RefundRef, AmountPiastres = payment.AmountPiastres, Succeeded = true });
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
             return Ok(new { status = "milestone_not_due_refunded", payment.Id });
@@ -261,52 +266,73 @@ public sealed class FinanceController(
         catch (DbUpdateException)
         {
             // Same event delivered twice at the same moment: the unique index stops the second one.
-            if (await IsDuplicateEventAsync(dto.EventId))
+            if (await IsDuplicateEventAsync(dto.Provider, dto.EventId))
                 return Ok(new { status = "duplicate_ignored", dto.EventId });
             throw;
         }
 
-        // Status only: this response can reach the dentist (via the sandbox helper) and the gateway,
+        // Status only: this response can reach the dentist (via the test checkout) and the gateway,
         // so it must never carry either party's commission. Role-scoped endpoints expose the figures.
         return Ok(new { status = "succeeded", payment.Id });
     }
 
-    private async Task<bool> IsDuplicateEventAsync(string eventId)
+    private async Task<bool> IsDuplicateEventAsync(string provider, string eventId)
     {
         db.ChangeTracker.Clear();
-        return await db.PaymentProviderEvents.AnyAsync(e => e.Provider == paymentGateway.ProviderName && e.EventId == eventId);
+        return await db.PaymentProviderEvents.AnyAsync(e => e.Provider == provider && e.EventId == eventId);
+    }
+
+    // ---------------- local test checkout (simulator, Development only) ----------------
+
+    private SandboxPaymentGateway? TestGateway => env.IsDevelopment() ? paymentGateway as SandboxPaymentGateway : null;
+
+    /// <summary>What the test checkout page shows. Only the paying dentist, only in Development with the simulator.</summary>
+    [Authorize(Roles = AppRoles.Dentist)]
+    [HttpGet("payments/test-gateway/{checkoutId}")]
+    public async Task<IActionResult> TestCheckout([FromRoute] string checkoutId, CancellationToken ct)
+    {
+        if (TestGateway is null) return NotFound();
+        var userId = User.GetUserId();
+        var p = await db.Payments.FirstOrDefaultAsync(x => x.ProviderCheckoutId == checkoutId && x.PayerDentistUserId == userId, ct);
+        if (p is null) return NotFound();
+        var order = await db.Orders.Include(o => o.Milestones).FirstAsync(o => o.Id == p.OrderId, ct);
+        return Ok(new
+        {
+            checkoutId, order.OrderNumber, AmountEgp = p.AmountPiastres / 100m, Currency = Money.Currency,
+            MilestoneSequence = order.Milestones.First(m => m.Id == p.MilestoneId).Sequence,
+            Status = p.Status.ToString(),
+            SuccessCard = SandboxPaymentGateway.SuccessCard, DeclineCard = SandboxPaymentGateway.DeclineCard,
+        });
+    }
+
+    public sealed record TestPayRequest(string CardNumber);
+
+    /// <summary>"Pay" on the test checkout: the simulator decides by card number, then sends its signed callback.</summary>
+    [Authorize(Roles = AppRoles.Dentist)]
+    [HttpPost("payments/test-gateway/{checkoutId}/pay")]
+    public async Task<IActionResult> TestPay([FromRoute] string checkoutId, [FromBody] TestPayRequest req, CancellationToken ct)
+    {
+        if (TestGateway is not { } gw) return NotFound();
+        var userId = User.GetUserId();
+        var p = await db.Payments.FirstOrDefaultAsync(x => x.ProviderCheckoutId == checkoutId && x.PayerDentistUserId == userId, ct);
+        if (p is null) return NotFound();
+        var card = new string((req.CardNumber ?? string.Empty).Where(char.IsDigit).ToArray());
+        var (body, sig) = gw.BuildEvent(checkoutId, p.AmountPiastres, card == SandboxPaymentGateway.SuccessCard);
+        var evt = gw.VerifyWebhook(body, new Dictionary<string, string>(), new Dictionary<string, string> { ["X-Webhook-Signature"] = sig })!;
+        var result = await ApplyVerifiedPaymentAsync(evt, body, ct);
+        var order = await db.Orders.Where(o => o.Id == p.OrderId).Select(o => o.OrderNumber).FirstAsync(ct);
+        db.ChangeTracker.Clear();
+        var status = (await db.Payments.AsNoTracking().FirstAsync(x => x.Id == p.Id, ct)).Status.ToString();
+        return result is ObjectResult { StatusCode: >= 400 } bad ? bad : Ok(new { Status = status, OrderNumber = order });
     }
 
     /// <summary>
-    /// Development/Sandbox helper that signs and dispatches a real server-side webhook for testing the sandbox flow.
-    /// Explicitly restricted to non-production or sandbox provider mode.
+    /// Development helper kept for automated tests: pays a checkout with the success card in one call.
     /// </summary>
     [Authorize(Roles = AppRoles.Dentist)]
     [HttpPost("payments/sandbox-confirm/{checkoutId}")]
-    public async Task<IActionResult> SimulateSandboxWebhook([FromRoute] string checkoutId, CancellationToken ct)
-    {
-        // Outside Development this endpoint does not exist: otherwise a dentist could confirm a payment without paying.
-        if (!env.IsDevelopment())
-            return NotFound();
-        if (paymentGateway is not SandboxPaymentGateway sandbox)
-            return Problem("متاح في وضع Sandbox فقط.", statusCode: StatusCodes.Status400BadRequest);
-
-        var userId = User.GetUserId();
-        var payment = await db.Payments.FirstOrDefaultAsync(p => p.ProviderCheckoutId == checkoutId && p.PayerDentistUserId == userId, ct);
-        if (payment is null) return NotFound();
-
-        var dto = new WebhookEventDto(
-            EventId: $"evt_{payment.Id:N}",
-            CheckoutId: payment.ProviderCheckoutId,
-            TransactionRef: $"txn_{payment.Id.ToString("N")[..10]}",
-            AmountPiastres: payment.AmountPiastres,
-            Currency: Money.Currency,
-            Succeeded: true);
-
-        var raw = JsonSerializer.Serialize(dto);
-        Request.Headers["X-Webhook-Signature"] = sandbox.ComputeSignature(raw);
-        return await ProcessSandboxWebhook(dto, ct);
-    }
+    public Task<IActionResult> SimulateSandboxWebhook([FromRoute] string checkoutId, CancellationToken ct) =>
+        TestPay(checkoutId, new TestPayRequest(SandboxPaymentGateway.SuccessCard), ct);
 
     [Authorize(Roles = AppRoles.Dentist)]
     [HttpGet("finance/doctor")]
@@ -640,6 +666,11 @@ public sealed class FinanceController(
             refundMoney);
         var labReduction = refundMoney - reversedComm;
 
+        // The gateway returns the money first; nothing is booked if it refuses.
+        var gatewayRefund = await paymentGateway.RefundAsync(payment.ProviderTransactionRef ?? string.Empty, refundMoney.Piastres, ct);
+        if (!gatewayRefund.Accepted)
+            return Problem("رفضت بوابة الدفع الاسترداد. راجع حالة العملية لدى البوابة ثم حاول مرة أخرى.", statusCode: StatusCodes.Status502BadGateway);
+
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
         payment.RefundedPiastres += refundMoney.Piastres;
@@ -662,8 +693,14 @@ public sealed class FinanceController(
             Reason = req.Reason.Trim(),
             Status = RefundStatus.Approved,
             ResolvedAt = DateTimeOffset.UtcNow,
+            ProviderRefundRef = gatewayRefund.RefundRef,
         };
         db.RefundRequests.Add(refundRow);
+        db.PaymentProviderEvents.Add(new PaymentProviderEvent
+        {
+            Provider = payment.Provider, EventId = $"rfd_{gatewayRefund.RefundRef ?? Guid.NewGuid().ToString("N")}", Kind = "Refund",
+            CheckoutId = payment.ProviderCheckoutId, TransactionRef = gatewayRefund.RefundRef, AmountPiastres = refundMoney.Piastres, Succeeded = true,
+        });
 
         var liabilityAccount = req.FaultParty == RefundFaultParty.Platform ? "PlatformLiability" : "LabPayable";
         db.LedgerTransactions.Add(new LedgerTransaction

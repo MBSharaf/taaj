@@ -423,6 +423,12 @@ public sealed class PaymentProviderEvent
     public string EventId { get; set; } = string.Empty;
     public string PayloadHash { get; set; } = string.Empty;
     public DateTimeOffset ProcessedAt { get; set; } = DateTimeOffset.UtcNow;
+    // What the gateway reported (kept for reconciliation against our own records).
+    public string Kind { get; set; } = "Payment"; // Payment | Refund
+    public string? CheckoutId { get; set; }
+    public string? TransactionRef { get; set; }
+    public long AmountPiastres { get; set; }
+    public bool Succeeded { get; set; }
 }
 
 public sealed class CommissionEntry
@@ -478,6 +484,8 @@ public sealed class RefundRequest
     public Guid? ApprovedByUserId { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ResolvedAt { get; set; }
+    /// <summary>The gateway's reference for the refund (null until the gateway accepted it).</summary>
+    public string? ProviderRefundRef { get; set; }
 }
 
 public sealed class LedgerTransaction

@@ -101,6 +101,10 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
             e.HasIndex(p => new { p.Provider, p.EventId }).IsUnique();
             e.Property(p => p.Provider).HasMaxLength(64);
             e.Property(p => p.EventId).HasMaxLength(160);
+            e.Property(p => p.Kind).HasMaxLength(16);
+            e.Property(p => p.CheckoutId).HasMaxLength(160);
+            e.Property(p => p.TransactionRef).HasMaxLength(160);
+            e.HasIndex(p => p.CheckoutId);
         });
 
         b.Entity<Payment>(e =>

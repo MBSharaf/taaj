@@ -36,7 +36,13 @@ else if (!isDevelopment && (webhookSecret == LegacyDevWebhookSecret || webhookSe
 }
 
 builder.Services.AddDbContext<LabStageDbContext>(o => o.UseSqlServer(connStr));
-builder.Services.AddScoped<IPaymentGateway, SandboxPaymentGateway>();
+// Real gateway only when its keys are configured; otherwise the local test simulator (usable in Development only).
+if (LabStage.Infrastructure.Payments.PaymobPaymentGateway.IsConfigured(builder.Configuration))
+    builder.Services.AddHttpClient<IPaymentGateway, LabStage.Infrastructure.Payments.PaymobPaymentGateway>(c => c.Timeout = TimeSpan.FromSeconds(30));
+else
+    builder.Services.AddScoped<IPaymentGateway, SandboxPaymentGateway>();
+if (builder.Configuration["Documents:Fonts"] is { Length: > 0 } pdfFonts)
+    LabStage.Infrastructure.Documents.FinanceDocuments.Fonts = pdfFonts.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 builder.Services.AddSingleton<LabStage.Application.Email.IEmailSender>(sp => LabStage.Infrastructure.Email.EmailSenderFactory.Create(
     builder.Configuration, builder.Environment.ContentRootPath, isDevelopment, sp.GetRequiredService<ILoggerFactory>()));
 

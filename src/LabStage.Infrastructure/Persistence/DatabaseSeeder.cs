@@ -492,6 +492,12 @@ public static class DatabaseSeeder
     /// </summary>
     private static async Task EnsureDemoExtrasAsync(LabStageDbContext db, CancellationToken ct)
     {
+        // Demo payments come with the gateway's confirmation record, so the reconciliation report starts clean.
+        var unmatched = await db.Payments.Where(p => p.ConfirmedAt != null && !db.PaymentProviderEvents.Any(e => e.Kind == "Payment" && e.CheckoutId == p.ProviderCheckoutId)).ToListAsync(ct);
+        foreach (var p in unmatched)
+            db.PaymentProviderEvents.Add(new PaymentProviderEvent { Provider = p.Provider, EventId = $"seed_{p.Id:N}", Kind = "Payment", CheckoutId = p.ProviderCheckoutId, TransactionRef = p.ProviderTransactionRef, AmountPiastres = p.AmountPiastres, Succeeded = true, ProcessedAt = p.ConfirmedAt!.Value });
+        if (unmatched.Count > 0) await db.SaveChangesAsync(ct);
+
         // Demo accounts are known addresses: treat them as confirmed.
         await db.Users.Where(u => u.EmailConfirmedAt == null && u.NormalizedEmail.EndsWith("@LABSTAGE.EG"))
             .ExecuteUpdateAsync(x => x.SetProperty(u => u.EmailConfirmedAt, u => u.CreatedAt), ct);
