@@ -1,6 +1,7 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=15';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=16';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=4';
+import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=1';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=5';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -1831,6 +1832,8 @@ async function initAdminDashboard() {
   await installFinanceGate(user, page);
   initVerifyBanner(user);
   installDocLinks();
+  initNotificationCenter();
+  if (page.endsWith('-account')) initNotificationPrefs();
   if (page === 'doctor-dashboard') await initDoctorDashboard();
   else if (page === 'doctor-orders') await initDoctorOrders();
   else if (page === 'doctor-order-details') await initOrderDetails(false);

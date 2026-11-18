@@ -132,11 +132,15 @@
   function notify(targetRole, type, title, body, link) {
     const n = U(targetRole)?.get['/api/v1/notifications'];
     if (!n) return;
-    n.items.unshift({ id: uuid(), type, title, body, linkUrl: link, isRead: false, createdAt: now() });
+    n.items.unshift({ id: uuid(), type, category: categoryOf(type), title, body, linkUrl: link, orderNumber: (String(link || '').match(/orderNumber=([^&]+)/) || [])[1] || null, isRead: false, createdAt: now() });
     n.unreadCount = (n.unreadCount || 0) + 1;
     const me = U(targetRole).get['/api/v1/auth/me'];
     if (me) me.unreadNotifications = n.unreadCount;
   }
+  const categoryOf = (t) => (/^(NewOrder|OrderAccepted|OrderRejected|PriceProposed|PriceApproved|OrderCompleted)$/.test(t) ? 'Orders'
+    : /^(Stage|ReviewNeeded|RevisionRequested)/.test(t) ? 'Production'
+      : /^(Payment|Refund|Settlement)/.test(t) ? 'Payments'
+        : /^(Delivery|OutForDelivery|Delivered)$/.test(t) ? 'Delivery' : t === 'NewMessage' ? 'Chat' : 'Account');
   const orderLink = (who, n) => `/${who === 'doctor' ? 'doctor' : 'lab'}-order-details.html?orderNumber=${n}`;
   const pct = () => {
     const s = state.users.admin.get['/api/v1/admin/overview']?.settings || {};
@@ -366,6 +370,29 @@
       const collected = pays.reduce((a, x) => a + Number(x.amountEgp || 0), 0);
       return json({ summary: { payments: pays.length, matched: pays.length, issues: 0, collectedEgp: r2(collected), gatewayCollectedEgp: r2(collected), refundedEgp: 0, gatewayRefundedEgp: 0, commissionEgp: r2(collected * pct().lab / 100), labNetEgp: r2(collected * (100 - pct().lab) / 100), gatewayFeesEgp: r2(collected * 0.015) }, items: [] });
     }
+    // ---- notification center ----
+    if (p === '/api/v1/notifications' && method === 'GET') {
+      const all = (G['/api/v1/notifications']?.items || []).map((n) => ({ ...n, category: n.category || categoryOf(n.type), orderNumber: n.orderNumber ?? ((String(n.linkUrl || '').match(/orderNumber=([^&]+)/) || [])[1] || null) }));
+      let items = all;
+      if (q.get('unread') === 'true') items = items.filter((n) => !n.isRead);
+      if (q.get('category')) items = items.filter((n) => n.category === q.get('category'));
+      const size = Math.min(50, Number(q.get('pageSize') || 20)); const pg = Math.max(1, Number(q.get('page') || 1));
+      const unreadByCategory = {}; all.filter((n) => !n.isRead).forEach((n) => { unreadByCategory[n.category] = (unreadByCategory[n.category] || 0) + 1; });
+      return json(withMask({ unreadCount: all.filter((n) => !n.isRead).length, unreadByCategory, total: items.length, page: pg, pageSize: size, items: items.slice((pg - 1) * size, pg * size) }));
+    }
+    if (p === '/api/v1/notifications/read-all' && method === 'POST') {
+      const nl = G['/api/v1/notifications']; let changed = 0;
+      (nl?.items || []).forEach((n) => { const cat = n.category || categoryOf(n.type); if (!n.isRead && (!q.get('category') || q.get('category') === cat)) { n.isRead = true; changed++; } });
+      if (nl) { nl.unreadCount = nl.items.filter((n) => !n.isRead).length; G['/api/v1/auth/me'].unreadNotifications = nl.unreadCount; }
+      save(); return json({ changed });
+    }
+    if (p === '/api/v1/account/notification-preferences') {
+      const cats = ['Orders', 'Production', 'Payments', 'Delivery', 'Chat', 'Account'];
+      U(r).prefs ||= Object.fromEntries(cats.map((c) => [c, { inSite: true, email: c !== 'Chat' }]));
+      if (method === 'PUT') { (body || []).forEach((x) => { if (U(r).prefs[x.category]) U(r).prefs[x.category] = { inSite: !!x.inSite, email: !!x.email }; }); save(); }
+      return json({ items: cats.map((c) => ({ category: c, ...U(r).prefs[c] })) });
+    }
+
     // ---- simple GETs (recorded, kept up to date by the actions below) ----
     if (method === 'GET') {
       if (p === '/api/v1/orders') {

@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=15">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=13">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=16">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=14">
 </head>
 <body class="page-dash dash-v2" data-dash-page="lab-settings">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -74,7 +74,28 @@
       <div class="dash-top-actions">
         <button class="fin-chip" type="button" data-fin-chip data-state="locked" hidden><span class="ic-locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><span class="ic-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.6-1.7"/></svg></span><span class="fin-chip-text"><span class="txt-locked">المالية مقفلة</span><span class="txt-open">قفل المالية الآن</span></span></button>
         <a class="dash-icon-btn" href="/lab-orders.html" aria-label="الرسائل والطلبات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></a>
-        <a class="dash-icon-btn" href="/lab-dashboard.html" aria-label="الإشعارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dash-icon-dot num" id="notif-count">0</span></a>
+        <div class="notif-wrap">
+          <button class="dash-icon-btn" type="button" id="notif-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="notif-panel" aria-label="الإشعارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dash-icon-dot num" id="notif-count">0</span></button>
+          <div class="notif-panel" id="notif-panel" role="dialog" aria-label="الإشعارات" hidden>
+            <div class="notif-head"><h3>الإشعارات</h3><button type="button" class="link-btn" id="notif-read-all">تعليم الكل كمقروء</button></div>
+            <div class="notif-filters">
+              <button type="button" data-cat="" aria-pressed="true">الكل</button>
+              <button type="button" data-cat="unread" aria-pressed="false">غير المقروء</button>
+              <button type="button" data-cat="Orders" aria-pressed="false">الطلبات</button>
+              <button type="button" data-cat="Production" aria-pressed="false">الإنتاج</button>
+              <button type="button" data-cat="Payments" aria-pressed="false">المدفوعات</button>
+              <button type="button" data-cat="Delivery" aria-pressed="false">التوصيل</button>
+              <button type="button" data-cat="Chat" aria-pressed="false">الرسائل</button>
+            </div>
+            <div class="notif-list" id="np-list"></div>
+            <p class="notif-empty" id="np-empty" hidden>لا توجد إشعارات هنا.</p>
+            <button class="btn btn-ghost btn-sm notif-more" type="button" id="notif-more" hidden>عرض المزيد</button>
+            <div hidden id="notif-groups"><span data-g="today">اليوم</span><span data-g="yesterday">أمس</span><span data-g="older">أقدم</span></div>
+            <template id="notif-item-tpl"><a class="notif-item"><span class="notif-ic" aria-hidden="true"></span><span class="notif-text"><b data-f="title"></b><span data-f="body"></span><time data-f="time"></time></span><span class="notif-dot" aria-hidden="true"></span></a></template>
+            <a class="notif-settings" href="/lab-account.html#notif-prefs">إعدادات التنبيهات</a>
+          </div>
+          <div class="notif-toast" id="notif-toast" role="status" aria-live="polite" hidden><b data-f="title"></b><span data-f="body"></span></div>
+        </div>
         <div class="dash-profile"><span class="dash-avatar" id="top-user-avatar" aria-hidden="true">ت</span><span class="dash-profile-text"><strong id="top-user-name">...</strong><span id="top-user-email"></span></span></div>
       </div>
     </header>
@@ -151,7 +172,7 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=21"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=22"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>
