@@ -696,7 +696,15 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("EmailedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<bool>("IsRead")
@@ -704,6 +712,10 @@ namespace LabStage.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("LinkUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -718,7 +730,37 @@ namespace LabStage.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId", "IsRead", "CreatedAt");
+
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("LabStage.Domain.Entities.NotificationPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("nvarchar(24)");
+
+                    b.Property<bool>("Email")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("InSite")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Category")
+                        .IsUnique();
+
+                    b.ToTable("NotificationPreferences");
                 });
 
             modelBuilder.Entity("LabStage.Domain.Entities.Order", b =>

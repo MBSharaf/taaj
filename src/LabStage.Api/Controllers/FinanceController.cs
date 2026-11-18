@@ -257,6 +257,14 @@ public sealed class FinanceController(
                 LinkUrl = $"/lab-order-details.html?orderNumber={order.OrderNumber}",
             });
         }
+        db.Notifications.Add(new Notification
+        {
+            UserId = payment.PayerDentistUserId,
+            Type = "PaymentReceived",
+            Title = $"تم استلام دفعتك للطلب {order.OrderNumber}",
+            Body = $"تم سداد {(milestone.Sequence == 1 ? "الدفعة الأولى" : "الدفعة النهائية")} ({paidMoney.ToDecimal():#,0.##} ج.م). الإيصال متاح في صفحة الطلب.",
+            LinkUrl = $"/doctor-order-details.html?orderNumber={order.OrderNumber}",
+        });
 
         try
         {
@@ -726,6 +734,23 @@ public sealed class FinanceController(
             EntityId = payment.Id.ToString(),
             Details = $"Refund {refundMoney.ToDecimal():0.00} EGP, reversed commission {reversedComm.ToDecimal():0.00} EGP, fault={req.FaultParty}, reason={req.Reason}",
         });
+
+        var rOrder = await db.Orders.Include(o => o.Laboratory).FirstAsync(o => o.Id == payment.OrderId, ct);
+        db.Notifications.Add(new Notification
+        {
+            UserId = payment.PayerDentistUserId, Type = "RefundExecuted",
+            Title = $"تم استرداد مبلغ للطلب {rOrder.OrderNumber}",
+            Body = $"تم رد {refundMoney.ToDecimal():#,0.##} ج.م إلى وسيلة الدفع. السبب: {req.Reason.Trim()}",
+            LinkUrl = $"/doctor-order-details.html?orderNumber={rOrder.OrderNumber}",
+        });
+        if (rOrder.Laboratory is not null)
+            db.Notifications.Add(new Notification
+            {
+                UserId = rOrder.Laboratory.OwnerUserId, Type = "RefundExecuted",
+                Title = $"استرداد على الطلب {rOrder.OrderNumber}",
+                Body = $"تم استرداد {refundMoney.ToDecimal():#,0.##} ج.م للطبيب. السبب: {req.Reason.Trim()}",
+                LinkUrl = $"/lab-order-details.html?orderNumber={rOrder.OrderNumber}",
+            });
 
         await db.SaveChangesAsync(ct);
         await tx.CommitAsync(ct);

@@ -383,6 +383,40 @@ public sealed class Notification
     public string? LinkUrl { get; set; }
     public bool IsRead { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    /// <summary>Orders | Production | Payments | Delivery | Chat | Account (set from Type when saved).</summary>
+    public string Category { get; set; } = string.Empty;
+    /// <summary>The order this is about, when there is one (taken from the link).</summary>
+    public string? OrderNumber { get; set; }
+    public DateTimeOffset? EmailedAt { get; set; }
+}
+
+/// <summary>Per user and category: show in the site, and/or send by email.</summary>
+public sealed class NotificationPreference
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid UserId { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public bool InSite { get; set; } = true;
+    public bool Email { get; set; } = true;
+}
+
+public static class NotificationCategories
+{
+    public const string Orders = "Orders", Production = "Production", Payments = "Payments", Delivery = "Delivery", Chat = "Chat", Account = "Account";
+    public static readonly string[] All = [Orders, Production, Payments, Delivery, Chat, Account];
+
+    public static string Of(string type) => type switch
+    {
+        "NewOrder" or "OrderAccepted" or "OrderRejected" or "PriceProposed" or "PriceApproved" or "OrderCompleted" => Orders,
+        "StageStarted" or "StageUpdated" or "StageCompleted" or "StageApproved" or "ReviewNeeded" or "RevisionRequested" => Production,
+        "PaymentDue" or "PaymentConfirmed" or "PaymentReceived" or "PaymentCollected" or "RefundExecuted" or "SettlementPaid" => Payments,
+        "Delivery" or "OutForDelivery" or "Delivered" => Delivery,
+        "NewMessage" => Chat,
+        _ => Account,
+    };
+
+    /// <summary>Email on by default for what needs action or confirms money; off for chat (it is live in the site).</summary>
+    public static bool EmailByDefault(string category) => category is not Chat;
 }
 
 public sealed class PaymentMilestone

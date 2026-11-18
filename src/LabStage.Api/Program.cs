@@ -35,7 +35,10 @@ else if (!isDevelopment && (webhookSecret == LegacyDevWebhookSecret || webhookSe
     throw new InvalidOperationException("Payments:WebhookSecret is the old development value or shorter than 32 characters.");
 }
 
-builder.Services.AddDbContext<LabStageDbContext>(o => o.UseSqlServer(connStr));
+builder.Services.AddSingleton<LabStage.Api.Security.NotificationQueue>();
+builder.Services.AddSingleton<LabStage.Api.Security.NotificationSaveInterceptor>();
+builder.Services.AddDbContext<LabStageDbContext>((sp, o) => o.UseSqlServer(connStr)
+    .AddInterceptors(sp.GetRequiredService<LabStage.Api.Security.NotificationSaveInterceptor>()));
 // Real gateway only when its keys are configured; otherwise the local test simulator (usable in Development only).
 if (LabStage.Infrastructure.Payments.PaymobPaymentGateway.IsConfigured(builder.Configuration))
     builder.Services.AddHttpClient<IPaymentGateway, LabStage.Infrastructure.Payments.PaymobPaymentGateway>(c => c.Timeout = TimeSpan.FromSeconds(30));
@@ -120,6 +123,8 @@ builder.Services.AddRateLimiter(o =>
 
 builder.Services.AddScoped<LabStage.Api.Security.FinanceGate>();
 builder.Services.AddHostedService<LabStage.Api.Security.OrderAutoCompleter>();
+builder.Services.AddSingleton<LabStage.Api.Security.NotificationDispatcher>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<LabStage.Api.Security.NotificationDispatcher>());
 builder.Services.AddControllers(o => o.Filters.Add<LabStage.Api.Security.LabMoneyMaskFilter>());
 builder.Services.AddOpenApi("v1");
 builder.Services.AddProblemDetails();

@@ -478,8 +478,8 @@ public static class DatabaseSeeder
             new Review { OrderId = Guid.NewGuid(), LaboratoryId = lab1.Id, DentistUserId = dentist2.Id, DentistName = dentist2.FullName, Rating = 5, Comment = "متابعة كل مرحلة واضحة جدًا على المنصة والمندوب التزم بموعد التسليم." }
         );
         db.Notifications.AddRange(
-            new Notification { UserId = dentist1.Id, Type = "StageStarted", Title = "بدأت مرحلة التفريز", Body = "بدأت مرحلة التفريز للطلب LS-000187 في معمل القاهرة الرقمي.", LinkUrl = $"/doctor-order-details.html?orderNumber={order1.OrderNumber}" },
-            new Notification { UserId = labOwner1.Id, Type = "PaymentConfirmed", Title = "تم تأكيد الدفعة الأولى (20%)", Body = "تم تحصيل 2,000 ج.م للطلب LS-000187 (صافي مستحقات المعمل 1,960 ج.م بعد عمولة 2%).", LinkUrl = $"/lab-order-details.html?orderNumber={order1.OrderNumber}" }
+            new Notification { UserId = dentist1.Id, Type = "StageStarted", Title = "بدأت مرحلة التفريز", Body = "بدأت مرحلة التفريز للطلب LS-000187 في معمل القاهرة الرقمي.", LinkUrl = $"/doctor-order-details.html?orderNumber={order1.OrderNumber}", EmailedAt = DateTimeOffset.UtcNow },
+            new Notification { UserId = labOwner1.Id, Type = "PaymentConfirmed", Title = "تم تأكيد الدفعة الأولى (20%)", Body = "تم تحصيل 2,000 ج.م للطلب LS-000187 (صافي مستحقات المعمل 1,960 ج.م بعد عمولة 2%).", LinkUrl = $"/lab-order-details.html?orderNumber={order1.OrderNumber}", EmailedAt = DateTimeOffset.UtcNow }
         );
 
         await db.SaveChangesAsync(ct);

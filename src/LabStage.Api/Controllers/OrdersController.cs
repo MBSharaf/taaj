@@ -539,16 +539,34 @@ public sealed class OrdersController(
         });
 
         var targetNotifyUser = actor == StageActor.Laboratory ? order.DentistUserId : order.Laboratory!.OwnerUserId;
+        var stageAr = stage switch { ProductionStage.Design => "التصميم", ProductionStage.Milling => "التفريز", ProductionStage.Layering => "الطبقات", ProductionStage.Glazing => "الجليز", _ => stage.ToString() };
+        var (nType, nTitle, nBody) = req.TargetStatus switch
+        {
+            StageStatus.InProgress => ("StageStarted", $"بدأت مرحلة {stageAr} للطلب {order.OrderNumber}", "المعمل يعمل الآن على هذه المرحلة."),
+            StageStatus.SubmittedForReview => ("ReviewNeeded", $"{stageAr} جاهز لمراجعتك — الطلب {order.OrderNumber}", "راجع العمل واعتمده أو اطلب تعديلًا."),
+            StageStatus.Approved => ("StageApproved", $"اعتمد الطبيب مرحلة {stageAr} للطلب {order.OrderNumber}", "يمكنك متابعة المراحل التالية."),
+            StageStatus.RevisionRequested => ("RevisionRequested", $"طلب الطبيب تعديل {stageAr} للطلب {order.OrderNumber}", $"السبب: {req.Reason?.Trim()}"),
+            StageStatus.Completed => ("StageCompleted", $"اكتملت مرحلة {stageAr} للطلب {order.OrderNumber}", order.Status == OrderStatus.ReadyForDelivery ? "اكتملت كل مراحل التصنيع والحالة جاهزة للتوصيل." : "انتقلت الحالة للمرحلة التالية."),
+            _ => ("StageUpdated", $"تحديث مرحلة {stageAr} للطلب {order.OrderNumber}", $"الحالة الجديدة: {req.TargetStatus}"),
+        };
         db.Notifications.Add(new Notification
         {
             UserId = targetNotifyUser,
-            Type = "StageUpdated",
-            Title = $"تحديث مرحلة {stage} للطلب {order.OrderNumber}",
-            Body = $"الحالة الجديدة: {req.TargetStatus}",
+            Type = nType,
+            Title = nTitle,
+            Body = nBody,
             LinkUrl = actor == StageActor.Laboratory
                 ? $"/doctor-order-details.html?orderNumber={order.OrderNumber}"
                 : $"/lab-order-details.html?orderNumber={order.OrderNumber}",
         });
+        foreach (var due in order.Milestones.Where(m => m.Status == MilestoneStatus.Due && m.DueAt == now))
+            db.Notifications.Add(new Notification
+            {
+                UserId = order.DentistUserId, Type = "PaymentDue",
+                Title = $"دفعة مستحقة للطلب {order.OrderNumber}",
+                Body = $"{(due.Sequence == 1 ? "الدفعة الأولى" : "الدفعة النهائية")} ({due.AmountPiastres / 100m:#,0.##} ج.م) مستحقة الآن.",
+                LinkUrl = $"/doctor-order-details.html?orderNumber={order.OrderNumber}",
+            });
 
         await db.SaveChangesAsync(ct);
         await hub.Clients.Group($"order:{order.OrderNumber}").SendAsync("stageUpdated", new { order.OrderNumber, Stage = stage.ToString(), Status = req.TargetStatus.ToString() }, ct);
@@ -743,6 +761,15 @@ public sealed class OrdersController(
             ActorRole = actorRole,
             Action = $"تثبيت الشروط التجارية والسعر النهائي ({confirmedTotal.ToDecimal():0.00} ج.م) — الدفعة الأولى 20% والدفعة النهائية 80%",
         });
+
+        var doctorLink = $"/doctor-order-details.html?orderNumber={order.OrderNumber}";
+        var labOwner = await db.Laboratories.Where(l => l.Id == order.LaboratoryId).Select(l => l.OwnerUserId).FirstAsync(ct);
+        if (actorRole == AppRoles.Dentist)
+            db.Notifications.Add(new Notification { UserId = labOwner, Type = "PriceApproved", Title = $"وافق الطبيب على السعر للطلب {order.OrderNumber}", Body = "تم تثبيت السعر ويمكنك بدء التنفيذ.", LinkUrl = $"/lab-order-details.html?orderNumber={order.OrderNumber}" });
+        else
+            db.Notifications.Add(new Notification { UserId = order.DentistUserId, Type = "OrderAccepted", Title = $"قبل المعمل طلبك {order.OrderNumber}", Body = $"تم تثبيت السعر النهائي {confirmedTotal.ToDecimal():#,0.##} ج.م وبدأ تجهيز الحالة.", LinkUrl = doctorLink });
+        if (plan.FirstOrDefault(d => d.Trigger == MilestoneTrigger.OrderFinalized) is { } dueNow)
+            db.Notifications.Add(new Notification { UserId = order.DentistUserId, Type = "PaymentDue", Title = $"دفعة مستحقة للطلب {order.OrderNumber}", Body = $"الدفعة الأولى ({dueNow.Amount.ToDecimal():#,0.##} ج.م) مستحقة الآن.", LinkUrl = doctorLink });
 
         await db.SaveChangesAsync(ct);
     }
