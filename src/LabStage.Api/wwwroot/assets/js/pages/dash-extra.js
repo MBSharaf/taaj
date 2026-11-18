@@ -1,6 +1,6 @@
 // Lab finance lock (password modal + top-bar chip), lab finance settings, doctor clinics, order tracker.
 // Behaviour only: every text shown here is written in the HTML (hidden until needed).
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=13';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=14';
 
 const translate = (el) => { if (el && getLang() === 'en') applyDomTranslations(el); };
 const LAB_ROLES = ['LaboratoryOwner', 'LaboratoryStaff'];
@@ -317,4 +317,104 @@ export function renderTracker(o, isLabView, { orderNumber, showMsg, refresh }) {
     if (days) days.textContent = String(o.autoCompleteDays || 3);
     document.getElementById('btn-confirm-receipt').onclick = () => post(`/api/v1/orders/${encodeURIComponent(orderNumber)}/confirm-receipt`);
   }
+}
+
+// ---- Email confirmation banner (dashboards) + "resend" buttons ----
+export function initVerifyBanner(user) {
+  const banner = document.getElementById('verify-banner');
+  if (banner && user && user.emailConfirmed === false) banner.hidden = false;
+  document.querySelectorAll('[data-verify-resend]').forEach((b) => b.addEventListener('click', async () => {
+    b.disabled = true;
+    const r = await rawFetch('/api/v1/account/resend-confirmation', { method: 'POST' }).catch(() => null);
+    document.querySelectorAll('[data-verify-sent]').forEach((s) => { s.hidden = !r?.ok; });
+    setTimeout(() => { b.disabled = false; }, 30000);
+  }));
+}
+
+// ---- "My account": profile, password, and (lab owner) technicians ----
+export async function initAccountPage(user) {
+  const say = (el, text, bad = false) => { if (!el) return; el.textContent = text; el.classList.toggle('is-error', bad); translate(el); };
+  const pf = document.getElementById('profile-form');
+  const pwf = document.getElementById('password-form');
+
+  const loadProfile = async () => {
+    const r = await rawFetch('/api/v1/account/profile');
+    if (!r.ok) return;
+    const p = await r.json();
+    pf.fullName.value = p.fullName || '';
+    pf.phone.value = p.phone || '';
+    pf.email.value = p.email || '';
+    document.getElementById('acc-email-ok').hidden = !p.emailConfirmed;
+    document.getElementById('acc-email-pending').hidden = !!p.emailConfirmed;
+  };
+
+  pf?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('profile-msg');
+    if (pf.fullName.value.trim().length < 2) { say(msg, 'اكتب الاسم الكامل.', true); return; }
+    const r = await rawFetch('/api/v1/account/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: pf.fullName.value.trim(), phone: pf.phone.value.trim() }) });
+    if (!r.ok) { say(msg, await problemText(r, 'تعذّر حفظ البيانات.'), true); return; }
+    say(msg, 'تم حفظ البيانات.');
+    const top = document.getElementById('top-user-name');
+    if (top) top.textContent = pf.fullName.value.trim();
+  });
+
+  pwf?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById('password-msg');
+    if (pwf.newPassword.value.length < 8) { say(msg, 'كلمة المرور 8 أحرف على الأقل.', true); return; }
+    if (pwf.newPassword.value !== pwf.confirmPassword.value) { say(msg, 'تأكيد كلمة المرور غير مطابق.', true); return; }
+    const r = await rawFetch('/api/v1/account/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: pwf.currentPassword.value, newPassword: pwf.newPassword.value }) });
+    if (!r.ok) { say(msg, await problemText(r, 'تعذّر تغيير كلمة المرور.'), true); return; }
+    pwf.reset();
+    say(msg, 'تم تغيير كلمة المرور، وتم تسجيل الخروج من الأجهزة الأخرى.');
+  });
+
+  await loadProfile();
+
+  // Technicians (lab owner only)
+  const card = document.getElementById('staff-card');
+  if (!card || user?.role !== 'LaboratoryOwner') return;
+  card.hidden = false;
+  const list = document.getElementById('staff-list');
+  const tpl = document.getElementById('staff-row-tpl');
+  const sf = document.getElementById('staff-form');
+  const smsg = document.getElementById('staff-msg');
+  const empty = list.querySelector('li.muted');
+  const loadStaff = async () => {
+    const r = await rawFetch('/api/v1/labs/my/staff');
+    const items = r.ok ? (await r.json()).items || [] : [];
+    list.querySelectorAll('li:not(.muted)').forEach((li) => li.remove());
+    if (empty) { empty.hidden = items.length > 0; empty.textContent = 'لا يوجد فنيون بعد. أضف أول فني.'; translate(empty); }
+    items.forEach((s) => {
+      const li = tpl.content.firstElementChild.cloneNode(true);
+      li.querySelector('[data-f="name"]').textContent = s.fullName;
+      li.querySelector('[data-f="email"]').textContent = [s.email, s.phone].filter(Boolean).join(' · ');
+      li.querySelector('[data-f="active"]').hidden = !s.active;
+      li.querySelector('[data-f="pending"]').hidden = s.active;
+      li.querySelector('[data-act="resend"]').hidden = s.active;
+      li.querySelector('[data-act="resend"]').onclick = async () => {
+        const x = await rawFetch(`/api/v1/labs/my/staff/${encodeURIComponent(s.userId)}/resend`, { method: 'POST' });
+        say(smsg, x.ok ? 'تم إرسال الدعوة مرة أخرى.' : await problemText(x, 'تعذّر الإرسال.'), !x.ok);
+      };
+      li.querySelector('[data-act="remove"]').onclick = async () => {
+        const x = await rawFetch(`/api/v1/labs/my/staff/${encodeURIComponent(s.userId)}`, { method: 'DELETE' });
+        say(smsg, x.ok ? 'تمت إزالة الفني من المعمل وإغلاق حسابه.' : await problemText(x, 'تعذّرت الإزالة.'), !x.ok);
+        loadStaff();
+      };
+      list.append(li);
+    });
+    translate(list);
+  };
+  sf?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (sf.fullName.value.trim().length < 2) { say(smsg, 'اكتب اسم الفني.', true); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(sf.email.value.trim())) { say(smsg, 'أدخل بريدًا إلكترونيًا صحيحًا.', true); return; }
+    const r = await rawFetch('/api/v1/labs/my/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fullName: sf.fullName.value.trim(), email: sf.email.value.trim(), phone: sf.phone.value.trim() }) });
+    if (!r.ok) { say(smsg, await problemText(r, 'تعذّر إضافة الفني.'), true); return; }
+    sf.reset();
+    say(smsg, 'تمت إضافة الفني، ووصلته دعوة بالبريد لاختيار كلمة المرور.');
+    loadStaff();
+  });
+  await loadStaff();
 }

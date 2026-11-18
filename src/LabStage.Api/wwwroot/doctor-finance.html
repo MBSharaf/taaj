@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=13">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=11">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=14">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=12">
 </head>
 <body class="page-dash dash-v2" data-dash-page="doctor-finance">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -29,6 +29,7 @@
         <a href="/doctor-orders.html">الطلبات وإنشاء حالة<span class="nav-badge num" data-nav-count hidden></span></a>
         <a href="/labs">استكشاف المعامل</a>
         <a href="/doctor-settings.html">عياداتي</a>
+        <a href="/doctor-account.html">حسابي</a>
         <p class="nav-group"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>المالية</p>
         <a href="/doctor-finance.html" aria-current="page">المدفوعات والفواتير</a>
       </nav>
@@ -72,6 +73,11 @@
         <div class="dash-profile"><span class="dash-avatar" id="top-user-avatar" aria-hidden="true">ت</span><span class="dash-profile-text"><strong id="top-user-name">...</strong><span id="top-user-email"></span></span></div>
       </div>
     </header>
+    <div class="verify-banner" id="verify-banner" hidden>
+      <span>أكّد بريدك الإلكتروني لتصلك التنبيهات المهمة عن حالاتك ومدفوعاتك.</span>
+      <button class="btn btn-primary btn-sm" type="button" data-verify-resend>إعادة إرسال رابط التأكيد</button>
+      <span class="verify-sent" data-verify-sent hidden>تم إرسال الرابط إلى بريدك ✓</span>
+    </div>
 
     <div class="dash-pagehead">
       <div>
@@ -114,7 +120,7 @@
     </section>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=19"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=20"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

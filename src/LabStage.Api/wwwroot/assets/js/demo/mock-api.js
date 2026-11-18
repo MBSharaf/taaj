@@ -213,6 +213,19 @@
       return json(hit[1].login);
     }
     if (p === '/api/v1/auth/logout') { localStorage.removeItem(SESSION); state.fin.unlockedUntil = 0; save(); return json({ ok: true }); }
+    // ---- account links (the demo sends no email: the link is returned so the page can show it) ----
+    if (p === '/api/v1/auth/forgot-password' && method === 'POST') {
+      const hit = Object.entries(state.users).find(([, x]) => x.email.toLowerCase() === String(body?.email || '').trim().toLowerCase());
+      return json({ sent: true, demoLink: hit ? `${BASE}/reset-password.html?token=demo-reset-${hit[0]}` : null });
+    }
+    if (p === '/api/v1/auth/reset-password' && method === 'POST') {
+      const m = String(body?.token || '').match(/^demo-reset-(doctor|lab|admin)$/);
+      if (!m) return problem('الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.');
+      if (String(body?.newPassword || '').length < 8) return problem('كلمة المرور يجب ألا تقل عن 8 أحرف.');
+      state.users[m[1]].password = body.newPassword; save();
+      return json({ reset: true, email: state.users[m[1]].email });
+    }
+    if (p === '/api/v1/auth/confirm-email' && method === 'POST') return /^demo-/.test(String(body?.token || '')) ? json({ confirmed: true }) : problem('الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.');
     if (p === '/api/v1/auth/register') return problem('إنشاء حساب جديد غير متاح في نسخة العرض. استخدم أحد الحسابات التجريبية في صفحة الدخول.');
 
     // ---- public ----
@@ -241,6 +254,45 @@
 
     if (!r) return json({ title: 'Unauthorized', status: 401 }, 401);
     const G = U(r).get;
+
+    // ---- my account ----
+    if (p === '/api/v1/account/profile') {
+      const me = G['/api/v1/auth/me'];
+      if (method === 'PUT') {
+        const name = String(body?.fullName || '').trim(); const phone = String(body?.phone || '').trim();
+        if (name.length < 2) return problem('اكتب الاسم الكامل.');
+        if (phone && !/^\+?[0-9 ]{8,20}$/.test(phone)) return problem('رقم الهاتف غير صحيح.');
+        Object.assign(me, { fullName: name, phone }); U(r).login.fullName = name; save();
+        return json({ fullName: name, phone });
+      }
+      return json({ fullName: me.fullName, email: me.email, phone: me.phone || '', role: me.role, emailConfirmed: true, phoneConfirmed: false });
+    }
+    if (p === '/api/v1/account/change-password' && method === 'POST') {
+      if (body?.currentPassword !== U(r).password) return problem('كلمة المرور الحالية غير صحيحة.');
+      if (String(body?.newPassword || '').length < 8) return problem('كلمة المرور يجب ألا تقل عن 8 أحرف.');
+      U(r).password = body.newPassword; save();
+      return json({ changed: true });
+    }
+    if (p === '/api/v1/account/resend-confirmation') return json({ confirmed: true });
+    if (p.startsWith('/api/v1/labs/my/staff')) {
+      if (r !== 'lab') return json({ title: 'Forbidden', status: 403 }, 403);
+      state.staff ||= [];
+      const id = seg[5];
+      if (method === 'GET') return json({ items: state.staff });
+      if (method === 'POST' && !id) {
+        const email = String(body?.email || '').trim();
+        if (String(body?.fullName || '').trim().length < 2) return problem('اكتب اسم الفني.');
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return problem('أدخل بريدًا إلكترونيًا صحيحًا.');
+        if (Object.values(state.users).some((x) => x.email.toLowerCase() === email.toLowerCase()) || state.staff.some((x) => x.email.toLowerCase() === email.toLowerCase())) return problem('هذا البريد مسجّل بالفعل بحساب آخر على تاج.', 409);
+        const t = { userId: uuid(), fullName: body.fullName.trim(), email, phone: String(body?.phone || '').trim(), active: false, isSuspended: false, createdAt: now() };
+        state.staff.push(t); save();
+        return json({ id: t.userId, fullName: t.fullName, email, invited: true });
+      }
+      const t = state.staff.find((x) => x.userId === id);
+      if (!t) return problem('غير موجود.', 404);
+      if (method === 'POST') return json({ sent: true });
+      if (method === 'DELETE') { state.staff = state.staff.filter((x) => x !== t); save(); return json({ removed: true }); }
+    }
 
     // ---- lab finance password ----
     if (p.startsWith('/api/v1/labs/my/finance-lock') && r === 'lab') {

@@ -1,6 +1,6 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=13';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=14';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker } from './dash-extra.js?v=2';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage } from './dash-extra.js?v=3';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -24,6 +24,7 @@ const ICONS = {
   bell: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="currentColor" fill-opacity=".22"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
   gear: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>`,
   clinic: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12z" fill="currentColor" fill-opacity=".2"/><path d="M12 10v6M9 13h6M2.5 21h19"/></svg>`,
+  user: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4" fill="currentColor" fill-opacity=".2"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>`,
   spark: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4-2.4 6.1-2.4-6.1-6.1-2.4 6.1-2.4L12 2.5z" fill="currentColor" fill-opacity=".26"/></svg>`,
   crown3dWire: `<svg class="dash-3d-wire-fallback" viewBox="0 0 160 140" fill="none" aria-hidden="true">
     <defs>
@@ -56,6 +57,7 @@ function enhanceDashboard3DAndIcons() {
     else if (href.endsWith('admin-dashboard.html#labs')) ic = ICONS.shield;
     else if (href.endsWith('admin-dashboard.html#settlements')) ic = ICONS.wallet;
     else if (href.endsWith('admin-dashboard.html#audit')) ic = ICONS.layers;
+    else if (href.includes('-account')) ic = ICONS.user;
     else if (href.includes('lab-settings')) ic = ICONS.gear;
     else if (href.includes('doctor-settings')) ic = ICONS.clinic;
     else if (href.includes('orders')) ic = ICONS.tooth;
@@ -1824,6 +1826,7 @@ async function initAdminDashboard() {
   const user = await ensureAuthenticated();
   if (!user) return;
   await installFinanceGate(user, page);
+  initVerifyBanner(user);
   if (page === 'doctor-dashboard') await initDoctorDashboard();
   else if (page === 'doctor-orders') await initDoctorOrders();
   else if (page === 'doctor-order-details') await initOrderDetails(false);
@@ -1835,6 +1838,7 @@ async function initAdminDashboard() {
   else if (page === 'admin-dashboard') { await initAdminDashboard(); initAdminSearch(); }
   else if (page === 'lab-settings') await initLabSettings();
   else if (page === 'doctor-settings') await initDoctorSettings();
+  else if (page.endsWith('-account')) { await initAccountPage(user); if (page === 'admin-account') initAdminSearch(); }
   if (getLang() === 'en') applyDomTranslations(document.body);
 })();
 
@@ -1850,8 +1854,11 @@ function initAdminSearch() {
     });
   };
   input.addEventListener('input', apply);
+  const q0 = new URLSearchParams(location.search).get('q');
+  if (q0) { input.value = q0; apply(); }
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (page !== 'admin-dashboard') { location.href = `/admin-dashboard.html?q=${encodeURIComponent(input.value.trim())}#labs`; return; }
     apply();
     const hit = document.querySelector('.dash-main tbody tr:not([hidden])');
     hit?.scrollIntoView({ block: 'center', behavior: 'smooth' });

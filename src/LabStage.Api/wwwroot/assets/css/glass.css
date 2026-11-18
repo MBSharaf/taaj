@@ -318,3 +318,11 @@ body:has(.page-hero) .site-header:not(.is-scrolled) .btn-primary,
 /* Phone menu only: the sign-in link inside the open menu (all public pages) */
 .nav-mobile-only { display: none; }
 @media (max-width: 900px) { .nav-main.is-open .nav-mobile-only { display: block; } }
+/* Account pages: views switched by script */
+[data-view][hidden], [data-mode][hidden] { display: none !important; }
+.page-auth [data-view] { display: grid; gap: var(--sp-4); }
+/* Phones: the form comes first on every sign-in page; the feature panel follows, compact */
+@media (max-width: 900px) {
+  .page-auth .auth-art { order: 1 !important; }
+  .page-auth .auth-art .auth-scene { display: none; }
+}
