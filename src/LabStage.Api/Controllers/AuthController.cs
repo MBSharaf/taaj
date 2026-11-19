@@ -131,23 +131,23 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
 
     [EnableRateLimiting("auth")]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest req, [FromServices] IMemoryCache cache, CancellationToken ct)
+    public async Task<IActionResult> Login([FromBody] LoginRequest req, [FromServices] LabStage.Api.Security.Throttle throttle, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
             return Problem("البريد الإلكتروني وكلمة المرور مطلوبان.", statusCode: StatusCodes.Status400BadRequest);
 
         var normEmail = req.Email.Trim().ToUpperInvariant();
         var failKey = $"login-fail:{normEmail}";
-        if (cache.TryGetValue(failKey, out int fails) && fails >= MaxFailedLogins)
+        if (await throttle.FailuresAsync(failKey, ct) >= MaxFailedLogins)
             return Problem("تم إيقاف تسجيل الدخول لهذا الحساب مؤقتًا بعد محاولات فاشلة متكررة. حاول مرة أخرى بعد 15 دقيقة.", statusCode: StatusCodes.Status429TooManyRequests);
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normEmail, ct);
         if (user is null || !PasswordHasher.Verify(req.Password, user.PasswordHash))
         {
-            cache.Set(failKey, fails + 1, LockoutWindow);
+            await throttle.FailAsync(failKey, LockoutWindow, ct);
             return Problem("البريد الإلكتروني أو كلمة المرور غير صحيحة.", statusCode: StatusCodes.Status401Unauthorized);
         }
-        cache.Remove(failKey);
+        await throttle.ResetAsync(failKey, ct);
 
         // Older, weaker hashes are upgraded transparently on a successful sign-in.
         if (PasswordHasher.NeedsRehash(user.PasswordHash))
@@ -208,6 +208,8 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
 
     public static async Task SignInAsync(HttpContext ctx, AppUser user, bool isPersistent)
     {
+        // Platform admins: never a long "remember me" session (ends with the browser, 8 idle hours at most).
+        if (user.Role == AppRoles.Admin) isPersistent = false;
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),

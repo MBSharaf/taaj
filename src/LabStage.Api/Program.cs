@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var isDevelopment = builder.Environment.IsDevelopment();
+builder.WebHost.ConfigureKestrel(k => k.AddServerHeader = false); // do not advertise the server software
 
 // ---- Secrets: never read from appsettings.json. Development uses user-secrets (or a throwaway value);
 // every other environment must supply them as environment variables / a vault, or the app refuses to start.
@@ -122,6 +123,7 @@ builder.Services.AddRateLimiter(o =>
 });
 
 builder.Services.AddScoped<LabStage.Api.Security.FinanceGate>();
+builder.Services.AddScoped<LabStage.Api.Security.Throttle>();
 builder.Services.AddHostedService<LabStage.Api.Security.OrderAutoCompleter>();
 builder.Services.AddSingleton<LabStage.Api.Security.NotificationDispatcher>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<LabStage.Api.Security.NotificationDispatcher>());
@@ -137,6 +139,8 @@ builder.Services.AddResponseCompression(o =>
 });
 
 var app = builder.Build();
+// Outside Development, refuse to start while a local-testing setting is still on (see LaunchGuard).
+LabStage.Api.Security.LaunchGuard.Enforce(app.Configuration, app.Environment, app.Logger);
 
 using (var scope = app.Services.CreateScope())
 {
@@ -167,15 +171,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 app.UseHttpsRedirection();
 
-app.Use(async (ctx, next) =>
-{
-    var h = ctx.Response.Headers;
-    h.XContentTypeOptions = "nosniff";
-    h.XFrameOptions = "DENY";
-    h["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(self)";
-    await next();
-});
+// Security headers (CSP, COOP, CORP...), same-origin check on writes, logging of refused requests.
+app.UseMiddleware<LabStage.Api.Security.SecurityMiddleware>();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

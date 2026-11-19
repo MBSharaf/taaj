@@ -1329,6 +1329,23 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("LabStage.Domain.Entities.SecurityThrottle", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("SecurityThrottles");
+                });
+
             modelBuilder.Entity("LabStage.Domain.Entities.SettlementBatch", b =>
                 {
                     b.Property<Guid>("Id")

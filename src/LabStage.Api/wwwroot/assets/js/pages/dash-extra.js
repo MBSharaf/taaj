@@ -494,3 +494,6 @@ export async function initReconciliation() {
   form.addEventListener('submit', (e) => { e.preventDefault(); load(); });
   await load();
 }
+
+// Print buttons (no inline handlers: the Content-Security-Policy blocks them)
+document.addEventListener('click', (e) => { if (e.target.closest('[data-print]')) window.print(); });

@@ -25,6 +25,7 @@ public sealed class Phase0HardeningTests(WebApplicationFactory<Program> baseFact
         {
             ["ConnectionStrings:DefaultConnection"] = $"Server=(localdb)\\mssqllocaldb;Database=LabStageTestDb_{Guid.NewGuid():N};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True",
             ["Payments:WebhookSecret"] = StrongSecret,
+            ["Launch:AllowIncompleteSetup"] = "true", // these tests check other production rules
         };
         b.UseEnvironment(environment);
         foreach (var kv in settings) b.UseSetting(kv.Key, kv.Value);

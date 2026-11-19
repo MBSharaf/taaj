@@ -14,7 +14,7 @@ namespace LabStage.Api.Controllers;
 [ApiController]
 [Route("api/v1/labs/my/finance-lock")]
 [Authorize(Roles = $"{AppRoles.LaboratoryOwner},{AppRoles.LaboratoryStaff}")]
-public sealed class FinanceLockController(LabStageDbContext db, FinanceGate gate, IMemoryCache cache) : ControllerBase
+public sealed class FinanceLockController(LabStageDbContext db, FinanceGate gate, Throttle throttle) : ControllerBase
 {
     public const int MaxFailedAttempts = 5;
     public static readonly TimeSpan LockoutWindow = TimeSpan.FromMinutes(15);
@@ -55,7 +55,7 @@ public sealed class FinanceLockController(LabStageDbContext db, FinanceGate gate
         lab.FinancePinSetAt = DateTimeOffset.UtcNow;
         db.AuditLogs.Add(new AuditLog { ActorUserId = userId, ActorRole = AppRoles.LaboratoryOwner, Action = "FinancePinSet", EntityType = nameof(Laboratory), EntityId = lab.Id.ToString(), Details = "" });
         await db.SaveChangesAsync(ct);
-        cache.Remove(FailKey(lab.Id));
+        await throttle.ResetAsync(FailKey(lab.Id), ct);
         var until = gate.Unlock(HttpContext, userId, lab.Id);
         return Ok(new { hasPin = true, unlocked = true, unlockedUntil = until });
     }
@@ -70,14 +70,14 @@ public sealed class FinanceLockController(LabStageDbContext db, FinanceGate gate
         if (lab.FinancePinHash is null)
             return Problem("لم يحدد صاحب المعمل كلمة مرور المالية بعد.", statusCode: StatusCodes.Status409Conflict);
         var key = FailKey(lab.Id);
-        if (cache.TryGetValue(key, out int fails) && fails >= MaxFailedAttempts)
+        if (await throttle.FailuresAsync(key, ct) >= MaxFailedAttempts)
             return Problem("تم إيقاف فتح المالية مؤقتًا بعد محاولات خاطئة متكررة. حاول بعد 15 دقيقة.", statusCode: StatusCodes.Status429TooManyRequests);
         if (!PasswordHasher.Verify(req.Pin?.Trim() ?? string.Empty, lab.FinancePinHash))
         {
-            cache.Set(key, fails + 1, LockoutWindow);
+            await throttle.FailAsync(key, LockoutWindow, ct);
             return Problem("كلمة مرور المالية غير صحيحة.", statusCode: StatusCodes.Status401Unauthorized);
         }
-        cache.Remove(key);
+        await throttle.ResetAsync(key, ct);
         var until = gate.Unlock(HttpContext, userId, lab.Id);
         return Ok(new { unlocked = true, unlockedUntil = until });
     }

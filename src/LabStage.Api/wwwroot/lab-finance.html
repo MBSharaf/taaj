@@ -9,7 +9,7 @@
   <link rel="icon" href="/assets/brand/taaj-icon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
@@ -171,7 +171,7 @@
             <h2 id="sdl-title" style="margin-block-start:4px">اختر طبيبًا من الجدول أعلاه لعرض معاملاته التفصيلية</h2>
             <p class="muted" id="sdl-sub" style="font-size:var(--fs-xs)">يعرض كل طلبات الطبيب المختار، التواريخ، المبالغ المدفوعة، المتبقية، وصافي المعمل.</p>
           </div>
-          <button class="btn btn-ghost btn-sm" type="button" onclick="window.print()">طباعة كشف حساب الطبيب</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-print>طباعة كشف حساب الطبيب</button>
         </div>
 
         <div class="stats-grid" id="sdl-metrics" style="margin-block-end:var(--sp-4)">

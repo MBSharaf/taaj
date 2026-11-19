@@ -116,6 +116,14 @@ public sealed class AppUser
     public Laboratory? OwnedLaboratory { get; set; }
 }
 
+/// <summary>Failed attempts for a key (sign-in per email, finance password per lab) until ExpiresAt.</summary>
+public sealed class SecurityThrottle
+{
+    public string Key { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+}
+
 /// <summary>One-time link token (password reset, email confirmation, staff invitation). Only a hash is stored.</summary>
 public sealed class UserToken
 {

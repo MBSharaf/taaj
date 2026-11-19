@@ -34,6 +34,7 @@ public sealed class Phase0SecurityTests(WebApplicationFactory<Program> baseFacto
         {
             ["ConnectionStrings:DefaultConnection"] = NewDbConnection(),
             ["Payments:WebhookSecret"] = StrongSecret,
+            ["Launch:AllowIncompleteSetup"] = "true", // these tests check other production rules
         };
         foreach (var kv in extra ?? new Dictionary<string, string?>()) settings[kv.Key] = kv.Value;
         return Factory("Production", settings);

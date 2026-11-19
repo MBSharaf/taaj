@@ -7,6 +7,7 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
 {
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<UserToken> UserTokens => Set<UserToken>();
+    public DbSet<SecurityThrottle> SecurityThrottles => Set<SecurityThrottle>();
     public DbSet<Dispute> Disputes => Set<Dispute>();
     public DbSet<ConversationRead> ConversationReads => Set<ConversationRead>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
@@ -78,6 +79,8 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
             e.Property(x => x.Reason).HasMaxLength(2000);
             e.Property(x => x.Resolution).HasMaxLength(2000);
         });
+
+        b.Entity<SecurityThrottle>(e => { e.HasKey(x => x.Key); e.Property(x => x.Key).HasMaxLength(200); });
 
         b.Entity<NotificationPreference>(e =>
         {
