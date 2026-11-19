@@ -10,16 +10,17 @@
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
-  <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
-  <link rel="stylesheet" href="/assets/css/base.css?v=7">
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=19">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=16">
+  <link rel="stylesheet" href="/assets/css/tokens.css?v=8">
+  <link rel="stylesheet" href="/assets/css/base.css?v=8">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=11">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=20">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=17">
 </head>
 <body class="page-dash dash-v2" data-dash-page="lab-dashboard">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
   <aside class="dash-sidebar" id="dash-sidebar" aria-label="قائمة المعمل">
     <div>
+      <button class="dash-close dash-menu-btn" type="button" aria-controls="dash-sidebar" aria-label="إغلاق القائمة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <a class="brand" href="/" aria-label="تاج — الصفحة الرئيسية"><img class="brand-rail-mark" src="/assets/brand/taaj-icon.svg" alt="" width="44" height="44"><img class="brand-logo logo-ar logo-light" src="/assets/brand/taaj-wordmark-ar-light.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-ar logo-dark" src="/assets/brand/taaj-wordmark-ar-dark.svg" alt="تاج" width="38" height="36"><img class="brand-logo logo-en logo-light" src="/assets/brand/taaj-wordmark-en-light.svg" alt="Taaj" width="54" height="30"><img class="brand-logo logo-en logo-dark" src="/assets/brand/taaj-wordmark-en-dark.svg" alt="Taaj" width="54" height="30"></a>
       <button class="dash-pin" type="button" aria-pressed="false" aria-label="تثبيت القائمة مفتوحة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
       <p class="dash-nav-label">القائمة</p>
@@ -75,7 +76,7 @@
         <button class="fin-chip" type="button" data-fin-chip data-state="locked" hidden><span class="ic-locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></span><span class="ic-open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 7.6-1.7"/></svg></span><span class="fin-chip-text"><span class="txt-locked">المالية مقفلة</span><span class="txt-open">قفل المالية الآن</span></span></button>
         <a class="dash-icon-btn" href="/lab-orders.html" aria-label="الرسائل والطلبات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg></a>
         <div class="notif-wrap">
-          <button class="dash-icon-btn" type="button" id="notif-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="notif-panel" aria-label="الإشعارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dash-icon-dot num" id="notif-count">0</span></button>
+          <button class="dash-icon-btn" type="button" id="notif-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="notif-panel" aria-label="الإشعارات"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="dash-icon-dot num" id="notif-count" aria-hidden="true" hidden>0</span></button>
           <div class="notif-panel" id="notif-panel" role="dialog" aria-label="الإشعارات" hidden>
             <div class="notif-head"><h3>الإشعارات</h3><button type="button" class="link-btn" id="notif-read-all">تعليم الكل كمقروء</button></div>
             <div class="notif-filters">
@@ -249,7 +250,7 @@
         </div>
 
         <form id="add-service-form" style="display:grid;gap:var(--sp-3);margin-block-start:var(--sp-5);padding-block-start:var(--sp-4);border-block-start:1px solid var(--line)">
-          <strong style="font-size:var(--fs-md);color:var(--g-900)">+ إضافة خدمة جديدة داخل القالب الموحد</strong>
+          <strong style="font-size:var(--fs-md);color:var(--ink)">+ إضافة خدمة جديدة داخل القالب الموحد</strong>
           <div class="form-row-2">
             <div class="field"><label for="srv-name">اسم الخدمة</label><input class="input" id="srv-name" name="name" placeholder="مثال: تاج زركونيا متجانس" required></div>
             <div class="field">
@@ -302,7 +303,7 @@
         </div>
 
         <form id="lab-profile-form" style="display:grid;gap:var(--sp-4);margin-block-start:var(--sp-5)">
-          <h3 style="font-size:var(--fs-md);color:var(--g-900)">1. الهوية الأساسية، الـ Bio، ومواعيد العمل والتوصيل</h3>
+          <h3 style="font-size:var(--fs-md);color:var(--ink)">1. الهوية الأساسية، الـ Bio، ومواعيد العمل والتوصيل</h3>
           <div class="form-row-2">
             <div class="field">
               <label for="sf-name">اسم المعمل التجاري (يحدد أحرف الشعار تلقائيًا)</label>
@@ -361,7 +362,7 @@
         <div class="dash-grid-2">
           <!-- Equipment Manager -->
           <div style="display:grid;gap:var(--sp-3);align-content:start">
-            <h3 style="font-size:var(--fs-md);color:var(--g-900)">2. الأجهزة والتقنيات المستخدمة في المعمل</h3>
+            <h3 style="font-size:var(--fs-md);color:var(--ink)">2. الأجهزة والتقنيات المستخدمة في المعمل</h3>
             <p class="muted" style="font-size:var(--fs-xs)">أضف ماكينات التفريز، الماسحات الضوئية، أفران التلبيد، والطابعات ثلاثية الأبعاد ليراها الأطباء.</p>
             <div id="sf-equipment-list" style="display:grid;gap:8px"></div>
             <form id="sf-add-equipment-form" style="display:grid;gap:var(--sp-2);padding:var(--sp-3);background:var(--bg);border-radius:var(--r-md);border:1px solid var(--line)">
@@ -374,7 +375,7 @@
 
           <!-- Portfolio Showcase Manager -->
           <div style="display:grid;gap:var(--sp-3);align-content:start">
-            <h3 style="font-size:var(--fs-md);color:var(--g-900)">3. معرض منتجات الشغل والحالات المنفذة (Portfolio)</h3>
+            <h3 style="font-size:var(--fs-md);color:var(--ink)">3. معرض منتجات الشغل والحالات المنفذة (Portfolio)</h3>
             <p class="muted" style="font-size:var(--fs-xs)">أضف نماذج شغلك مع درجة اللون (VITA Shade) والوصف الفني لتظهر في متجرك.</p>
             <div id="sf-portfolio-list" style="display:grid;gap:8px"></div>
             <form id="sf-add-portfolio-form" style="display:grid;gap:var(--sp-2);padding:var(--sp-3);background:var(--bg);border-radius:var(--r-md);border:1px solid var(--line)">
@@ -423,7 +424,7 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=25"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=26"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

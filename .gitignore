@@ -33,6 +33,10 @@ design/reference/
 PROGRESS.md
 docs/BACKEND-PLAN.md
 _site/
-tools/qa/
+tools/qa/*
+!tools/qa/ui_matrix.js
+!tools/qa/QA-CHECKLIST.md
+!tools/qa/package.json
 docs/REPORT-*.md
 docs/SECURITY-REVIEW-*.md
+docs/QA-*.md

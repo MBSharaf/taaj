@@ -151,7 +151,7 @@ html[data-theme="dark"] .badge { background: rgb(127 227 255 / .1); color: var(-
 
 /* Lab profile: a light viewer bar sits above the dark hero, so the header keeps dark ink there */
 body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand,
-body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .nav-main a { color: var(--g-900); }
+body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .nav-main a { color: var(--ink); }
 html[data-theme="dark"] body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .brand,
 html[data-theme="dark"] body:has(.viewer-mode-bar) .site-header:not(.is-scrolled) .nav-main a { color: var(--ink); }
 
@@ -339,3 +339,19 @@ html[data-theme="dark"] .pay-amount b { color: #F3F7FF; }
 /* Legal pages: draft notice and version line */
 .prose-card .legal-meta { margin: 0 0 .5rem; font-size: .9rem; color: var(--ink-2); }
 .prose-card .legal-meta strong { color: var(--warning, #b45309); }
+
+/* QA 2026-11-19: logo link is a comfortable tap target */
+a.brand { min-block-size: 44px; }
+/* QA 2026-11-19: dark theme uses Taaj navy everywhere (no neutral grey/black page or form panel) */
+html { background: var(--bg); }
+html[data-theme="dark"] .page-auth .auth-pane:not(.auth-art) { background: rgb(14 23 52 / .94) !important; }
+html[data-theme="dark"] .page-auth .auth-frame { background: #0E1734; border-color: rgb(77 168 255 / .35); }
+/* QA 2026-11-19: alerts follow the theme; links inside an alert use the alert's own colour */
+.alert a { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+html[data-theme="dark"] .alert-info { background: #0F2A3A; border-color: #1F4D63; color: #BFE6F5; }
+html[data-theme="dark"] .alert-error { background: #3A1218; border-color: #6B2230; color: #FFC2CB; }
+html[data-theme="dark"] .alert-success { background: #0E3A2C; border-color: #1C6B50; color: #B8F0D8; }
+/* QA 2026-11-19: checkboxes and radios are easy to tap on phones */
+@media (max-width: 980px) {
+  input[type="checkbox"]:not([role="switch"]), input[type="radio"] { inline-size: 24px; block-size: 24px; flex: none; }
+}

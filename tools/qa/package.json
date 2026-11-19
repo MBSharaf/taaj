@@ -1,0 +1,15 @@
+{
+  "name": "taaj-ui-qa",
+  "version": "1.0.0",
+  "description": "Taaj UI/UX QA matrix (see QA-CHECKLIST.md)",
+  "scripts": {
+    "qa": "node ui_matrix.js"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axe-core": "^4.14.1",
+    "playwright-core": "^1.65.0"
+  },
+  "private": true
+}

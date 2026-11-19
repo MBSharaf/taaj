@@ -1413,9 +1413,43 @@ const EXACT_AR_TO_EN = {
   'السياسات المالية': 'Financial policies',
   'السياسات التشغيلية': 'Operating policies',
   'سياسة النزاعات وطلبات التعديل': 'Disputes and Change Requests Policy',
+  'القائمة الرئيسية': 'Main menu',
+  'البحث عن معمل': 'Search for a lab',
+  'مثال توضيحي لإشعار': 'Sample notification',
+  'الدفعة الأولى 20% بقيمة 2,000 جنيه بعد اعتماد التصميم والدفع': 'First payment 20% (EGP 2,000) after design approval and payment',
+  'تصفية المعامل': 'Filter labs',
+  'زركونيا، إيماكس، اسم المعمل...': 'Zirconia, e.max, lab name...',
+  'مثال: 2500': 'e.g. 2500',
+  'قائمة المعامل': 'Labs list',
+  'ظهور إعلاني مدفوع — لا يغير التقييم الفعلي': 'Paid placement — does not change the real rating',
+  'انقر لتبديل مراحل التصنيع ثلاثية الأبعاد': 'Tap to switch the 3D production stages',
+  'ملخص المعمل': 'Lab summary',
+  'بيانات التشغيل والأجهزة': 'Operations and equipment',
+  'إظهار أو إخفاء كلمة المرور': 'Show or hide password',
+  'مميزات المنصة': 'Platform features',
+  'نوع الحساب': 'Account type',
+  'د. أحمد محمود': 'Dr. Ahmed Mahmoud',
+  'عيادة النور للأسنان': 'Al Nour Dental Clinic',
+  'مزايا التسجيل': 'Why sign up',
+  'قائمة لوحة الطبيب': 'Dentist dashboard menu',
+  'تثبيت القائمة مفتوحة': 'Keep the menu open',
+  'القائمة السريعة': 'Quick menu',
+  'ملخص': 'Summary',
+  'مخطط الأسنان': 'Tooth chart',
+  'قائمة المعمل': 'Lab menu',
+  'قائمة لوحة المعمل': 'Lab dashboard menu',
+  'قائمة لوحة الإدارة': 'Admin dashboard menu',
+  'سعر الخدمة بالجنيه المصري': 'Service price in EGP',
+  'اختر طبيبًا من الجدول أعلاه لعرض معاملاته التفصيلية': 'Pick a dentist in the table above to see their detailed transactions',
+  'يعرض كل طلبات الطبيب المختار، التواريخ، المبالغ المدفوعة، المتبقية، وصافي المعمل.': 'Shows every order of the chosen dentist: dates, amounts paid, remaining and the lab’s net.',
+  'اختر طبيبًا لعرض معاملاته...': 'Pick a dentist to see their transactions...',
+  'ملف الحالة': 'Case file',
+  'الدور': 'Role',
+  'الدفعة الأولى 20% بقيمة 2,000 جنيه بعد اعتماد التصميم والدفعة النهائية 80% بقيمة 8,000 جنيه بعد اكتمال آخر مرحلة': 'First payment 20% (EGP 2,000) after design approval, final payment 80% (EGP 8,000) on completion',
 };
 
 const SUBSTRING_AR_TO_EN = [
+  ['السن رقم', 'Tooth'],
   // Dashboard strings assembled at runtime (stage statuses, notifications, statements, counts)
   ['اعتماد مرحلة التصميم واستحقاق الدفعة الأولى', 'Design approved, first payment due'],
   ['قبول الطلب وتثبيت السعر', 'Order accepted, price locked'],
@@ -1632,6 +1666,8 @@ function translateStringToEn(str) {
 
 const originalTextMap = new WeakMap();
 const originalPlaceholderMap = new WeakMap();
+const originalAttrMap = new WeakMap();
+let originalTitle = null;
 
 export function applyDomTranslations(root = document.body) {
   if (!root) return;
@@ -1649,6 +1685,23 @@ export function applyDomTranslations(root = document.body) {
       el.setAttribute('placeholder', target);
     }
   });
+
+  // Screen-reader labels, tooltips and image text follow the language too.
+  root.querySelectorAll?.('[aria-label], [title], img[alt]').forEach((el) => {
+    if (el.closest('.pref-toggles')) return;
+    let orig = originalAttrMap.get(el);
+    if (!orig) { orig = {}; for (const a of ['aria-label', 'title', 'alt']) if (el.hasAttribute(a)) orig[a] = el.getAttribute(a); originalAttrMap.set(el, orig); }
+    for (const [a, v] of Object.entries(orig)) {
+      if (!v || !/[؀-ۿ]/.test(v)) continue;
+      const target = lang === 'en' ? translateStringToEn(v) : v;
+      if (el.getAttribute(a) !== target) el.setAttribute(a, target);
+    }
+  });
+  if (root === document.body) {
+    if (originalTitle === null) originalTitle = document.title;
+    const t = lang === 'en' ? translateStringToEn(originalTitle) : originalTitle;
+    if (document.title !== t) document.title = t;
+  }
 
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {

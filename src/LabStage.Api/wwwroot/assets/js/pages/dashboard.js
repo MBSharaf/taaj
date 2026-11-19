@@ -1,9 +1,9 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=19';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=20';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=4';
-import { initOrderChat, decorateUnreadChats } from './chat.js?v=3';
-import { initAdminLists, initOrderDisputes } from './admin-lists.js?v=2';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=8';
+import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=5';
+import { initOrderChat, decorateUnreadChats } from './chat.js?v=4';
+import { initAdminLists, initOrderDisputes } from './admin-lists.js?v=3';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=9';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -277,13 +277,23 @@ async function updateNavCount(user) {
 (() => {
   const btns = [...document.querySelectorAll('.dash-menu-btn')];
   const scrim = document.querySelector('.dash-scrim');
+  const sidebar = document.getElementById('dash-sidebar');
+  let opener = null;
   const setOpen = (open) => {
+    const was = document.body.classList.contains('nav-open');
     document.body.classList.toggle('nav-open', open);
     btns.forEach((btn) => btn.setAttribute('aria-expanded', String(open)));
     if (scrim) scrim.hidden = !open;
+    // keyboard users land inside the drawer, and go back to the button that opened it
+    if (open && !was) { opener = document.activeElement; setTimeout(() => sidebar?.querySelector('.dash-close')?.focus({ preventScroll: true }), 50); }
+    if (!open && was && opener && document.contains(opener) && opener.getBoundingClientRect().width) opener.focus({ preventScroll: true });
   };
   btns.forEach((btn) => btn.addEventListener('click', () => setOpen(!document.body.classList.contains('nav-open'))));
   scrim?.addEventListener('click', () => setOpen(false));
+  // choosing a page or section in the drawer closes it
+  sidebar?.addEventListener('click', (e) => { if (e.target.closest('.dash-nav a, .dash-promo a') && document.body.classList.contains('nav-open')) setOpen(false); });
+  // back to a wide screen: never leave the page locked
+  matchMedia('(min-width: 981px)').addEventListener('change', (m) => { if (m.matches) setOpen(false); });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setOpen(false);
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -798,10 +808,10 @@ async function initOrderDetails(isLabView) {
     const dentistFeeVal = Number(o.dentistCommissionEgp ?? (baseOrderPrice * 0.01));
     const roleFinanceSummary = isLabView
       ? `<div class="muted" style="font-size:var(--fs-xs)">السعر المؤكد للحالة</div>
-         <strong class="num" style="font-size:var(--fs-2xl);color:var(--g-900)">${fmtEgp(baseOrderPrice)}</strong>
+         <strong class="num" style="font-size:var(--fs-2xl);color:var(--ink)">${fmtEgp(baseOrderPrice)}</strong>
          <div class="muted" style="font-size:var(--fs-xs)">عمولة المنصة على المعمل: 2% (صافي المعمل 98%)</div>`
       : `<div class="muted" style="font-size:var(--fs-xs)">السعر المؤكد للحالة</div>
-         <strong class="num" style="font-size:var(--fs-2xl);color:var(--g-900)">${fmtEgp(baseOrderPrice)}</strong>
+         <strong class="num" style="font-size:var(--fs-2xl);color:var(--ink)">${fmtEgp(baseOrderPrice)}</strong>
          <div class="muted" style="font-size:var(--fs-xs)">عمولة الخدمة للطبيب (1%): <span class="num">${fmtEgp(dentistFeeVal)}</span></div>`;
 
     document.getElementById('order-header-box').innerHTML = `

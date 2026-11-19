@@ -479,7 +479,7 @@
 .data-table th {
   font-size: var(--fs-xs);
   font-weight: 700;
-  color: var(--g-900);
+  color: var(--ink);
   background: rgb(207 226 255 / .45);
   border-block: 1px solid rgb(110 143 224 / .28);
 }
@@ -1021,7 +1021,7 @@
 .chart-bar-val {
   font-size: 11px;
   font-weight: 700;
-  color: var(--g-900);
+  color: var(--ink);
   white-space: nowrap;
 }
 
@@ -1155,7 +1155,7 @@
 
 .campaign-kpi-box strong {
   font-size: var(--fs-md);
-  color: var(--g-900);
+  color: var(--ink);
 }
 
 /* ==========================================================================

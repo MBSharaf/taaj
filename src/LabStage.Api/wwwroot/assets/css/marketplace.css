@@ -16,7 +16,7 @@ body:has(.page-hero) .site-header:not(.is-scrolled) .nav-toggle span::after { ba
 body:has(.page-hero) .site-header:not(.is-scrolled) .nav-toggle[aria-expanded="true"] span { background: transparent; }
 body:has(.page-hero) .site-header:has(.nav-main.is-open) { background: var(--bg); }
 body:has(.page-hero) .site-header:has(.nav-main.is-open) .brand,
-body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: var(--g-900); }
+body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: var(--ink); }
 
 .page-hero {
   padding-block: calc(var(--header-h) + var(--sp-7)) var(--sp-6);
@@ -155,7 +155,7 @@ body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: va
   block-size: 52px;
   border-radius: var(--r-md);
   background: var(--grad-mint);
-  color: var(--g-900);
+  color: var(--ink);
   font-weight: 700;
   font-size: var(--fs-lg);
   display: grid;
@@ -175,7 +175,7 @@ body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: va
 
 .lab-title-wrap h3 a {
   text-decoration: none;
-  color: var(--g-900);
+  color: var(--ink);
 }
 
 .lab-title-wrap h3 a:hover {
@@ -208,7 +208,7 @@ body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: va
 }
 
 .lab-services-preview b {
-  color: var(--g-900);
+  color: var(--ink);
 }
 
 .lab-card-foot {
@@ -224,7 +224,7 @@ body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: va
   gap: 4px;
   font-weight: 700;
   font-size: var(--fs-sm);
-  color: var(--g-900);
+  color: var(--ink);
 }
 
 .rating-chip small {
@@ -302,7 +302,7 @@ body:has(.page-hero) .site-header:has(.nav-main.is-open) .nav-main a { color: va
 
 .editorial-services .srv-price {
   font-weight: 700;
-  color: var(--g-900);
+  color: var(--ink);
   white-space: nowrap;
 }
 

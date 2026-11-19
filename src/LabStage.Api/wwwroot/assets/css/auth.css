@@ -128,7 +128,7 @@
 
 .pw-toggle:hover {
   background: var(--bg);
-  color: var(--g-900);
+  color: var(--ink);
 }
 
 .auth-meta {
