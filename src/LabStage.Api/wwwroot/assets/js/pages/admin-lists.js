@@ -1,6 +1,6 @@
 // Admin lists with server-side paging and Excel export (users, orders, disputes, refunds),
 // plus the dispute card on order pages. Texts come from the HTML (#admin-texts, #dispute-texts).
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=20';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=21';
 
 const tr = (el) => { if (el && getLang() === 'en') applyDomTranslations(el); };
 const t = (k) => document.querySelector(`#admin-texts [data-t="${k}"]`)?.textContent || k;

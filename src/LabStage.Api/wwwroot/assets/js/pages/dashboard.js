@@ -1,4 +1,4 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=20';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=21';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
 import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=5';
 import { initOrderChat, decorateUnreadChats } from './chat.js?v=4';

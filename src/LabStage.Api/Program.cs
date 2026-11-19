@@ -179,6 +179,13 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
+    // Rebuild the joined style sheets after an edit to assets/css (see Frontend/CssBundles.cs).
+    try
+    {
+        foreach (var f in LabStage.Api.Frontend.CssBundles.Sync(app.Environment.WebRootPath, write: true))
+            app.Logger.LogWarning("CSS bundle updated: {File}", f);
+    }
+    catch (Exception ex) { app.Logger.LogWarning(ex, "Could not rebuild the CSS bundles"); }
     app.MapOpenApi();
     app.UseSwaggerUI(o => o.SwaggerEndpoint("/openapi/v1.json", "LabStage API v1"));
 }

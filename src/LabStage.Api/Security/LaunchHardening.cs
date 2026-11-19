@@ -47,9 +47,13 @@ public static class LaunchGuard
 /// </summary>
 public sealed class SecurityMiddleware(RequestDelegate next, IConfiguration config, ILogger<SecurityMiddleware> log)
 {
-    // The one inline script on every page: document.documentElement.classList.add('js')
+    // The one inline script on every page (same text in each <head>): marks that JS runs, and handles the brand fonts:
+    // a returning visitor (fonts cached) gets them at once; on a first visit the page stays in the system font and
+    // fonts-warm.js downloads them after the page has loaded, so nothing jumps or waits on them.
+    public const string InlineScript =
+        "document.documentElement.classList.add('js');(function(d,w){var s=function(u,c){var e=d.createElement(c?'link':'script');if(c){e.rel='stylesheet';e.href=u}else{e.src=u}d.head.appendChild(e)};try{if(w.localStorage.getItem('taaj-fonts'))return s('/assets/css/fonts.css?v=3',1)}catch(e){}w.addEventListener('load',function(){setTimeout(function(){s('/assets/js/core/fonts-warm.js?v=1')},1500)})})(document,window)";
     private static readonly string InlineScriptHash =
-        Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes("document.documentElement.classList.add('js')")));
+        Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(InlineScript)));
 
     private static readonly HashSet<string> Unsafe = ["POST", "PUT", "PATCH", "DELETE"];
 
@@ -67,8 +71,8 @@ public sealed class SecurityMiddleware(RequestDelegate next, IConfiguration conf
         h.ContentSecurityPolicy = string.Join("; ",
             "default-src 'self'",
             $"script-src 'self' 'sha256-{InlineScriptHash}'",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            "font-src 'self' https://fonts.gstatic.com",
+            "style-src 'self' 'unsafe-inline'",
+            "font-src 'self'",
             "img-src 'self' data: blob:",
             $"connect-src 'self' wss://{host} ws://{host}",
             "media-src 'self' blob:",
