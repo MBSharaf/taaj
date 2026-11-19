@@ -93,8 +93,15 @@ public sealed class OrdersController(
         var pickupAddress = !string.IsNullOrWhiteSpace(req.PickupAddress) ? req.PickupAddress.Trim()
             : clinic is null ? string.Empty : string.Join("، ", new[] { clinic.Address, clinic.City }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
-        var count = await db.Orders.CountAsync(ct);
-        var orderNumber = $"LS-{(count + 188):D6}";
+        // Order numbers come from a database sequence: unique even when many dentists submit at the same moment
+        // (the old COUNT(*)+188 gave the same number to simultaneous requests and all but one failed).
+        string orderNumber;
+        do
+        {
+            // ToListAsync, not SingleAsync: the SQL must not be wrapped in a sub-query (NEXT VALUE FOR is not allowed there).
+            var next = (await db.Database.SqlQuery<long>($"SELECT NEXT VALUE FOR dbo.OrderNumberSeq AS [Value]").ToListAsync(ct))[0];
+            orderNumber = $"LS-{next:D6}";
+        } while (await db.Orders.AnyAsync(o => o.OrderNumber == orderNumber, ct)); // skip any number already taken
         var distinctStages = req.IsMockup ? [ProductionStage.Design] : req.Stages!.Distinct().OrderBy(s => s).ToList();
         var instructions = req.Instructions?.Trim() ?? string.Empty;
         if (req.IsMockup)
