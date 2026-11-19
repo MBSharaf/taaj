@@ -416,7 +416,7 @@ public static class NotificationCategories
 
     public static string Of(string type) => type switch
     {
-        "NewOrder" or "OrderAccepted" or "OrderRejected" or "PriceProposed" or "PriceApproved" or "OrderCompleted" => Orders,
+        "NewOrder" or "OrderAccepted" or "OrderRejected" or "PriceProposed" or "PriceApproved" or "OrderCompleted" or "DisputeOpened" or "DisputeDecided" => Orders,
         "StageStarted" or "StageUpdated" or "StageCompleted" or "StageApproved" or "ReviewNeeded" or "RevisionRequested" => Production,
         "PaymentDue" or "PaymentConfirmed" or "PaymentReceived" or "PaymentCollected" or "RefundExecuted" or "SettlementPaid" => Payments,
         "Delivery" or "OutForDelivery" or "Delivered" => Delivery,
@@ -511,6 +511,24 @@ public sealed class SettlementItem
     public Guid CommissionEntryId { get; set; }
     public Guid OrderId { get; set; }
     public long NetPiastres { get; set; }
+}
+
+public enum DisputeStatus { Open = 0, Resolved = 1, Rejected = 2 }
+
+/// <summary>A complaint about an order, opened by the dentist or the lab, decided by an admin (optionally with a refund).</summary>
+public sealed class Dispute
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid OrderId { get; set; }
+    public Guid OpenedByUserId { get; set; }
+    public string OpenedByRole { get; set; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
+    public DisputeStatus Status { get; set; } = DisputeStatus.Open;
+    public string? Resolution { get; set; }
+    public Guid? ResolvedByUserId { get; set; }
+    public Guid? RefundRequestId { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? ResolvedAt { get; set; }
 }
 
 public sealed class RefundRequest

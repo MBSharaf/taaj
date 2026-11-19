@@ -365,10 +365,13 @@ public sealed class AdminAndMonetizationController(LabStageDbContext db, Finance
         if (req.Suspended && string.IsNullOrWhiteSpace(req.Reason))
             return Problem("يجب ذكر سبب تعليق الحساب في سجل التدقيق.", statusCode: StatusCodes.Status400BadRequest);
 
+        if (id == User.GetUserId())
+            return Problem("لا يمكنك تعليق حسابك أنت.", statusCode: StatusCodes.Status400BadRequest);
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct);
         if (user is null) return NotFound();
 
         user.IsSuspended = req.Suspended;
+        if (req.Suspended) user.SecurityStamp = Guid.NewGuid().ToString("N"); // signed out everywhere
         user.SuspensionReason = req.Suspended ? req.Reason.Trim() : null;
 
         db.AuditLogs.Add(new AuditLog

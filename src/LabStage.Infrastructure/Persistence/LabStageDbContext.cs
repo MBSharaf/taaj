@@ -7,6 +7,7 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
 {
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<UserToken> UserTokens => Set<UserToken>();
+    public DbSet<Dispute> Disputes => Set<Dispute>();
     public DbSet<ConversationRead> ConversationReads => Set<ConversationRead>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
@@ -68,6 +69,15 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
         });
 
         b.Entity<ConversationRead>(e => e.HasIndex(x => new { x.ConversationId, x.UserId }).IsUnique());
+
+        b.Entity<Dispute>(e =>
+        {
+            e.HasIndex(x => new { x.Status, x.CreatedAt });
+            e.HasIndex(x => x.OrderId);
+            e.Property(x => x.OpenedByRole).HasMaxLength(64);
+            e.Property(x => x.Reason).HasMaxLength(2000);
+            e.Property(x => x.Resolution).HasMaxLength(2000);
+        });
 
         b.Entity<NotificationPreference>(e =>
         {
