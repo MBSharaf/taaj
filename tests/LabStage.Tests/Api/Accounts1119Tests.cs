@@ -131,11 +131,11 @@ public sealed class Accounts1119Tests(WebApplicationFactory<Program> baseFactory
         using var __ = f;
         var phone = await SignedIn(f, "admin@labstage.eg", "Admin@12345");
         var laptop = await SignedIn(f, "admin@labstage.eg", "Admin@12345");
-        Assert.Equal(HttpStatusCode.BadRequest, (await laptop.PostAsJsonAsync("/api/v1/account/change-password", new { currentPassword = "wrong", newPassword = "NewAdmin@2026" })).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await laptop.PostAsJsonAsync("/api/v1/account/change-password", new { currentPassword = "Admin@12345", newPassword = "NewAdmin@2026" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await laptop.PostAsJsonAsync("/api/v1/account/change-password", new { currentPassword = "wrong", newPassword = "Fresh-Key@2026" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await laptop.PostAsJsonAsync("/api/v1/account/change-password", new { currentPassword = "Admin@12345", newPassword = "Fresh-Key@2026" })).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await laptop.GetAsync("/api/v1/auth/me")).StatusCode);     // this device stays in
         Assert.Equal(HttpStatusCode.Unauthorized, (await phone.GetAsync("/api/v1/auth/me")).StatusCode); // the other one is out
-        await SignedIn(f, "admin@labstage.eg", "NewAdmin@2026");
+        await SignedIn(f, "admin@labstage.eg", "Fresh-Key@2026");
     }
 
     [Fact]

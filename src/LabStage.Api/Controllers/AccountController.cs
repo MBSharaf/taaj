@@ -17,7 +17,7 @@ namespace LabStage.Api.Controllers;
 [ApiController]
 public sealed class AccountController(LabStageDbContext db, IEmailSender email, IConfiguration config, ILogger<AccountController> log) : ControllerBase
 {
-    public const int MinPasswordLength = 8;
+    public const int MinPasswordLength = PasswordPolicy.MinLength;
     private const string LinkInvalid = "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.";
 
     public sealed record ForgotRequest(string Email);
@@ -59,7 +59,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         u.SecurityStamp = Guid.NewGuid().ToString("N");
         u.EmailConfirmedAt ??= DateTimeOffset.UtcNow; // the link reached this inbox
         t.UsedAt = DateTimeOffset.UtcNow;
-        Audit(u, t.Purpose == UserToken.StaffInvite ? "StaffInviteAccepted" : "PasswordReset");
+        db.AddUserAudit(u, t.Purpose == UserToken.StaffInvite ? "StaffInviteAccepted" : "PasswordReset");
         await db.SaveChangesAsync(ct);
         return Ok(new { reset = true, email = u.Email });
     }
@@ -74,7 +74,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         if (t is null) return Problem(LinkInvalid, statusCode: StatusCodes.Status400BadRequest);
         t.UsedAt = DateTimeOffset.UtcNow;
         t.User!.EmailConfirmedAt ??= DateTimeOffset.UtcNow;
-        Audit(t.User, "EmailConfirmed");
+        db.AddUserAudit(t.User, "EmailConfirmed");
         await db.SaveChangesAsync(ct);
         return Ok(new { confirmed = true });
     }
@@ -122,7 +122,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         if (u.Phone != phone) u.PhoneConfirmedAt = null; // a new number needs confirming again
         u.FullName = name;
         u.Phone = phone;
-        Audit(u, "ProfileUpdated");
+        db.AddUserAudit(u, "ProfileUpdated");
         await db.SaveChangesAsync(ct);
         return Ok(new { u.FullName, u.Phone });
     }
@@ -132,7 +132,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
     [HttpPost("api/v1/account/change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req, CancellationToken ct)
     {
-        if (PasswordProblem(req.NewPassword) is { } bad) return bad;
+        if (PasswordProblem(req.NewPassword, User.FindFirstValue(ClaimTypes.Email)) is { } bad) return bad;
         var u = await db.Users.FirstAsync(x => x.Id == User.GetUserId(), ct);
         if (!PasswordHasher.Verify(req.CurrentPassword ?? string.Empty, u.PasswordHash))
             return Problem("كلمة المرور الحالية غير صحيحة.", statusCode: StatusCodes.Status400BadRequest);
@@ -140,7 +140,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
             return Problem("اختر كلمة مرور مختلفة عن الحالية.", statusCode: StatusCodes.Status400BadRequest);
         u.PasswordHash = PasswordHasher.Hash(req.NewPassword);
         u.SecurityStamp = Guid.NewGuid().ToString("N");
-        Audit(u, "PasswordChanged");
+        db.AddUserAudit(u, "PasswordChanged");
         await db.SaveChangesAsync(ct);
         // Other devices are signed out by the new stamp; this one gets a fresh cookie.
         await AuthController.SignInAsync(HttpContext, u, isPersistent: true);
@@ -188,7 +188,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         };
         db.Users.Add(u);
         db.LaboratoryStaff.Add(new LaboratoryStaff { LaboratoryId = lab.Id, UserId = u.Id });
-        Audit(u, "StaffInvited", User.GetUserId(), AppRoles.LaboratoryOwner);
+        db.AddUserAudit(u, "StaffInvited", User.GetUserId(), AppRoles.LaboratoryOwner);
         var raw = await AccountTokens.IssueAsync(db, u.Id, UserToken.StaffInvite, AccountTokens.InviteLifetime, ct);
         await db.SaveChangesAsync(ct);
         await SendSafelyAsync(AccountEmails.StaffInvite(u, lab.Name, $"{AccountEmails.BaseUrl(HttpContext, config)}/reset-password.html?invite=1&token={Uri.EscapeDataString(raw)}"), ct);
@@ -226,7 +226,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         u.SuspensionReason = "تمت إزالة الحساب من المعمل.";
         u.SecurityStamp = Guid.NewGuid().ToString("N");
         await db.UserTokens.Where(t => t.UserId == u.Id && t.UsedAt == null).ExecuteUpdateAsync(x => x.SetProperty(t => t.UsedAt, DateTimeOffset.UtcNow), ct);
-        Audit(u, "StaffRemoved", User.GetUserId(), AppRoles.LaboratoryOwner);
+        db.AddUserAudit(u, "StaffRemoved", User.GetUserId(), AppRoles.LaboratoryOwner);
         await db.SaveChangesAsync(ct);
         return Ok(new { removed = true });
     }
@@ -239,13 +239,9 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         return db.Laboratories.FirstOrDefaultAsync(l => l.OwnerUserId == id, ct);
     }
 
-    private ObjectResult? PasswordProblem(string? pw) =>
-        string.IsNullOrEmpty(pw) || pw.Length < MinPasswordLength
-            ? Problem($"كلمة المرور يجب ألا تقل عن {MinPasswordLength} أحرف.", statusCode: StatusCodes.Status400BadRequest)
-            : pw.Length > 128 ? Problem("كلمة المرور طويلة جدًا.", statusCode: StatusCodes.Status400BadRequest) : null;
+    private ObjectResult? PasswordProblem(string? pw, string? email = null) =>
+        PasswordPolicy.Problem(pw, email) is { } weak ? Problem(weak, statusCode: StatusCodes.Status400BadRequest) : null;
 
-    private void Audit(AppUser u, string action, Guid? actor = null, string? actorRole = null) =>
-        db.AuditLogs.Add(new AuditLog { ActorUserId = actor ?? u.Id, ActorRole = actorRole ?? u.Role, Action = action, EntityType = nameof(AppUser), EntityId = u.Id.ToString(), Details = "" });
 
     /// <summary>A failing provider must not reveal anything or break the request; it is logged instead.</summary>
     private async Task SendSafelyAsync(EmailMessage m, CancellationToken ct)

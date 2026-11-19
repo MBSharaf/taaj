@@ -109,7 +109,17 @@ if (root) {
       })
       .catch((err) => { console.warn('3D hero unavailable, keeping the SVG pieces.', err); });
   if (host) {
-    const whenIdle = () => ('requestIdleCallback' in window ? requestIdleCallback(load3d, { timeout: 3000 }) : setTimeout(load3d, 1200));
-    if (document.readyState === 'complete') whenIdle(); else window.addEventListener('load', whenIdle, { once: true });
+    // three.js is large (about 700 KB), so it starts only once the visitor interacts with the page
+    // (moves the mouse, touches, scrolls or presses a key). Until then the SVG pieces show, and the
+    // first screen stays fast on phones.
+    const events = ['pointermove', 'pointerdown', 'touchstart', 'wheel', 'scroll', 'keydown'];
+    let started = false;
+    const begin = () => {
+      if (started) return;
+      started = true;
+      events.forEach((t) => window.removeEventListener(t, begin));
+      ('requestIdleCallback' in window ? requestIdleCallback(load3d, { timeout: 1500 }) : setTimeout(load3d, 200));
+    };
+    events.forEach((t) => window.addEventListener(t, begin, { passive: true }));
   }
 }

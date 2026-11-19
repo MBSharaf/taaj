@@ -112,6 +112,16 @@ public sealed class AppUser
     /// <summary>Changes with every password change/reset; sessions signed with an older value are signed out.</summary>
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
 
+    // ---- Two-step sign-in (authenticator app, TOTP) ----
+    /// <summary>The authenticator secret, encrypted with ASP.NET Data Protection. Set during setup, before it is enabled.</summary>
+    public string? TwoFactorSecret { get; set; }
+    /// <summary>When two-step sign-in was turned on (null = off).</summary>
+    public DateTimeOffset? TwoFactorEnabledAt { get; set; }
+    /// <summary>Last 30-second step whose code was accepted, so the same code can't be used twice.</summary>
+    public long TwoFactorLastStep { get; set; }
+    /// <summary>Hashes of the unused one-time recovery codes, separated by ';'.</summary>
+    public string? TwoFactorRecoveryCodes { get; set; }
+
     public DoctorProfile? DoctorProfile { get; set; }
     public Laboratory? OwnedLaboratory { get; set; }
 }

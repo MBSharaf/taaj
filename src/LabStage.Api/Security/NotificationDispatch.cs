@@ -17,6 +17,8 @@ public sealed class NotificationQueue
     private readonly Channel<Guid> channel = Channel.CreateUnbounded<Guid>(new UnboundedChannelOptions { SingleReader = false });
     public ChannelReader<Guid> Reader => channel.Reader;
     public void Enqueue(Guid id) => channel.Writer.TryWrite(id);
+    /// <summary>Notifications saved but not yet delivered (watched by the readiness health check).</summary>
+    public int Backlog => channel.Reader.Count;
 }
 
 /// <summary>

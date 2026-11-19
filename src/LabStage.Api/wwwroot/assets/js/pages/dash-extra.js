@@ -1,6 +1,6 @@
 // Lab finance lock (password modal + top-bar chip), lab finance settings, doctor clinics, order tracker.
 // Behaviour only: every text shown here is written in the HTML (hidden until needed).
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=20';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=22';
 
 const translate = (el) => { if (el && getLang() === 'en') applyDomTranslations(el); };
 const LAB_ROLES = ['LaboratoryOwner', 'LaboratoryStaff'];
@@ -331,6 +331,60 @@ export function initVerifyBanner(user) {
   }));
 }
 
+// ---- Two-step verification card (account pages; the text and forms are in the HTML) ----
+async function initTwoFactor(say) {
+  const card = document.getElementById('two-factor-card');
+  if (!card) return;
+  const $ = (id) => document.getElementById(id);
+  const msg = $('tf-msg');
+  const show = (state) => {
+    $('tf-off').hidden = state !== 'off';
+    $('tf-setup').hidden = state !== 'setup';
+    $('tf-on').hidden = state !== 'on';
+  };
+  const refresh = async () => {
+    const r = await rawFetch('/api/v1/account/two-factor');
+    if (!r.ok) { card.hidden = true; return; }
+    const st = await r.json();
+    $('tf-required').hidden = !(st.required && !st.enabled);
+    $('tf-left').textContent = new Intl.NumberFormat(getLang() === 'en' ? 'en' : 'ar-EG').format(st.recoveryCodesLeft || 0);
+    show(st.enabled ? 'on' : 'off');
+  };
+  $('tf-start').addEventListener('click', async () => {
+    const r = await rawFetch('/api/v1/account/two-factor/setup', { method: 'POST' });
+    if (!r.ok) { say(msg, await problemText(r, 'تعذّر بدء الإعداد.'), true); return; }
+    const d = await r.json();
+    $('tf-qr').src = d.qrSvgDataUri;
+    $('tf-secret').textContent = d.secret;
+    say(msg, '');
+    show('setup');
+    $('tf-setup').code.focus();
+  });
+  $('tf-setup').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await rawFetch('/api/v1/account/two-factor/enable', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: e.target.code.value }) });
+    if (!r.ok) { say(msg, await problemText(r, 'الكود غير صحيح.'), true); return; }
+    const d = await r.json();
+    const list = $('tf-code-list');
+    list.replaceChildren(...d.recoveryCodes.map((c) => Object.assign(document.createElement('li'), { textContent: c })));
+    $('tf-codes').hidden = false;
+    e.target.reset();
+    say(msg, 'تم تفعيل التحقق بخطوتين، وتم تسجيل الخروج من الأجهزة الأخرى.');
+    await refresh();
+  });
+  $('tf-on').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const r = await rawFetch('/api/v1/account/two-factor/disable', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: f.password.value, code: f.code.value }) });
+    if (!r.ok) { say(msg, await problemText(r, 'تعذّر إيقاف التحقق بخطوتين.'), true); return; }
+    f.reset();
+    $('tf-codes').hidden = true;
+    say(msg, 'تم إيقاف التحقق بخطوتين.');
+    await refresh();
+  });
+  await refresh();
+}
+
 // ---- "My account": profile, password, and (lab owner) technicians ----
 export async function initAccountPage(user) {
   const say = (el, text, bad = false) => { if (!el) return; el.textContent = text; el.classList.toggle('is-error', bad); translate(el); };
@@ -362,7 +416,7 @@ export async function initAccountPage(user) {
   pwf?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = document.getElementById('password-msg');
-    if (pwf.newPassword.value.length < 8) { say(msg, 'كلمة المرور 8 أحرف على الأقل.', true); return; }
+    { const pw = pwf.newPassword.value; if (pw.length < 10 || !/\p{L}/u.test(pw) || !/\d/.test(pw)) { say(msg, 'كلمة المرور 10 أحرف على الأقل، فيها حروف وأرقام.', true); return; } }
     if (pwf.newPassword.value !== pwf.confirmPassword.value) { say(msg, 'تأكيد كلمة المرور غير مطابق.', true); return; }
     const r = await rawFetch('/api/v1/account/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currentPassword: pwf.currentPassword.value, newPassword: pwf.newPassword.value }) });
     if (!r.ok) { say(msg, await problemText(r, 'تعذّر تغيير كلمة المرور.'), true); return; }
@@ -371,6 +425,7 @@ export async function initAccountPage(user) {
   });
 
   await loadProfile();
+  await initTwoFactor(say);
 
   // Technicians (lab owner only)
   const card = document.getElementById('staff-card');

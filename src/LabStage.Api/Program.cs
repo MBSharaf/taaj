@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using System.Threading.RateLimiting;
 using LabStage.Api.Hubs;
 using LabStage.Application.Payments;
@@ -54,6 +55,7 @@ if (builder.Configuration["Documents:Fonts"] is { Length: > 0 } pdfFonts)
 builder.Services.AddSingleton<LabStage.Application.Email.IEmailSender>(sp => LabStage.Infrastructure.Email.EmailSenderFactory.Create(
     builder.Configuration, builder.Environment.ContentRootPath, isDevelopment, sp.GetRequiredService<ILoggerFactory>()));
 
+builder.Services.AddSingleton<LabStage.Api.Security.TwoFactor>();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
@@ -114,11 +116,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    // Sign-in and sign-up: at most 10 attempts per minute from one address (on top of the per-account lockout).
+    // Sign-in, sign-up, password and two-step endpoints: 10 a minute per address (Security:AuthRequestsPerMinute),
+    // on top of the per-account lockout.
+    var authPerMinute = Math.Max(1, builder.Configuration.GetValue("Security:AuthRequestsPerMinute", 10));
     o.AddPolicy("auth", ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = authPerMinute, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     var perAddress = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
@@ -152,7 +156,13 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<LabStage.Api.Secur
 builder.Services.AddControllers(o => o.Filters.Add<LabStage.Api.Security.LabMoneyMaskFilter>());
 builder.Services.AddOpenApi("v1");
 builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<LabStage.Api.Security.DatabaseHealthCheck>("database", tags: ["ready"])
+    .AddCheck<LabStage.Api.Security.NotificationBacklogHealthCheck>("notifications", tags: ["ready"]);
+// Monitoring: with an Application Insights connection string set (Azure), requests, failures, dependencies (SQL)
+// and logs are sent there; the alert rules are listed in docs/OPERATIONS.md. Without it nothing is sent anywhere.
+if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
 builder.Services.AddResponseCompression(o =>
 {
     o.EnableForHttps = true;
@@ -170,7 +180,9 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(db, new SeedOptions(
         IncludeDemoData: app.Environment.IsDevelopment(),
         BootstrapAdminEmail: app.Configuration["Bootstrap:AdminEmail"],
-        BootstrapAdminPassword: app.Configuration["Bootstrap:AdminPassword"]));
+        BootstrapAdminPassword: app.Configuration["Bootstrap:AdminPassword"],
+        // Database:MigrateOnStartup=false when the deployment updates the schema with its own (owner) database user.
+        ApplyMigrations: app.Configuration.GetValue("Database:MigrateOnStartup", true)));
 }
 
 app.UseResponseCompression();
@@ -179,6 +191,13 @@ app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
+    // Rebuild the joined style sheets after an edit to assets/css (see Frontend/CssBundles.cs).
+    try
+    {
+        foreach (var f in LabStage.Api.Frontend.CssBundles.Sync(app.Environment.WebRootPath, write: true))
+            app.Logger.LogWarning("CSS bundle updated: {File}", f);
+    }
+    catch (Exception ex) { app.Logger.LogWarning(ex, "Could not rebuild the CSS bundles"); }
     app.MapOpenApi();
     app.UseSwaggerUI(o => o.SwaggerEndpoint("/openapi/v1.json", "LabStage API v1"));
 }
@@ -212,8 +231,15 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<LabStage.Api.Security.AdminTwoFactorGate>();
 
-app.MapHealthChecks("/api/v1/health");
+// Liveness: the app answers. Readiness: it can also reach the database and is keeping up with notifications.
+app.MapHealthChecks("/api/v1/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/api/v1/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = c => c.Tags.Contains("ready"),
+    ResponseWriter = LabStage.Api.Security.HealthReport.WriteAsync,
+});
 app.MapHub<OrderHub>("/hubs/orders");
 app.MapControllers();
 

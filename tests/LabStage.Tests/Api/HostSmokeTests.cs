@@ -27,4 +27,14 @@ public class HostSmokeTests(WebApplicationFactory<Program> baseFactory) : IClass
         Assert.Contains("lang=\"ar\"", html);
         Assert.Contains("dir=\"rtl\"", html);
     }
+
+    [Fact]
+    public async Task Readiness_check_reports_the_database_and_notifications()
+    {
+        var res = await factory.CreateClient().GetAsync("/api/v1/health/ready");
+        Assert.Equal(HttpStatusCode.OK, res.StatusCode);
+        var body = await res.Content.ReadAsStringAsync();
+        Assert.Contains("\"database\":\"Healthy\"", body);
+        Assert.Contains("\"notifications\":\"Healthy\"", body);
+    }
 }

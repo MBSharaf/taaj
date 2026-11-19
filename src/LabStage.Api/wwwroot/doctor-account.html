@@ -3,18 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>document.documentElement.classList.add('js')</script>
+  <script>document.documentElement.classList.add('js');(function(d,w){var s=function(u,c){var e=d.createElement(c?'link':'script');if(c){e.rel='stylesheet';e.href=u}else{e.src=u}d.head.appendChild(e)};try{if(w.localStorage.getItem('taaj-fonts'))return s('/assets/css/fonts.css?v=3',1)}catch(e){}w.addEventListener('load',function(){setTimeout(function(){s('/assets/js/core/fonts-warm.js?v=1')},1500)})})(document,window)</script>
   <title>حسابي | تاج</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="/assets/brand/taaj-icon.svg" type="image/svg+xml">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
-  <link rel="stylesheet" href="/assets/css/tokens.css?v=8">
-  <link rel="stylesheet" href="/assets/css/base.css?v=8">
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=11">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=20">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=17">
+  <link rel="stylesheet" href="/assets/css/bundles/dash.css?v=9161541fe8">
 </head>
 <body class="page-dash dash-v2" data-dash-page="doctor-account">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -129,13 +124,42 @@
         <form class="settings-form" id="password-form" novalidate>
           <label>كلمة المرور الحالية<input name="currentPassword" type="password" autocomplete="current-password" required></label>
           <div class="row-2">
-            <label>كلمة المرور الجديدة<input name="newPassword" type="password" autocomplete="new-password" minlength="8" required></label>
-            <label>تأكيدها<input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></label>
+            <label>كلمة المرور الجديدة<input name="newPassword" type="password" autocomplete="new-password" minlength="10" required></label>
+            <label>تأكيدها<input name="confirmPassword" type="password" autocomplete="new-password" minlength="10" required></label>
           </div>
-          <p class="muted" style="margin:0;font-size:var(--fs-xs)">8 أحرف على الأقل. سيتم تسجيل خروجك من كل الأجهزة الأخرى.</p>
+          <p class="muted" style="margin:0;font-size:var(--fs-xs)">10 أحرف على الأقل فيها حروف وأرقام. سيتم تسجيل خروجك من كل الأجهزة الأخرى.</p>
           <p class="settings-msg" id="password-msg" role="status"></p>
           <div class="form-actions"><button class="btn btn-primary" type="submit">تغيير كلمة المرور</button></div>
         </form>
+      </section>
+
+      <section class="card" id="two-factor-card">
+        <h2>التحقق بخطوتين</h2>
+        <p class="muted" style="margin-block:4px 12px;font-size:var(--fs-sm)">بعد كلمة المرور يطلب الموقع كودًا من تطبيق مصادقة على هاتفك (مثل Google Authenticator أو Microsoft Authenticator)، فلا يستطيع أحد الدخول بكلمة المرور وحدها.</p>
+        <p class="alert alert-error" id="tf-required" hidden>حساب الإدارة يجب أن يكون عليه التحقق بخطوتين. فعّله أولًا لتتمكن من استخدام لوحة الإدارة.</p>
+        <div id="tf-off" hidden>
+          <div class="form-actions"><button class="btn btn-primary" type="button" id="tf-start">فعّل التحقق بخطوتين</button></div>
+        </div>
+        <form class="settings-form" id="tf-setup" novalidate hidden>
+          <p style="margin:0">1. امسح هذا الكود بتطبيق المصادقة:</p>
+          <img id="tf-qr" class="tf-qr" alt="كود QR لإضافة حسابك في تطبيق المصادقة" width="200" height="200">
+          <p class="muted" style="margin:0;font-size:var(--fs-sm)">أو اكتب هذا المفتاح يدويًا في التطبيق: <code id="tf-secret" dir="ltr"></code></p>
+          <label>2. اكتب الكود الظاهر في التطبيق<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" dir="ltr" required></label>
+          <div class="form-actions"><button class="btn btn-primary" type="submit">تأكيد وتفعيل</button></div>
+        </form>
+        <div id="tf-codes" hidden>
+          <p style="margin:0 0 8px"><strong>احفظ أكواد الاسترجاع هذه في مكان آمن.</strong> كل كود يُستخدم مرة واحدة إذا فقدت هاتفك، ولن تظهر مرة أخرى.</p>
+          <ol class="tf-code-list" id="tf-code-list" dir="ltr"></ol>
+        </div>
+        <form class="settings-form" id="tf-on" novalidate hidden>
+          <p style="margin:0">✓ التحقق بخطوتين مفعّل. أكواد الاسترجاع المتبقية: <bdi id="tf-left"></bdi></p>
+          <div class="row-2">
+            <label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required></label>
+            <label>كود من التطبيق أو كود استرجاع<input name="code" autocomplete="one-time-code" maxlength="9" dir="ltr" required></label>
+          </div>
+          <div class="form-actions"><button class="btn btn-ghost" type="submit">إيقاف التحقق بخطوتين</button></div>
+        </form>
+        <p class="settings-msg" id="tf-msg" role="status"></p>
       </section>
 
       <section class="card" id="notif-prefs">
@@ -163,7 +187,7 @@
     </div>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=26"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=27"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

@@ -118,6 +118,18 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                     b.Property<string>("SuspensionReason")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTimeOffset?>("TwoFactorEnabledAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("TwoFactorLastStep")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TwoFactorRecoveryCodes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TwoFactorSecret")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
