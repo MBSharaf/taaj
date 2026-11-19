@@ -35,3 +35,4 @@ docs/BACKEND-PLAN.md
 _site/
 tools/qa/
 docs/REPORT-*.md
+docs/SECURITY-REVIEW-*.md

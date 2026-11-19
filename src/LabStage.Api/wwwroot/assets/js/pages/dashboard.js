@@ -1,9 +1,9 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=18';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=19';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=3';
-import { initOrderChat, decorateUnreadChats } from './chat.js?v=2';
-import { initAdminLists, initOrderDisputes } from './admin-lists.js?v=1';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=7';
+import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=4';
+import { initOrderChat, decorateUnreadChats } from './chat.js?v=3';
+import { initAdminLists, initOrderDisputes } from './admin-lists.js?v=2';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=8';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.

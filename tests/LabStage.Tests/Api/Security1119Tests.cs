@@ -71,6 +71,12 @@ public sealed class Security1119Tests(WebApplicationFactory<Program> baseFactory
             Assert.Equal("same-origin", r.Headers.GetValues("Cross-Origin-Resource-Policy").Single());
             Assert.False(r.Headers.Contains("Server"));
         }
+
+        // Caching: versioned assets for a year, pages always re-checked.
+        var asset = await c.GetAsync("/assets/js/core/i18n.js?v=1");
+        Assert.Contains("immutable", asset.Headers.CacheControl!.ToString());
+        var page = await c.GetAsync("/index.html");
+        Assert.True(page.Headers.CacheControl!.NoCache);
     }
 
     [Fact]

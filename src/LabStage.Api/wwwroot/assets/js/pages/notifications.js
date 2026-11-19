@@ -1,7 +1,7 @@
 // Notification center in the dashboard top bar: grouped by day, filters, unread counts, mark read, paging,
 // live updates (SignalR), and the per-category preferences form on "My account".
 // Behaviour only: every text is in the HTML (groups, filters, empty state).
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=18';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=19';
 import { live } from '../core/live.js?v=1';
 
 const ICON = {

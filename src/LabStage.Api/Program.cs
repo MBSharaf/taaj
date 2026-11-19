@@ -175,7 +175,17 @@ app.UseHttpsRedirection();
 app.UseMiddleware<LabStage.Api.Security.SecurityMiddleware>();
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    // Versioned assets (?v=N) never change: cache for a year. Pages are always re-checked; other files for an hour.
+    OnPrepareResponse = c =>
+    {
+        var h = c.Context.Response.Headers;
+        if (c.Context.Request.Query.ContainsKey("v")) h.CacheControl = "public, max-age=31536000, immutable";
+        else if (c.File.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) h.CacheControl = "no-cache";
+        else h.CacheControl = "public, max-age=3600";
+    },
+});
 
 app.UseRateLimiter();
 app.UseAuthentication();

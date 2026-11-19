@@ -335,3 +335,7 @@ html[data-theme="dark"] .pay-amount b { color: #F3F7FF; }
 .pay-test-cards { display: grid; gap: 6px; font-size: 13px; }
 .pay-test-cards p { margin: 0; color: var(--ink-2, #5A6785); }
 .pay-test-cards button { text-align: start; padding: 8px 12px; border-radius: 12px; border: 1px dashed rgb(42 98 245 / .45); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+
+/* Legal pages: draft notice and version line */
+.prose-card .legal-meta { margin: 0 0 .5rem; font-size: .9rem; color: var(--ink-2); }
+.prose-card .legal-meta strong { color: var(--warning, #b45309); }

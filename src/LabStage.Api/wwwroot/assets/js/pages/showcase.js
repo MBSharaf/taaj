@@ -93,8 +93,8 @@ if (root) {
 
   // Real 3D pieces. Loaded after first paint; the SVG pieces show until the canvas is ready.
   const host = root.querySelector('.sc-3d');
-  if (host) {
-    import('./hero3d.js?v=5')
+  // Wait until the page has loaded and the browser is idle, so the 3D set-up does not delay the first screen.
+  const load3d = () => import('./hero3d.js?v=5')
       .then(({ mountHero3D }) => {
         three = mountHero3D(frame, {
           host,
@@ -108,5 +108,8 @@ if (root) {
         root.classList.add('has-3d');
       })
       .catch((err) => { console.warn('3D hero unavailable, keeping the SVG pieces.', err); });
+  if (host) {
+    const whenIdle = () => ('requestIdleCallback' in window ? requestIdleCallback(load3d, { timeout: 3000 }) : setTimeout(load3d, 1200));
+    if (document.readyState === 'complete') whenIdle(); else window.addEventListener('load', whenIdle, { once: true });
   }
 }

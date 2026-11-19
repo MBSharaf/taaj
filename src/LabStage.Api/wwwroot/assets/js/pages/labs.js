@@ -1,4 +1,4 @@
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=18';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=19';
 
 // Progressive enhancement for /labs and /lab-profile.html connected to /api/v1/labs.
 const grid = document.getElementById('labs-grid');
