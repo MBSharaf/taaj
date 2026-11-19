@@ -1,8 +1,9 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=17';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=18';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=2';
-import { initOrderChat, decorateUnreadChats } from './chat.js?v=1';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=6';
+import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=3';
+import { initOrderChat, decorateUnreadChats } from './chat.js?v=2';
+import { initAdminLists, initOrderDisputes } from './admin-lists.js?v=1';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=7';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -60,6 +61,9 @@ function enhanceDashboard3DAndIcons() {
     else if (href.endsWith('admin-dashboard.html#settlements')) ic = ICONS.wallet;
     else if (href.endsWith('admin-dashboard.html#audit')) ic = ICONS.layers;
     else if (href.endsWith('admin-dashboard.html#reconciliation')) ic = ICONS.chart;
+    else if (href.endsWith('admin-dashboard.html#users')) ic = ICONS.user;
+    else if (href.endsWith('admin-dashboard.html#orders')) ic = ICONS.tooth;
+    else if (href.endsWith('admin-dashboard.html#disputes')) ic = ICONS.bell;
     else if (href.includes('-account')) ic = ICONS.user;
     else if (href.includes('lab-settings')) ic = ICONS.gear;
     else if (href.includes('doctor-settings')) ic = ICONS.clinic;
@@ -968,6 +972,7 @@ async function initOrderDetails(isLabView) {
 
   await refresh();
   initOrderChat(orderNumber, currentUser);
+  initOrderDisputes(orderNumber);
   // Live: the other side changed a stage or added a file -> refresh the order (not the chat).
   document.addEventListener('taaj:order-changed', () => refresh());
   // Back from the payment page: the gateway's confirmation may take a moment.
@@ -1825,7 +1830,7 @@ async function initAdminDashboard() {
   else if (page === 'lab-orders') await initLabOrders();
   else if (page === 'lab-order-details') await initOrderDetails(true);
   else if (page === 'lab-finance') await initLabFinance();
-  else if (page === 'admin-dashboard') { await initAdminDashboard(); initAdminSearch(); initReconciliation(); }
+  else if (page === 'admin-dashboard') { await initAdminDashboard(); initAdminSearch(); initReconciliation(); initAdminLists(); }
   else if (page === 'lab-settings') await initLabSettings();
   else if (page === 'doctor-settings') await initDoctorSettings();
   else if (page.endsWith('-account')) { await initAccountPage(user); if (page === 'admin-account') initAdminSearch(); }

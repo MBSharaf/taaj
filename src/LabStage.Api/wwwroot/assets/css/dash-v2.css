@@ -836,3 +836,24 @@ html[data-theme="dark"] .notif-panel { box-shadow: 0 30px 80px -16px rgb(0 0 0 /
 .chat-attach svg { inline-size: 18px; block-size: 18px; }
 .chat-file-name { margin: 0; padding: 6px 12px; font-size: 12px; color: var(--d-ink-2); background: var(--d-card); }
 .chat-badge { display: inline-block; margin-inline-start: 6px; padding: 1px 8px; border-radius: 999px; background: var(--d-bad); color: #fff; font-size: 11px; font-weight: 700; font-family: inherit; }
+
+/* Admin lists, pager, filters, disputes */
+.admin-list-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px; margin-block-end: 12px; }
+.admin-list-head h2 { margin: 0; }
+.admin-list-head p { margin: 4px 0 0; font-size: var(--fs-xs); }
+.admin-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-block-end: 12px; }
+.admin-filters .input { block-size: 40px; inline-size: auto; min-inline-size: 140px; flex: 1 1 160px; max-inline-size: 280px; }
+.admin-filters .filter-date { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--d-ink-2); }
+.admin-filters .filter-date .input { min-inline-size: 0; flex: none; inline-size: 150px; }
+.admin-filters .check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--d-ink-2); }
+.pager { display: flex; justify-content: center; align-items: center; gap: 12px; margin-block-start: 12px; font-size: 13px; color: var(--d-ink-2); }
+.pager b { color: var(--d-ink); }
+.dispute-decide { margin-block-start: 14px; padding: 16px; border-radius: 16px; border: 1px dashed var(--d-primary); background: var(--d-panel); }
+.dispute-decide[hidden], #dispute-form[hidden] { display: none; }
+.dispute-decide h3 { margin: 0; font-size: 16px; color: var(--d-ink); }
+.dd-refund { border: 1px solid var(--d-border); border-radius: 14px; padding: 10px 12px; display: grid; gap: 10px; }
+.dd-refund legend { font-size: 12px; color: var(--d-ink-2); padding: 0 6px; }
+.dispute-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+.dispute-item { padding: 10px 12px; border-radius: 14px; background: var(--d-panel); border: 1px solid var(--d-border); font-size: 13px; }
+.dispute-item p { margin: 6px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .admin-filters .input, .admin-filters .filter-date .input { max-inline-size: none; inline-size: 100%; flex-basis: 100%; } .admin-filters .filter-date { flex: 1 1 100%; } }

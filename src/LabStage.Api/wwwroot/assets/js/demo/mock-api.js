@@ -404,6 +404,53 @@
       return json({ items: (d.messages || []).map((m) => ({ ...m, mine: m.senderUserId === meId })), unread: 0, otherLastReadAt: now() });
     }
 
+    // ---- disputes on an order (parties) ----
+    const dm = p.match(/^\/api\/v1\/orders\/([^/]+)\/disputes$/);
+    if (dm) {
+      const n = decodeURIComponent(dm[1]);
+      if (!G[`/api/v1/orders/${n}`]) return problem('الطلب غير موجود.', 404);
+      state.disputes ||= [];
+      if (method === 'POST') {
+        const reason = String(body?.reason || '').trim();
+        if (reason.length < 10) return problem('اشرح المشكلة بوضوح (10 أحرف على الأقل).');
+        if (state.disputes.some((d) => d.orderNumber === n && d.status === 'Open')) return problem('يوجد نزاع مفتوح على هذا الطلب بالفعل.', 409);
+        const me = G['/api/v1/auth/me'];
+        state.disputes.unshift({ id: uuid(), orderNumber: n, openedBy: me.fullName, openedByRole: me.role, reason, status: 'Open', resolution: null, createdAt: now(), resolvedAt: null, paidEgp: 0, refundedEgp: 0 });
+        notify('admin', 'DisputeOpened', `نزاع جديد على الطلب ${n}`, reason.slice(0, 140), '/admin-dashboard.html#disputes');
+        save(); return json({ status: 'Open' });
+      }
+      const items = state.disputes.filter((d) => d.orderNumber === n);
+      return json({ items, canOpen: r !== 'admin' && !items.some((d) => d.status === 'Open') });
+    }
+    // ---- admin lists (paged) ----
+    if (r === 'admin' && /^\/api\/v1\/admin\/(users|orders|disputes|refunds)$/.test(p) && method === 'GET') {
+      const kind = seg[3];
+      const size = Math.min(100, Number(q.get('pageSize') || 20)); const pg = Math.max(1, Number(q.get('page') || 1));
+      const term = (q.get('q') || '').trim();
+      let items = [];
+      if (kind === 'users') {
+        state.userFlags ||= {};
+        items = Object.values(state.users).map((u) => { const me = u.get['/api/v1/auth/me'] || {}; return { id: me.id, fullName: me.fullName, email: u.email, phone: me.phone || '', role: me.role, isSuspended: !!state.userFlags[me.id], emailConfirmed: true, createdAt: me.createdAt || now(), organization: me.laboratoryName || me.clinicName || null, orders: (u.get['/api/v1/orders']?.items || []).length }; });
+        (state.staff || []).forEach((x) => items.push({ id: x.userId, fullName: x.fullName, email: x.email, phone: x.phone, role: 'LaboratoryStaff', isSuspended: false, emailConfirmed: x.active, createdAt: x.createdAt, organization: state.users.lab.get['/api/v1/labs/my']?.name, orders: 0 }));
+        if (q.get('role')) items = items.filter((u) => u.role === q.get('role'));
+        if (q.get('status') === 'suspended') items = items.filter((u) => u.isSuspended);
+        if (q.get('status') === 'active') items = items.filter((u) => !u.isSuspended);
+        if (term) items = items.filter((u) => [u.fullName, u.email, u.phone].some((x) => String(x || '').includes(term)));
+      } else if (kind === 'orders') {
+        items = (state.users.admin.get['/api/v1/orders']?.items || state.users.doctor.get['/api/v1/orders']?.items || []).map((o) => ({ orderNumber: o.orderNumber, patient: o.patientName || o.caseReference, dentist: o.dentistName, lab: o.laboratoryName, status: o.status, deliveryStatus: o.deliveryStatus, totalEgp: o.confirmedPriceEgp ?? o.estimatedPriceEgp, paidEgp: o.paidEgp || 0, refundedEgp: 0, openDispute: (state.disputes || []).some((d) => d.orderNumber === o.orderNumber && d.status === 'Open'), createdAt: o.createdAt, isMockup: !!o.isMockup }));
+        if (q.get('status')) items = items.filter((o) => o.status === q.get('status'));
+        if (q.get('disputed') === 'true') items = items.filter((o) => o.openDispute);
+        if (term) items = items.filter((o) => [o.orderNumber, o.patient, o.dentist, o.lab].some((x) => String(x || '').includes(term)));
+      } else if (kind === 'disputes') {
+        items = (state.disputes || []).filter((d) => !q.get('status') || d.status === q.get('status'));
+        if (term) items = items.filter((d) => [d.orderNumber, d.openedBy, d.reason].some((x) => String(x || '').includes(term)));
+      } else items = state.refundsLog || [];
+      const labs = state.public['/api/v1/labs'].items.map((l) => ({ id: l.id, name: l.name }));
+      return json({ total: items.length, page: pg, pageSize: size, open: (state.disputes || []).filter((d) => d.status === 'Open').length, labs, items: items.slice((pg - 1) * size, pg * size) });
+    }
+    if (r === 'admin' && /^\/api\/v1\/admin\/orders\/[^/]+\/payments$/.test(p)) return json({ items: [] });
+    if (r === 'admin' && /^\/api\/v1\/admin\/export\//.test(p)) return problem('التصدير إلى Excel متاح في النسخة الكاملة على السيرفر.', 404);
+
     // ---- simple GETs (recorded, kept up to date by the actions below) ----
     if (method === 'GET') {
       if (p === '/api/v1/orders') {
@@ -720,8 +767,16 @@
         const s = ad.settlements.find((x) => x.id === m[1]); if (s) lf.settledPaidToLabEgp = r2(lf.settledPaidToLabEgp + s.netPayableEgp);
         save(); return json({ ok: true });
       }
+      const dd = p.match(/^\/api\/v1\/admin\/disputes\/([^/]+)\/decide$/);
+      if (dd) {
+        const d = (state.disputes || []).find((x) => x.id === dd[1]);
+        if (!d) return problem('غير موجود.', 404);
+        if (!String(body?.resolution || '').trim()) return problem('اكتب القرار وسببه.');
+        Object.assign(d, { status: body.resolve ? 'Resolved' : 'Rejected', resolution: body.resolution.trim(), resolvedAt: now() });
+        save(); return json({ status: d.status, resolution: d.resolution });
+      }
       m = p.match(/^\/api\/v1\/admin\/users\/([^/]+)\/suspend$/);
-      if (m) { const usr = ad.users.find((x) => x.id === m[1]); if (usr) Object.assign(usr, { isSuspended: !!body?.suspended, suspensionReason: body?.reason || null }); save(); return json({ ok: true }); }
+      if (m) { const usr = ad.users.find((x) => x.id === m[1]); if (usr) Object.assign(usr, { isSuspended: !!body?.suspended, suspensionReason: body?.reason || null }); state.userFlags = { ...(state.userFlags || {}), [m[1]]: !!body?.suspended }; save(); return json({ ok: true }); }
     }
     if (p === '/api/v1/finance/refunds') return problem('الاسترداد غير متاح في نسخة العرض.');
 

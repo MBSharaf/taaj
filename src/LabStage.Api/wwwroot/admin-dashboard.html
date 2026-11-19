@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=17">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=15">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=18">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=16">
 </head>
 <body class="page-dash dash-v2" data-dash-page="admin-dashboard">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -27,12 +27,15 @@
         <span class="rail-indicator" aria-hidden="true"></span>
         <a href="/admin-dashboard.html#overview" data-admin-nav="overview" aria-current="page">الرسوم البيانية والملخص</a>
         <a href="/admin-dashboard.html#labs" data-admin-nav="labs">توثيق المعامل والاشتراكات</a>
+        <a href="/admin-dashboard.html#users" data-admin-nav="users">المستخدمون</a>
+        <a href="/admin-dashboard.html#orders" data-admin-nav="orders">كل الطلبات</a>
         <a href="/admin-dashboard.html#audit" data-admin-nav="audit">سجل التدقيق الأمني</a>
         <a href="/labs">دليل المعامل العام</a>
         <a href="/admin-account.html">حسابي</a>
         <p class="nav-group"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>المالية</p>
         <a href="/admin-dashboard.html#settlements" data-admin-nav="settlements">التسويات البنكية للمعامل</a>
         <a href="/admin-dashboard.html#reconciliation" data-admin-nav="reconciliation">مطابقة الحسابات</a>
+        <a href="/admin-dashboard.html#disputes" data-admin-nav="disputes">النزاعات والاسترداد</a>
         <a href="/admin-dashboard.html#settings" data-admin-nav="settings">قواعد العمل والعمولة</a>
       </nav>
       <p class="dash-nav-label">عام</p>
@@ -276,9 +279,125 @@
         <span data-state="none">كل الدفعات مطابقة في هذه الفترة ✓</span>
       </div>
     </section>
+
+    <section class="card admin-list" id="users" style="margin-block-start:var(--sp-5)">
+      <div class="admin-list-head">
+        <div><h2>المستخدمون</h2><p class="muted">كل حسابات المنصة: بحث، تصفية، إيقاف وتفعيل.</p></div>
+        <button class="btn btn-ghost btn-sm" type="button" data-export="users">تصدير Excel</button>
+      </div>
+      <form class="admin-filters" data-filters="users">
+        <input class="input" name="q" type="search" placeholder="الاسم أو البريد أو الهاتف">
+        <select class="input" name="role"><option value="">كل الأدوار</option><option value="Dentist">طبيب</option><option value="LaboratoryOwner">صاحب معمل</option><option value="LaboratoryStaff">فني معمل</option><option value="Admin">مدير المنصة</option></select>
+        <select class="input" name="status"><option value="">كل الحالات</option><option value="active">نشط</option><option value="suspended">موقوف</option><option value="unconfirmed">بريد غير مؤكد</option></select>
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>العيادة / المعمل</th><th>الطلبات</th><th>الحالة</th><th>التسجيل</th><th></th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="8" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+        <div class="pager" data-pager="users">
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="prev">السابق</button>
+          <span>صفحة <b data-pg="cur">1</b> / <b data-pg="max">1</b> · <b data-pg="total">0</b> نتيجة</span>
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="next">التالي</button>
+        </div>
+    </section>
+
+    <section class="card admin-list" id="orders" style="margin-block-start:var(--sp-5)">
+      <div class="admin-list-head">
+        <div><h2>كل الطلبات</h2><p class="muted">متابعة طلبات المنصة بالحالة والمعمل والتاريخ.</p></div>
+        <button class="btn btn-ghost btn-sm" type="button" data-export="orders">تصدير Excel</button>
+      </div>
+      <form class="admin-filters" data-filters="orders">
+        <input class="input" name="q" type="search" placeholder="رقم الطلب أو المريض أو الطبيب أو المعمل">
+        <select class="input" name="status"><option value="">كل الحالات</option><option value="PendingLabReview">بانتظار مراجعة المعمل</option><option value="PriceRevisionProposed">مقترح سعر</option><option value="Accepted">مقبول</option><option value="InProduction">قيد التصنيع</option><option value="ReadyForDelivery">جاهز للتوصيل</option><option value="Completed">اكتملت</option><option value="Rejected">مرفوض</option></select>
+        <select class="input" name="labId"><option value="">كل المعامل</option></select>
+        <label class="filter-date">من<input class="input" type="date" name="from"></label>
+        <label class="filter-date">إلى<input class="input" type="date" name="to"></label>
+        <label class="check"><input type="checkbox" name="disputed" value="true">بها نزاع مفتوح</label>
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>المريض</th><th>الطبيب</th><th>المعمل</th><th>الحالة</th><th>الإجمالي</th><th>المدفوع</th><th>المسترد</th><th>التاريخ</th></tr></thead>
+          <tbody id="orders-tbody"><tr><td colspan="9" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+        <div class="pager" data-pager="orders">
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="prev">السابق</button>
+          <span>صفحة <b data-pg="cur">1</b> / <b data-pg="max">1</b> · <b data-pg="total">0</b> نتيجة</span>
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="next">التالي</button>
+        </div>
+    </section>
+
+    <section class="card admin-list" id="disputes" style="margin-block-start:var(--sp-5)">
+      <div class="admin-list-head">
+        <div><h2>النزاعات والاسترداد</h2><p class="muted">شكاوى الأطباء والمعامل على الطلبات، والقرار مع استرداد عبر بوابة الدفع عند الحاجة.</p></div>
+        <button class="btn btn-ghost btn-sm" type="button" data-export="disputes">تصدير Excel</button>
+      </div>
+      <form class="admin-filters" data-filters="disputes">
+        <input class="input" name="q" type="search" placeholder="رقم الطلب أو الاسم أو السبب">
+        <select class="input" name="status"><option value="Open">المفتوحة</option><option value="Resolved">تم الحل</option><option value="Rejected">المرفوضة</option><option value="">الكل</option></select>
+        <button class="btn btn-primary btn-sm" type="submit">بحث</button>
+      </form>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>فتحه</th><th>السبب</th><th>الحالة</th><th>المدفوع</th><th>التاريخ</th><th></th></tr></thead>
+          <tbody id="disputes-tbody"><tr><td colspan="7" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+        <div class="pager" data-pager="disputes">
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="prev">السابق</button>
+          <span>صفحة <b data-pg="cur">1</b> / <b data-pg="max">1</b> · <b data-pg="total">0</b> نتيجة</span>
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="next">التالي</button>
+        </div>
+
+      <form class="dispute-decide settings-form" id="dispute-decide" hidden>
+        <h3>القرار في نزاع الطلب <bdi class="ltr mono" id="dd-order"></bdi></h3>
+        <p class="muted" id="dd-reason"></p>
+        <label>القرار وسببه (يصل للطرفين)<textarea class="input" name="resolution" rows="3" required></textarea></label>
+        <div class="row-2">
+          <label class="check"><input type="radio" name="decision" value="resolve" checked>حل النزاع</label>
+          <label class="check"><input type="radio" name="decision" value="reject">رفض النزاع</label>
+        </div>
+        <fieldset class="dd-refund">
+          <legend>استرداد (اختياري)</legend>
+          <div class="row-2">
+            <label>الدفعة<select class="input" name="paymentId"><option value="">بدون استرداد</option></select></label>
+            <label>المبلغ (ج.م)<input class="input" name="amount" type="number" min="1" step="0.01" dir="ltr"></label>
+          </div>
+          <label>على حساب<select class="input" name="faultParty"><option value="0">المعمل</option><option value="1">المنصة</option></select></label>
+        </fieldset>
+        <p class="settings-msg" id="dd-msg" role="status"></p>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">حفظ القرار</button><button class="btn btn-ghost" type="button" id="dd-cancel">إلغاء</button></div>
+      </form>
+
+      <h3 style="margin-block:var(--sp-5) var(--sp-2)">سجل الاسترداد</h3>
+      <div class="admin-list-head"><span></span><button class="btn btn-ghost btn-sm" type="button" data-export="refunds">تصدير Excel</button></div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>رقم الطلب</th><th>المبلغ</th><th>عمولة معكوسة</th><th>على حساب</th><th>السبب</th><th>مرجع البوابة</th><th>التاريخ</th></tr></thead>
+          <tbody id="refunds-tbody"><tr><td colspan="7" class="muted">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+        <div class="pager" data-pager="refunds">
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="prev">السابق</button>
+          <span>صفحة <b data-pg="cur">1</b> / <b data-pg="max">1</b> · <b data-pg="total">0</b> نتيجة</span>
+          <button class="btn btn-ghost btn-sm" type="button" data-pg="next">التالي</button>
+        </div>
+      <div hidden id="admin-texts">
+        <span data-t="Dentist">طبيب</span><span data-t="LaboratoryOwner">صاحب معمل</span><span data-t="LaboratoryStaff">فني معمل</span><span data-t="Admin">مدير المنصة</span>
+        <span data-t="active">نشط</span><span data-t="suspended">موقوف</span><span data-t="unconfirmed">بريد غير مؤكد</span>
+        <span data-t="suspend">إيقاف</span><span data-t="activate">تفعيل</span><span data-t="suspendReason">سبب الإيقاف (يُسجل في سجل التدقيق):</span>
+        <span data-t="Open">مفتوح</span><span data-t="Resolved">تم الحل</span><span data-t="Rejected">مرفوض</span><span data-t="decide">اتخاذ قرار</span>
+        <span data-t="Laboratory">المعمل</span><span data-t="Platform">المنصة</span><span data-t="none">لا توجد نتائج.</span><span data-t="dispute">نزاع مفتوح</span>
+        <span data-t="exportDemo">التصدير إلى Excel متاح في النسخة الكاملة على السيرفر.</span>
+      </div>
+    </section>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=23"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=24"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

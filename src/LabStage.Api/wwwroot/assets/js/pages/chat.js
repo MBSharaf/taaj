@@ -1,6 +1,6 @@
 // Order chat (doctor <-> lab): live messages over SignalR, read receipts, unread count, file attachments.
 // Behaviour only: texts come from the HTML (#chat-texts); messages are user content set with textContent.
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=17';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=18';
 import { live } from '../core/live.js?v=1';
 
 const tr = (el) => { if (el && getLang() === 'en') applyDomTranslations(el); };

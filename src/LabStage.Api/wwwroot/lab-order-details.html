@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=17">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=15">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=18">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=16">
 </head>
 <body class="page-dash dash-v2" data-dash-page="lab-order-details">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -185,6 +185,18 @@
           <div id="order-files-list" style="display:grid;gap:var(--sp-2);margin-block-start:var(--sp-3)"></div>
         </section>
 
+        <section class="card" id="disputes">
+          <h2>النزاعات والشكاوى</h2>
+          <p class="muted" style="font-size:var(--fs-xs);margin-block:4px 10px">إذا واجهت مشكلة في هذه الحالة ولم تُحل بالمحادثة، افتح نزاعًا لتراجعه إدارة المنصة وتتواصل مع الطرفين.</p>
+          <ul class="dispute-list" id="dispute-list"></ul>
+          <form class="settings-form" id="dispute-form" hidden>
+            <label>اشرح المشكلة<textarea class="input" name="reason" rows="3" minlength="10" maxlength="2000" required></textarea></label>
+            <p class="settings-msg" id="dispute-msg" role="status"></p>
+            <div class="form-actions"><button class="btn btn-ghost btn-sm" type="submit">فتح نزاع</button></div>
+          </form>
+          <div hidden id="dispute-texts"><span data-s="Open">قيد المراجعة</span><span data-s="Resolved">تم الحل</span><span data-s="Rejected">مرفوض</span><span data-s="decision">قرار الإدارة:</span><span data-s="sent">تم فتح النزاع، وستراجعه إدارة المنصة.</span></div>
+        </section>
+
         <section class="card">
           <h2>المستندات</h2>
           <p class="muted" style="font-size:var(--fs-xs);margin-block:4px 10px">فاتورة الطلب بصيغة PDF، وإيصال كل دفعة مدفوعة من «حالة الدفعات».</p>
@@ -235,7 +247,7 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=23"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=24"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

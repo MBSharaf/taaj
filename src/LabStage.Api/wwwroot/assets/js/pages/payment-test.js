@@ -1,6 +1,6 @@
 // Local test checkout (development / demo only): simulates the gateway's payment page.
 // The order is marked paid only when the gateway's signed confirmation is accepted by the server.
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=17';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=18';
 
 const $ = (s) => document.querySelector(s);
 const checkout = new URLSearchParams(location.search).get('checkout') || '';
