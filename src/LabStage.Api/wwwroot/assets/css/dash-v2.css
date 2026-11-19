@@ -815,3 +815,24 @@ html[data-theme="dark"] .notif-panel { box-shadow: 0 30px 80px -16px rgb(0 0 0 /
 }
 .prefs-table td:not(:first-child), .prefs-table th:not(:first-child) { text-align: center; inline-size: 90px; }
 .prefs-table input { inline-size: 18px; block-size: 18px; }
+
+/* Order chat */
+.chat-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chat-head h2 { margin: 0; }
+.chat-unread { padding: 2px 10px; border-radius: 999px; background: var(--d-bad); color: #fff; font-size: 12px; font-weight: 700; }
+.chat-unread[hidden], .chat-live[hidden], .chat-empty[hidden], .chat-file-name[hidden] { display: none; }
+.chat-live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--d-ok); font-weight: 600; }
+.chat-live::before { content: ""; inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--d-ok); box-shadow: 0 0 0 3px var(--d-ok-bg); }
+.dash-v2 .chat-box { block-size: min(460px, 70vh); background: var(--d-panel); border-color: var(--d-border); border-radius: 18px; }
+.dash-v2 .chat-msg { background: var(--d-card); border-color: var(--d-border); color: var(--d-ink); border-radius: 16px; overflow-wrap: anywhere; }
+.dash-v2 .chat-msg.is-mine { background: var(--d-deep); color: #fff; }
+.chat-tick { display: block; margin-block-start: 4px; font-size: 11px; opacity: .7; }
+.chat-tick.is-read { opacity: 1; color: #9FE3C5; }
+.chat-file { display: inline-block; margin-block-start: 6px; color: inherit; font-weight: 600; text-decoration: underline; overflow-wrap: anywhere; }
+.chat-empty { margin: auto; padding: 16px; text-align: center; font-size: 13px; color: var(--d-ink-3); }
+.dash-v2 .chat-form { background: var(--d-card); border-color: var(--d-border); align-items: center; }
+.dash-v2 .chat-form .input { flex: 1; min-inline-size: 0; }
+.chat-attach { display: grid; place-items: center; flex: none; inline-size: 38px; block-size: 38px; border-radius: 12px; border: 1px solid var(--d-border); background: var(--d-panel); color: var(--d-ink-2); cursor: pointer; }
+.chat-attach svg { inline-size: 18px; block-size: 18px; }
+.chat-file-name { margin: 0; padding: 6px 12px; font-size: 12px; color: var(--d-ink-2); background: var(--d-card); }
+.chat-badge { display: inline-block; margin-inline-start: 6px; padding: 1px 8px; border-radius: 999px; background: var(--d-bad); color: #fff; font-size: 11px; font-weight: 700; font-family: inherit; }

@@ -13,8 +13,8 @@
   <link rel="stylesheet" href="/assets/css/tokens.css?v=7">
   <link rel="stylesheet" href="/assets/css/base.css?v=7">
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=10">
-  <link rel="stylesheet" href="/assets/css/glass.css?v=16">
-  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=14">
+  <link rel="stylesheet" href="/assets/css/glass.css?v=17">
+  <link rel="stylesheet" href="/assets/css/dash-v2.css?v=15">
 </head>
 <body class="page-dash dash-v2" data-dash-page="doctor-order-details">
   <p class="demo-notice" role="status" hidden><span>نسخة عرض ببيانات تجريبية محفوظة في متصفحك فقط.</span> <button type="button" class="demo-reset" data-demo-reset>إعادة ضبط بيانات العرض</button></p>
@@ -149,15 +149,24 @@
     </section>
 
     <div class="dash-grid-2">
-      <section class="card">
-        <h2>محادثة الحالة الخاصة</h2>
+      <section class="card" id="chat">
+        <div class="chat-head">
+          <h2>محادثة الحالة الخاصة</h2>
+          <span class="chat-unread" id="chat-unread" hidden><bdi class="num" id="chat-unread-n">0</bdi> جديدة</span>
+          <span class="chat-live" id="chat-live" hidden>مباشر</span>
+        </div>
         <div class="chat-box" style="margin-block-start:var(--sp-3)">
-          <div class="chat-messages" id="order-chat-messages"></div>
+          <div class="chat-messages" id="order-chat-messages" aria-live="polite"></div>
+          <p class="chat-empty" id="chat-empty" hidden>لا توجد رسائل بعد. ابدأ المحادثة.</p>
           <form class="chat-form" id="order-chat-form">
-            <input class="input" id="order-chat-input" placeholder="اكتب رسالة للمعمل بخصوص هذه الحالة..." required>
+            <input type="file" id="chat-file" accept=".stl,.ply,.obj,.png,.jpg,.jpeg,.pdf" hidden>
+            <button class="chat-attach" type="button" id="chat-attach-btn" aria-label="إرفاق ملف"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5 12.6 20a5.4 5.4 0 0 1-7.6-7.6l8.5-8.5a3.6 3.6 0 0 1 5.1 5.1l-8.5 8.5a1.8 1.8 0 0 1-2.5-2.5l7.8-7.8"/></svg></button>
+            <input class="input" id="order-chat-input" placeholder="اكتب رسالة للمعمل بخصوص هذه الحالة..." autocomplete="off" maxlength="4000">
             <button class="btn btn-primary btn-sm" type="submit">إرسال</button>
           </form>
+          <p class="chat-file-name" id="chat-file-name" hidden></p>
         </div>
+        <div hidden id="chat-texts"><span data-t="seen">تمت القراءة</span><span data-t="sent">تم الإرسال</span><span data-t="file">مرفق</span><span data-t="uploading">جاري رفع الملف...</span><span data-t="failed">تعذّر الإرسال، حاول مرة أخرى.</span></div>
       </section>
 
       <div style="display:grid;gap:var(--sp-5)">
@@ -189,7 +198,7 @@
     </div>
   </main>
 
-  <script type="module" src="/assets/js/pages/dashboard.js?v=22"></script>
+  <script type="module" src="/assets/js/pages/dashboard.js?v=23"></script>
 <script type="module" src="/assets/js/core/glass.js?v=6"></script>
 </body>
 </html>

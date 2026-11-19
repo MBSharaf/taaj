@@ -393,6 +393,17 @@
       return json({ items: cats.map((c) => ({ category: c, ...U(r).prefs[c] })) });
     }
 
+    // ---- order chat ----
+    if (p === '/api/v1/messages/unread') return json({ total: 0, orders: {} });
+    const cm = p.match(/^\/api\/v1\/orders\/([^/]+)\/messages(\/read)?$/);
+    if (cm && (method === 'GET' || cm[2])) {
+      const d = G[`/api/v1/orders/${decodeURIComponent(cm[1])}`];
+      if (!d) return problem('الطلب غير موجود.', 404);
+      if (cm[2]) return json({ read: true, readAt: now() });
+      const meId = G['/api/v1/auth/me']?.id;
+      return json({ items: (d.messages || []).map((m) => ({ ...m, mine: m.senderUserId === meId })), unread: 0, otherLastReadAt: now() });
+    }
+
     // ---- simple GETs (recorded, kept up to date by the actions below) ----
     if (method === 'GET') {
       if (p === '/api/v1/orders') {

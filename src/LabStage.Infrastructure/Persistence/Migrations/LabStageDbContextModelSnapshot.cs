@@ -277,6 +277,29 @@ namespace LabStage.Infrastructure.Persistence.Migrations
                     b.ToTable("Conversations");
                 });
 
+            modelBuilder.Entity("LabStage.Domain.Entities.ConversationRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("LastReadAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("ConversationReads");
+                });
+
             modelBuilder.Entity("LabStage.Domain.Entities.DeliveryTrackingEvent", b =>
                 {
                     b.Property<Guid>("Id")

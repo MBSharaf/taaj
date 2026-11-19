@@ -360,6 +360,15 @@ public sealed class Conversation
     public List<Message> Messages { get; set; } = [];
 }
 
+/// <summary>When a user last read an order's conversation (drives unread counts and "seen" ticks).</summary>
+public sealed class ConversationRead
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid ConversationId { get; set; }
+    public Guid UserId { get; set; }
+    public DateTimeOffset LastReadAt { get; set; }
+}
+
 public sealed class Message
 {
     public Guid Id { get; set; } = Guid.NewGuid();

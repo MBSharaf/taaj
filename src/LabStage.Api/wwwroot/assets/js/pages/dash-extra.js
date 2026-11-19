@@ -1,6 +1,6 @@
 // Lab finance lock (password modal + top-bar chip), lab finance settings, doctor clinics, order tracker.
 // Behaviour only: every text shown here is written in the HTML (hidden until needed).
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=16';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=17';
 
 const translate = (el) => { if (el && getLang() === 'en') applyDomTranslations(el); };
 const LAB_ROLES = ['LaboratoryOwner', 'LaboratoryStaff'];

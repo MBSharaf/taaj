@@ -15,76 +15,152 @@ public sealed class ChatAndNotificationsController(
     LabStageDbContext db,
     IHubContext<OrderHub> hub) : ControllerBase
 {
-    public sealed record SendMessageRequest(string Body);
+    public sealed record SendMessageRequest(string? Body, Guid? FileId = null);
+
+    /// <summary>The order and its conversation when the caller may take part (dentist, its lab owner/staff, admin).</summary>
+    private async Task<(Order? Order, Conversation? Conv)> ChatOrderAsync(string orderNumber, bool create, CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        if (!await OrderHub.CanAccessOrderAsync(db, userId, User.GetRole(), orderNumber, ct)) return (null, null);
+        var order = await db.Orders.Include(o => o.Laboratory).FirstAsync(o => o.OrderNumber == orderNumber, ct);
+        var conv = await db.Conversations.FirstOrDefaultAsync(c => c.OrderId == order.Id, ct);
+        if (conv is null && create)
+        {
+            conv = new Conversation { OrderId = order.Id, DentistUserId = order.DentistUserId, LaboratoryId = order.LaboratoryId };
+            db.Conversations.Add(conv);
+        }
+        return (order, conv);
+    }
+
+    private static object Dto(Message m, Guid me, OrderFile? f, string orderNumber) => new
+    {
+        m.Id, m.SenderUserId, m.SenderName, m.SenderRole, m.Body, m.SentAt, Mine = m.SenderUserId == me,
+        Attachment = f is null ? null : new { f.Id, Name = f.OriginalFileName, f.SizeBytes, DownloadUrl = $"/api/v1/orders/{orderNumber}/files/{f.Id}" },
+    };
+
+    /// <summary>The conversation, newest last, with when the other side last read it (for "seen" ticks).</summary>
+    [HttpGet("orders/{orderNumber}/messages")]
+    public async Task<IActionResult> GetOrderMessages([FromRoute] string orderNumber, CancellationToken ct)
+    {
+        var (order, conv) = await ChatOrderAsync(orderNumber, create: false, ct);
+        if (order is null) return NotFound();
+        var me = User.GetUserId();
+        if (conv is null) return Ok(new { items = Array.Empty<object>(), unread = 0, otherLastReadAt = (DateTimeOffset?)null });
+        var msgs = await db.Messages.Where(m => m.ConversationId == conv.Id).OrderBy(m => m.SentAt).Take(500).ToListAsync(ct);
+        var fileIds = msgs.Where(m => m.AttachmentOrderFileId != null).Select(m => m.AttachmentOrderFileId!.Value).ToList();
+        var files = await db.OrderFiles.Where(f => fileIds.Contains(f.Id)).ToDictionaryAsync(f => f.Id, ct);
+        var reads = await db.ConversationReads.Where(r => r.ConversationId == conv.Id).ToListAsync(ct);
+        var mine = reads.FirstOrDefault(r => r.UserId == me)?.LastReadAt;
+        var other = reads.Where(r => r.UserId != me).Select(r => (DateTimeOffset?)r.LastReadAt).DefaultIfEmpty(null).Max();
+        return Ok(new
+        {
+            items = msgs.Select(m => Dto(m, me, m.AttachmentOrderFileId is { } fid ? files.GetValueOrDefault(fid) : null, order.OrderNumber)),
+            unread = msgs.Count(m => m.SenderUserId != me && (mine is null || m.SentAt > mine)),
+            otherLastReadAt = other,
+        });
+    }
 
     [HttpPost("orders/{orderNumber}/messages")]
     public async Task<IActionResult> SendOrderMessage([FromRoute] string orderNumber, [FromBody] SendMessageRequest req, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(req.Body))
+        var body = (req.Body ?? string.Empty).Trim();
+        if (body.Length == 0 && req.FileId is null)
             return Problem("نص الرسالة مطلوب.", statusCode: StatusCodes.Status400BadRequest);
-
-        var order = await db.Orders
-            .Include(o => o.Laboratory)
-            .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber, ct);
+        if (body.Length > 4000)
+            return Problem("الرسالة طويلة جدًا.", statusCode: StatusCodes.Status400BadRequest);
+        var (order, conv) = await ChatOrderAsync(orderNumber, create: true, ct);
         if (order is null) return NotFound();
+        OrderFile? file = null;
+        if (req.FileId is { } fid)
+        {
+            file = await db.OrderFiles.FirstOrDefaultAsync(f => f.Id == fid && f.OrderId == order.Id, ct);
+            if (file is null) return Problem("الملف المرفق غير موجود في هذا الطلب.", statusCode: StatusCodes.Status400BadRequest);
+        }
 
         var userId = User.GetUserId();
         var role = User.GetRole();
-        var isDentist = role == AppRoles.Dentist && order.DentistUserId == userId;
-        var isLab = (role is AppRoles.LaboratoryOwner or AppRoles.LaboratoryStaff) && order.Laboratory?.OwnerUserId == userId;
-        if (!isDentist && !isLab && role != AppRoles.Admin)
-            return NotFound();
-
-        var conv = await db.Conversations.FirstOrDefaultAsync(c => c.OrderId == order.Id, ct);
-        if (conv is null)
-        {
-            conv = new Conversation
-            {
-                OrderId = order.Id,
-                DentistUserId = order.DentistUserId,
-                LaboratoryId = order.LaboratoryId,
-            };
-            db.Conversations.Add(conv);
-        }
-
         var msg = new Message
         {
-            ConversationId = conv.Id,
+            ConversationId = conv!.Id,
             SenderUserId = userId,
             SenderName = User.GetFullName(),
             SenderRole = role,
-            Body = req.Body.Trim(),
+            Body = body,
+            AttachmentOrderFileId = file?.Id,
         };
         conv.UpdatedAt = DateTimeOffset.UtcNow;
         db.Messages.Add(msg);
+        // Sending counts as having read everything before it.
+        await MarkReadAsync(conv.Id, userId, msg.SentAt, ct);
 
-        var recipientUserId = isDentist ? order.Laboratory!.OwnerUserId : order.DentistUserId;
-        db.Notifications.Add(new Notification
-        {
-            UserId = recipientUserId,
-            Type = "NewMessage",
-            Title = $"رسالة جديدة في الطلب {order.OrderNumber}",
-            Body = $"رسالة جديدة بخصوص الطلب {order.OrderNumber}",
-            LinkUrl = isDentist
-                ? $"/lab-order-details.html?orderNumber={order.OrderNumber}"
-                : $"/doctor-order-details.html?orderNumber={order.OrderNumber}",
-        });
+        // The other side: the dentist, or the lab (its owner). Admins write to both.
+        var fromDentist = role == AppRoles.Dentist;
+        var targets = role == AppRoles.Admin ? new[] { order.DentistUserId, order.Laboratory!.OwnerUserId } : fromDentist ? new[] { order.Laboratory!.OwnerUserId } : new[] { order.DentistUserId };
+        var preview = body.Length > 0 ? (body.Length > 120 ? body[..120] + "…" : body) : $"مرفق: {file!.OriginalFileName}";
+        foreach (var t in targets.Distinct())
+            db.Notifications.Add(new Notification
+            {
+                UserId = t,
+                Type = "NewMessage",
+                Title = $"رسالة جديدة في الطلب {order.OrderNumber}",
+                Body = $"{msg.SenderName}: {preview}",
+                LinkUrl = (t == order.DentistUserId ? "/doctor-order-details.html" : "/lab-order-details.html") + $"?orderNumber={order.OrderNumber}#chat",
+            });
 
         await db.SaveChangesAsync(ct);
 
         var payload = new
         {
-            msg.Id,
-            order.OrderNumber,
-            msg.SenderUserId,
-            msg.SenderName,
-            msg.SenderRole,
-            msg.Body,
-            msg.SentAt,
+            msg.Id, order.OrderNumber, msg.SenderUserId, msg.SenderName, msg.SenderRole, msg.Body, msg.SentAt,
+            Attachment = file is null ? null : new { file.Id, Name = file.OriginalFileName, file.SizeBytes, DownloadUrl = $"/api/v1/orders/{order.OrderNumber}/files/{file.Id}" },
         };
         await hub.Clients.Group($"order:{order.OrderNumber}").SendAsync("chatMessage", payload, ct);
-
         return Ok(payload);
+    }
+
+    /// <summary>Marks the conversation read up to now; the other side sees "seen" live.</summary>
+    [HttpPost("orders/{orderNumber}/messages/read")]
+    public async Task<IActionResult> MarkConversationRead([FromRoute] string orderNumber, CancellationToken ct)
+    {
+        var (order, conv) = await ChatOrderAsync(orderNumber, create: false, ct);
+        if (order is null) return NotFound();
+        if (conv is null) return Ok(new { read = true });
+        var userId = User.GetUserId();
+        var now = DateTimeOffset.UtcNow;
+        await MarkReadAsync(conv.Id, userId, now, ct);
+        await db.SaveChangesAsync(ct);
+        await db.Notifications.Where(n => n.UserId == userId && !n.IsRead && n.Category == NotificationCategories.Chat && n.OrderNumber == order.OrderNumber)
+            .ExecuteUpdateAsync(x => x.SetProperty(n => n.IsRead, true), ct);
+        await hub.Clients.Group($"order:{order.OrderNumber}").SendAsync("chatRead", new { order.OrderNumber, UserId = userId, ReadAt = now }, ct);
+        return Ok(new { read = true, readAt = now });
+    }
+
+    /// <summary>Unread chat messages per order for the signed-in user (badges on the order lists).</summary>
+    [HttpGet("messages/unread")]
+    public async Task<IActionResult> UnreadByOrder(CancellationToken ct)
+    {
+        var userId = User.GetUserId();
+        var role = User.GetRole();
+        IQueryable<Order> mine = role switch
+        {
+            AppRoles.Dentist => db.Orders.Where(o => o.DentistUserId == userId),
+            AppRoles.LaboratoryOwner or AppRoles.LaboratoryStaff => db.Orders.Where(o => o.Laboratory!.OwnerUserId == userId || db.LaboratoryStaff.Any(s => s.LaboratoryId == o.LaboratoryId && s.UserId == userId)),
+            _ => db.Orders.Where(o => false),
+        };
+        var rows = await (from o in mine
+                          join c in db.Conversations on o.Id equals c.OrderId
+                          let lastRead = db.ConversationReads.Where(r => r.ConversationId == c.Id && r.UserId == userId).Select(r => (DateTimeOffset?)r.LastReadAt).FirstOrDefault()
+                          select new { o.OrderNumber, Count = db.Messages.Count(m => m.ConversationId == c.Id && m.SenderUserId != userId && (lastRead == null || m.SentAt > lastRead)) })
+                         .Where(x => x.Count > 0).ToListAsync(ct);
+        return Ok(new { total = rows.Sum(r => r.Count), orders = rows.ToDictionary(r => r.OrderNumber, r => r.Count) });
+    }
+
+    private async Task MarkReadAsync(Guid conversationId, Guid userId, DateTimeOffset at, CancellationToken ct)
+    {
+        var row = db.ConversationReads.Local.FirstOrDefault(r => r.ConversationId == conversationId && r.UserId == userId)
+                  ?? await db.ConversationReads.FirstOrDefaultAsync(r => r.ConversationId == conversationId && r.UserId == userId, ct);
+        if (row is null) db.ConversationReads.Add(new ConversationRead { ConversationId = conversationId, UserId = userId, LastReadAt = at });
+        else if (row.LastReadAt < at) row.LastReadAt = at;
     }
 
     /// <summary>Notification center: newest first, filter by category or unread, paged.</summary>

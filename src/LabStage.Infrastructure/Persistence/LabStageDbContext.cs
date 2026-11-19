@@ -7,6 +7,7 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
 {
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<UserToken> UserTokens => Set<UserToken>();
+    public DbSet<ConversationRead> ConversationReads => Set<ConversationRead>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
     public DbSet<Clinic> Clinics => Set<Clinic>();
@@ -65,6 +66,8 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
             e.Property(x => x.OrderNumber).HasMaxLength(32);
             e.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
         });
+
+        b.Entity<ConversationRead>(e => e.HasIndex(x => new { x.ConversationId, x.UserId }).IsUnique());
 
         b.Entity<NotificationPreference>(e =>
         {

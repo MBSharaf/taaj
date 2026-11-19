@@ -1,7 +1,8 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=16';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=17';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
-import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=1';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=5';
+import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=2';
+import { initOrderChat, decorateUnreadChats } from './chat.js?v=1';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=6';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -685,6 +686,7 @@ async function initDoctorOrders() {
         <td><a class="btn btn-primary btn-sm" href="/doctor-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">فتح الحالة</a></td>
       </tr>`).join('') : `<tr><td colspan="8" class="muted">لا توجد طلبات مطابقة.</td></tr>`;
     translate(tbody);
+    decorateUnreadChats();
   }
 
   $('order-search-form')?.addEventListener('submit', (e) => {
@@ -942,15 +944,6 @@ async function initOrderDetails(isLabView) {
         <a class="btn btn-ghost btn-sm" href="${esc(f.downloadUrl)}" download>تنزيل آمن</a>
       </div>`).join('') : `<p class="muted" style="font-size:var(--fs-xs)">لا توجد ملفات مرفوعة بعد.</p>`;
 
-    // Chat
-    const chatBox = document.getElementById('order-chat-messages');
-    chatBox.innerHTML = (o.messages || []).map((m) => `
-      <div class="chat-msg ${m.senderUserId === currentUser.id ? 'is-mine' : ''}">
-        <div class="chat-msg-meta">${esc(m.senderName)}</div>
-        <div>${esc(m.body)}</div>
-      </div>`).join('');
-    chatBox.scrollTop = chatBox.scrollHeight;
-
     // History
     const histBox = document.getElementById('order-history-list');
     histBox.innerHTML = (o.history || []).map((h) => `
@@ -958,20 +951,6 @@ async function initOrderDetails(isLabView) {
         <strong>${esc(h.action)}</strong> ${h.reason ? `— ${esc(h.reason)}` : ''}
       </div>`).join('');
   }
-
-  document.getElementById('order-chat-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = document.getElementById('order-chat-input');
-    const body = input.value.trim();
-    if (!body) return;
-    input.value = '';
-    const r = await fetch(`/api/v1/orders/${encodeURIComponent(orderNumber)}/messages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
-    });
-    if (r.ok) refresh();
-  });
 
   document.getElementById('file-upload-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -988,6 +967,9 @@ async function initOrderDetails(isLabView) {
   });
 
   await refresh();
+  initOrderChat(orderNumber, currentUser);
+  // Live: the other side changed a stage or added a file -> refresh the order (not the chat).
+  document.addEventListener('taaj:order-changed', () => refresh());
   // Back from the payment page: the gateway's confirmation may take a moment.
   if (new URLSearchParams(location.search).get('payment')) {
     const paidNote = document.getElementById('payment-return-note');
@@ -1378,6 +1360,7 @@ async function initLabOrders() {
         <td><span class="badge ${toneOf(o.status)}">${esc(orderStatusText(o))}</span></td>
         <td><a class="btn btn-primary btn-sm" href="/lab-order-details.html?orderNumber=${encodeURIComponent(o.orderNumber)}">إدارة الحالة</a></td>
       </tr>`).join('') : `<tr><td colspan="8" class="muted">لا توجد طلبات مطابقة.</td></tr>`;
+    decorateUnreadChats();
   }
   document.getElementById('order-search-form')?.addEventListener('submit', (e) => {
     e.preventDefault();
