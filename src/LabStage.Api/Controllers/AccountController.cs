@@ -17,7 +17,7 @@ namespace LabStage.Api.Controllers;
 [ApiController]
 public sealed class AccountController(LabStageDbContext db, IEmailSender email, IConfiguration config, ILogger<AccountController> log) : ControllerBase
 {
-    public const int MinPasswordLength = 8;
+    public const int MinPasswordLength = PasswordPolicy.MinLength;
     private const string LinkInvalid = "الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.";
 
     public sealed record ForgotRequest(string Email);
@@ -132,7 +132,7 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
     [HttpPost("api/v1/account/change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req, CancellationToken ct)
     {
-        if (PasswordProblem(req.NewPassword) is { } bad) return bad;
+        if (PasswordProblem(req.NewPassword, User.FindFirstValue(ClaimTypes.Email)) is { } bad) return bad;
         var u = await db.Users.FirstAsync(x => x.Id == User.GetUserId(), ct);
         if (!PasswordHasher.Verify(req.CurrentPassword ?? string.Empty, u.PasswordHash))
             return Problem("كلمة المرور الحالية غير صحيحة.", statusCode: StatusCodes.Status400BadRequest);
@@ -239,10 +239,8 @@ public sealed class AccountController(LabStageDbContext db, IEmailSender email, 
         return db.Laboratories.FirstOrDefaultAsync(l => l.OwnerUserId == id, ct);
     }
 
-    private ObjectResult? PasswordProblem(string? pw) =>
-        string.IsNullOrEmpty(pw) || pw.Length < MinPasswordLength
-            ? Problem($"كلمة المرور يجب ألا تقل عن {MinPasswordLength} أحرف.", statusCode: StatusCodes.Status400BadRequest)
-            : pw.Length > 128 ? Problem("كلمة المرور طويلة جدًا.", statusCode: StatusCodes.Status400BadRequest) : null;
+    private ObjectResult? PasswordProblem(string? pw, string? email = null) =>
+        PasswordPolicy.Problem(pw, email) is { } weak ? Problem(weak, statusCode: StatusCodes.Status400BadRequest) : null;
 
     private void Audit(AppUser u, string action, Guid? actor = null, string? actorRole = null) =>
         db.AuditLogs.Add(new AuditLog { ActorUserId = actor ?? u.Id, ActorRole = actorRole ?? u.Role, Action = action, EntityType = nameof(AppUser), EntityId = u.Id.ToString(), Details = "" });

@@ -54,6 +54,7 @@ if (builder.Configuration["Documents:Fonts"] is { Length: > 0 } pdfFonts)
 builder.Services.AddSingleton<LabStage.Application.Email.IEmailSender>(sp => LabStage.Infrastructure.Email.EmailSenderFactory.Create(
     builder.Configuration, builder.Environment.ContentRootPath, isDevelopment, sp.GetRequiredService<ILoggerFactory>()));
 
+builder.Services.AddSingleton<LabStage.Api.Security.TwoFactor>();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o =>
@@ -114,11 +115,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    // Sign-in and sign-up: at most 10 attempts per minute from one address (on top of the per-account lockout).
+    // Sign-in, sign-up, password and two-step endpoints: 10 a minute per address (Security:AuthRequestsPerMinute),
+    // on top of the per-account lockout.
+    var authPerMinute = Math.Max(1, builder.Configuration.GetValue("Security:AuthRequestsPerMinute", 10));
     o.AddPolicy("auth", ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
-            _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = authPerMinute, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
     var perAddress = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
@@ -219,6 +222,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<LabStage.Api.Security.AdminTwoFactorGate>();
 
 app.MapHealthChecks("/api/v1/health");
 app.MapHub<OrderHub>("/hubs/orders");

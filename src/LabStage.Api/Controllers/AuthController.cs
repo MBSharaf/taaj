@@ -33,8 +33,8 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
     {
         if (string.IsNullOrWhiteSpace(req.Email) || !req.Email.Contains('@'))
             return Problem("أدخل بريدًا إلكترونيًا صحيحًا.", statusCode: StatusCodes.Status400BadRequest);
-        if (string.IsNullOrWhiteSpace(req.Password) || req.Password.Length < 8)
-            return Problem("كلمة المرور يجب ألا تقل عن 8 أحرف.", statusCode: StatusCodes.Status400BadRequest);
+        if (PasswordPolicy.Problem(req.Password, req.Email) is { } weak)
+            return Problem(weak, statusCode: StatusCodes.Status400BadRequest);
         if (string.IsNullOrWhiteSpace(req.FullName) || string.IsNullOrWhiteSpace(req.EntityName))
             return Problem("الاسم واسم العيادة/المعمل مطلوبان.", statusCode: StatusCodes.Status400BadRequest);
 
@@ -159,6 +159,10 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
         if (user.IsSuspended)
             return Problem($"تم تعليق الحساب: {user.SuspensionReason ?? "راجع إدارة المنصة"}", statusCode: StatusCodes.Status403Forbidden);
 
+        // Two-step sign-in: no session yet, only a 5-minute ticket for the code step (POST auth/login/two-factor).
+        if (user.TwoFactorEnabledAt is not null)
+            return Ok(new { TwoFactorRequired = true, Ticket = HttpContext.RequestServices.GetRequiredService<LabStage.Api.Security.TwoFactor>().IssueTicket(user, req.RememberMe) });
+
         await SignInCookieAsync(user, req.RememberMe);
         return Ok(new { user.Id, user.Email, user.FullName, user.Role });
     }
@@ -198,6 +202,9 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
             LaboratorySlug = user.OwnedLaboratory?.Slug,
             UnreadNotifications = unreadNotifications,
             EmailConfirmed = user.EmailConfirmedAt != null,
+            TwoFactorEnabled = user.TwoFactorEnabledAt != null,
+            TwoFactorSetupRequired = user.Role == AppRoles.Admin && !LabStage.Api.Security.TwoFactor.PassedCodeStep(User)
+                && HttpContext.RequestServices.GetRequiredService<LabStage.Api.Security.TwoFactor>().RequiredForAdmins,
         });
     }
 
@@ -206,7 +213,7 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
     /// <summary>Claim carrying the account's security stamp: a password change or reset signs out older sessions.</summary>
     public const string StampClaim = "taaj:stamp";
 
-    public static async Task SignInAsync(HttpContext ctx, AppUser user, bool isPersistent)
+    public static async Task SignInAsync(HttpContext ctx, AppUser user, bool isPersistent, bool passedTwoFactor = false)
     {
         // Platform admins: never a long "remember me" session (ends with the browser, 8 idle hours at most).
         if (user.Role == AppRoles.Admin) isPersistent = false;
@@ -217,6 +224,7 @@ public sealed class AuthController(LabStageDbContext db, LabStage.Application.Em
             new(ClaimTypes.Name, user.FullName),
             new(ClaimTypes.Role, user.Role),
             new(StampClaim, user.SecurityStamp),
+            new(LabStage.Api.Security.TwoFactor.Claim, passedTwoFactor ? "1" : "0"),
         };
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await ctx.SignInAsync(

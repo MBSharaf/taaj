@@ -677,8 +677,18 @@ public sealed class OrdersController(
         var fullPath = Path.Combine(storageDir, storageKey);
 
         string shaHex;
-        await using (var fs = System.IO.File.Create(fullPath))
+        long storedSize = file.Length;
+        if (ext is ".png" or ".jpg" or ".jpeg")
         {
+            // Photos are re-drawn: only the pixels are kept (no EXIF/GPS, no hidden extra data), huge ones are refused.
+            var (image, imageError) = LabStage.Infrastructure.Files.ImageSanitizer.Sanitize(stream, ext);
+            if (image is null) return Problem(imageError, statusCode: StatusCodes.Status400BadRequest);
+            await System.IO.File.WriteAllBytesAsync(fullPath, image.Bytes, ct);
+            storedSize = image.Bytes.Length;
+        }
+        else
+        {
+            await using var fs = System.IO.File.Create(fullPath);
             await stream.CopyToAsync(fs, ct);
         }
         await using (var fsRead = System.IO.File.OpenRead(fullPath))
@@ -695,7 +705,7 @@ public sealed class OrdersController(
             OriginalFileName = Path.GetFileName(file.FileName),
             StorageKey = storageKey,
             Extension = ext,
-            SizeBytes = file.Length,
+            SizeBytes = storedSize,
             Sha256Hex = shaHex,
         };
 

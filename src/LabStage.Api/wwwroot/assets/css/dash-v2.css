@@ -931,3 +931,8 @@ html[data-theme="dark"] .dash-v2 .dash-sidebar .dash-nav a[aria-current="page"] 
 }
 /* QA 2026-11-19: dialog buttons grow with their text (English labels wrap on 360px phones) */
 .fin-dialog .fin-actions button, .fin-dialog .fin-actions a { block-size: auto; min-block-size: 48px; padding: 8px 14px; line-height: 1.3; text-align: center; }
+
+/* Two-step verification card (account pages) */
+.tf-qr { inline-size: 200px; block-size: 200px; padding: 10px; background: #fff; border-radius: 12px; border: 1px solid var(--d-line, rgba(0,0,0,.08)); }
+.tf-code-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px 16px; margin: 0; padding-inline-start: 22px; font-family: var(--font-mono); font-size: 15px; letter-spacing: .04em; }
+#tf-secret { display: block; margin-block-start: 4px; font-family: var(--font-mono); letter-spacing: .06em; user-select: all; }

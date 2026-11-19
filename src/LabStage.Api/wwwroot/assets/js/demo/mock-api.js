@@ -225,7 +225,7 @@
     if (p === '/api/v1/auth/reset-password' && method === 'POST') {
       const m = String(body?.token || '').match(/^demo-reset-(doctor|lab|admin)$/);
       if (!m) return problem('الرابط غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.');
-      if (String(body?.newPassword || '').length < 8) return problem('كلمة المرور يجب ألا تقل عن 8 أحرف.');
+      if (String(body?.newPassword || '').length < 10) return problem('كلمة المرور يجب ألا تقل عن 10 أحرف.');
       state.users[m[1]].password = body.newPassword; save();
       return json({ reset: true, email: state.users[m[1]].email });
     }
@@ -273,11 +273,13 @@
     }
     if (p === '/api/v1/account/change-password' && method === 'POST') {
       if (body?.currentPassword !== U(r).password) return problem('كلمة المرور الحالية غير صحيحة.');
-      if (String(body?.newPassword || '').length < 8) return problem('كلمة المرور يجب ألا تقل عن 8 أحرف.');
+      if (String(body?.newPassword || '').length < 10) return problem('كلمة المرور يجب ألا تقل عن 10 أحرف.');
       U(r).password = body.newPassword; save();
       return json({ changed: true });
     }
     if (p === '/api/v1/account/resend-confirmation') return json({ confirmed: true });
+    if (p === '/api/v1/account/two-factor') return json({ enabled: false, recoveryCodesLeft: 0, required: false });
+    if (p.startsWith('/api/v1/account/two-factor/')) return problem('التحقق بخطوتين يعمل على الموقع الحقيقي فقط، وليس في النسخة التجريبية.');
     if (p.startsWith('/api/v1/labs/my/staff')) {
       if (r !== 'lab') return json({ title: 'Forbidden', status: 403 }, 403);
       state.staff ||= [];

@@ -1,6 +1,6 @@
 // Forgot password, set a new password (reset or staff invitation) and email confirmation pages.
 // Behaviour only: every text is written in the HTML; views are shown/hidden here.
-import { applyDomTranslations, getLang } from '../core/i18n.js?v=21';
+import { applyDomTranslations, getLang } from '../core/i18n.js?v=22';
 
 const $ = (sel) => document.querySelector(sel);
 const qs = new URLSearchParams(location.search);
@@ -41,7 +41,7 @@ if (resetForm) {
   resetForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const pw = resetForm.newPassword.value;
-    if (pw.length < 8) { fail('كلمة المرور 8 أحرف على الأقل.'); return; }
+    if (pw.length < 10 || !/\p{L}/u.test(pw) || !/\d/.test(pw)) { fail('كلمة المرور 10 أحرف على الأقل، فيها حروف وأرقام.'); return; }
     if (pw !== resetForm.confirmPassword.value) { fail('تأكيد كلمة المرور غير مطابق.'); return; }
     const r = await post('/api/v1/auth/reset-password', { token, newPassword: pw }).catch(() => null);
     if (r?.ok) { show('done'); return; }

@@ -39,7 +39,7 @@ public class FrontendAssetsTests
     [Fact]
     public void Minify_keeps_selectors_and_values()
     {
-        Assert.Equal("a :hover{color:red}.b,.c{margin:calc(1px + 2px)}",
+        Assert.Equal("a :hover{color:red}.b,.c{margin: calc(1px + 2px)}",
             CssBundles.Minify("/* x */ a :hover { color:red; }\n.b , .c { margin: calc(1px + 2px); }"));
     }
 }

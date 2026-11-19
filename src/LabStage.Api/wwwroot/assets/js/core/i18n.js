@@ -10,7 +10,7 @@ let EXACT_AR_TO_EN = {}, SUBSTRING_AR_TO_EN = [], COUNT_UNITS_AR_TO_EN = {}, COU
 let SUBSTRING_RES = [];
 let dictLoad = null, dictReady = false;
 function loadDictionary() {
-  dictLoad ??= import('./i18n-en.js?v=1').then((d) => {
+  dictLoad ??= import('./i18n-en.js?v=2').then((d) => {
     ({ EXACT_AR_TO_EN, SUBSTRING_AR_TO_EN, COUNT_UNITS_AR_TO_EN, COUNT_UNIT_RE, PLACEHOLDER_AR_TO_EN } = d);
     dictReady = true;
     SUBSTRING_RES = SUBSTRING_AR_TO_EN.map(([ar, en]) => [ar, en,

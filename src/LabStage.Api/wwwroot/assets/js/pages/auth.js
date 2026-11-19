@@ -1,5 +1,5 @@
 // Client-side validation, role tab switching, password visibility, and API submission for login/register.
-import { initPreferences } from '../core/i18n.js?v=21';
+import { initPreferences } from '../core/i18n.js?v=22';
 
 initPreferences();
 
@@ -102,6 +102,48 @@ loginForm?.addEventListener('submit', async (e) => {
       showAlert(data.detail || data.title || 'بيانات الدخول غير صحيحة.');
       return;
     }
+    if (data.twoFactorRequired) { showCodeStep(data.ticket); return; }
+    redirectForRole(data.role);
+  } catch {
+    showAlert('تعذّر الاتصال بالخادم. حاول مرة أخرى.');
+  } finally {
+    btn?.classList.remove('is-loading');
+  }
+});
+
+// Second step of sign-in (two-step verification): the form is in login.html, hidden until needed.
+const codeForm = document.getElementById('two-factor-form');
+let ticket = null;
+function showCodeStep(t) {
+  ticket = t;
+  document.getElementById('auth-alert')?.setAttribute('hidden', '');
+  loginForm.hidden = true;
+  codeForm.hidden = false;
+  codeForm.code.value = '';
+  codeForm.code.focus();
+}
+document.getElementById('tf-back')?.addEventListener('click', () => {
+  ticket = null;
+  codeForm.hidden = true;
+  loginForm.hidden = false;
+  loginForm.password.value = '';
+  loginForm.password.focus();
+});
+codeForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  clearErrors(codeForm);
+  const code = codeForm.code.value.trim();
+  if (code.replace(/[\s-]/g, '').length < 6) { setFieldError(codeForm, 'code', 'اكتب الكود المكوّن من 6 أرقام.'); return; }
+  const btn = document.getElementById('tf-submit');
+  btn?.classList.add('is-loading');
+  try {
+    const res = await fetch('/api/v1/auth/login/two-factor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticket, code }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showAlert(data.detail || data.title || 'الكود غير صحيح.'); return; }
     redirectForRole(data.role);
   } catch {
     showAlert('تعذّر الاتصال بالخادم. حاول مرة أخرى.');
@@ -129,7 +171,7 @@ regForm?.addEventListener('submit', async (e) => {
   if (payload.entityName.length < 2) { setFieldError(regForm, 'entityName', 'هذا الحقل مطلوب.'); valid = false; }
   if (!payload.governorate) { setFieldError(regForm, 'governorate', 'اختر المحافظة.'); valid = false; }
   if (!payload.email.includes('@')) { setFieldError(regForm, 'email', 'أدخل بريدًا إلكترونيًا صحيحًا.'); valid = false; }
-  if (payload.password.length < 8) { setFieldError(regForm, 'password', 'كلمة المرور 8 أحرف على الأقل.'); valid = false; }
+  if (payload.password.length < 10 || !/\p{L}/u.test(payload.password) || !/\d/.test(payload.password)) { setFieldError(regForm, 'password', 'كلمة المرور 10 أحرف على الأقل، فيها حروف وأرقام.'); valid = false; }
   if (!regForm.acceptTerms.checked) { setFieldError(regForm, 'acceptTerms', 'يجب الموافقة على الشروط والأحكام.'); valid = false; }
   if (!valid) return;
 

@@ -1,9 +1,9 @@
-import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=21';
+import { initPreferences, applyDomTranslations, getLang } from '../core/i18n.js?v=22';
 import { fillDoctorHome, fillLabHome, fillAdminHome } from './dash-home.js?v=2';
 import { initNotificationCenter, initNotificationPrefs } from './notifications.js?v=5';
 import { initOrderChat, decorateUnreadChats } from './chat.js?v=4';
 import { initAdminLists, initOrderDisputes } from './admin-lists.js?v=3';
-import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=9';
+import { installFinanceGate, initLabSettings, initDoctorSettings, renderTracker, initVerifyBanner, initAccountPage, installDocLinks, initReconciliation } from './dash-extra.js?v=10';
 
 // Unified controller for Dentist, Laboratory, and Admin dashboards.
 // Enforces authentication & role checks before rendering any protected data.
@@ -242,6 +242,15 @@ async function ensureAuthenticated() {
     return null;
   }
   const user = await res.json();
+  // Admins must use two-step verification: an older session signs in again; without it, set it up first.
+  if (user.twoFactorSetupRequired) {
+    if (user.twoFactorEnabled) {
+      await fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+      window.location.href = `/login.html?returnUrl=${encodeURIComponent(window.location.pathname)}`;
+      return null;
+    }
+    if (page !== 'admin-account') { window.location.href = '/admin-account.html#two-factor-card'; return null; }
+  }
   currentUser = user;
   document.getElementById('sidebar-user-name') && (document.getElementById('sidebar-user-name').textContent = `${user.fullName} (${user.email})`);
   document.getElementById('top-user-name') && (document.getElementById('top-user-name').textContent = user.fullName);
