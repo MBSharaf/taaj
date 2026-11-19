@@ -10,7 +10,9 @@ namespace LabStage.Infrastructure.Persistence;
 /// <param name="IncludeDemoData">Demo users (with published passwords), labs and orders. Development only.</param>
 /// <param name="BootstrapAdminEmail">Optional first admin for a fresh non-demo database (from secrets, never appsettings).</param>
 /// <param name="BootstrapAdminPassword">Password for the bootstrap admin.</param>
-public sealed record SeedOptions(bool IncludeDemoData, string? BootstrapAdminEmail = null, string? BootstrapAdminPassword = null);
+/// <param name="ApplyMigrations">False when the schema is updated by the deployment instead (the app then runs with a
+/// database user that can read and write data but not change tables; see docs/OPERATIONS.md).</param>
+public sealed record SeedOptions(bool IncludeDemoData, string? BootstrapAdminEmail = null, string? BootstrapAdminPassword = null, bool ApplyMigrations = true);
 
 public static class DatabaseSeeder
 {
@@ -79,7 +81,7 @@ public static class DatabaseSeeder
 
     private static async Task SeedCoreAsync(LabStageDbContext db, SeedOptions options, CancellationToken ct)
     {
-        await MigrateAsync(db, ct);
+        if (options.ApplyMigrations) await MigrateAsync(db, ct);
 
         if (!await db.PlatformSettings.AnyAsync(ct))
         {

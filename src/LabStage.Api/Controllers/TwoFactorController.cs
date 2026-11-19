@@ -44,7 +44,7 @@ public sealed class TwoFactorController(LabStageDbContext db, TwoFactor twoFacto
             await throttle.FailAsync(failKey, TwoFactor.FailureWindow, ct);
             return Problem(BadCode, statusCode: StatusCodes.Status401Unauthorized);
         }
-        Audit(u, used == "recovery" ? "TwoFactorRecoveryCodeUsed" : "TwoFactorSignIn");
+        db.AddUserAudit(u, used == "recovery" ? "TwoFactorRecoveryCodeUsed" : "TwoFactorSignIn");
         await db.SaveChangesAsync(ct);
         await throttle.ResetAsync(failKey, ct);
         await AuthController.SignInAsync(HttpContext, u, t.RememberMe, passedTwoFactor: true);
@@ -107,7 +107,7 @@ public sealed class TwoFactorController(LabStageDbContext db, TwoFactor twoFacto
         u.TwoFactorEnabledAt = DateTimeOffset.UtcNow;
         u.TwoFactorRecoveryCodes = string.Join(';', codes.Select(Totp.HashRecoveryCode));
         u.SecurityStamp = Guid.NewGuid().ToString("N"); // other sessions (signed in without the code) are signed out
-        Audit(u, "TwoFactorEnabled");
+        db.AddUserAudit(u, "TwoFactorEnabled");
         await db.SaveChangesAsync(ct);
         await AuthController.SignInAsync(HttpContext, u, isPersistent: true, passedTwoFactor: true);
         return Ok(new { Enabled = true, RecoveryCodes = codes });
@@ -126,7 +126,7 @@ public sealed class TwoFactorController(LabStageDbContext db, TwoFactor twoFacto
         if (twoFactor.Check(u, req.Code) is null) return Problem(BadCode, statusCode: StatusCodes.Status400BadRequest);
         Clear(u);
         u.SecurityStamp = Guid.NewGuid().ToString("N");
-        Audit(u, "TwoFactorDisabled");
+        db.AddUserAudit(u, "TwoFactorDisabled");
         await db.SaveChangesAsync(ct);
         await AuthController.SignInAsync(HttpContext, u, isPersistent: true);
         return Ok(new { Enabled = false });
@@ -143,7 +143,7 @@ public sealed class TwoFactorController(LabStageDbContext db, TwoFactor twoFacto
         if (u is null) return NotFound();
         Clear(u);
         u.SecurityStamp = Guid.NewGuid().ToString("N");
-        Audit(u, "TwoFactorResetByAdmin", User.GetUserId(), AppRoles.Admin);
+        db.AddUserAudit(u, "TwoFactorResetByAdmin", User.GetUserId(), AppRoles.Admin);
         await db.SaveChangesAsync(ct);
         return Ok(new { Enabled = false });
     }
@@ -158,6 +158,4 @@ public sealed class TwoFactorController(LabStageDbContext db, TwoFactor twoFacto
     private static int RecoveryLeft(AppUser u) =>
         string.IsNullOrEmpty(u.TwoFactorRecoveryCodes) ? 0 : u.TwoFactorRecoveryCodes.Split(';', StringSplitOptions.RemoveEmptyEntries).Length;
 
-    private void Audit(AppUser u, string action, Guid? actor = null, string? actorRole = null) =>
-        db.AuditLogs.Add(new AuditLog { ActorUserId = actor ?? u.Id, ActorRole = actorRole ?? u.Role, Action = action, EntityType = nameof(AppUser), EntityId = u.Id.ToString(), Details = "" });
 }

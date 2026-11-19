@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using System.Threading.RateLimiting;
 using LabStage.Api.Hubs;
 using LabStage.Application.Payments;
@@ -155,7 +156,13 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<LabStage.Api.Secur
 builder.Services.AddControllers(o => o.Filters.Add<LabStage.Api.Security.LabMoneyMaskFilter>());
 builder.Services.AddOpenApi("v1");
 builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<LabStage.Api.Security.DatabaseHealthCheck>("database", tags: ["ready"])
+    .AddCheck<LabStage.Api.Security.NotificationBacklogHealthCheck>("notifications", tags: ["ready"]);
+// Monitoring: with an Application Insights connection string set (Azure), requests, failures, dependencies (SQL)
+// and logs are sent there; the alert rules are listed in docs/OPERATIONS.md. Without it nothing is sent anywhere.
+if (!string.IsNullOrWhiteSpace(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
 builder.Services.AddResponseCompression(o =>
 {
     o.EnableForHttps = true;
@@ -173,7 +180,9 @@ using (var scope = app.Services.CreateScope())
     await DatabaseSeeder.SeedAsync(db, new SeedOptions(
         IncludeDemoData: app.Environment.IsDevelopment(),
         BootstrapAdminEmail: app.Configuration["Bootstrap:AdminEmail"],
-        BootstrapAdminPassword: app.Configuration["Bootstrap:AdminPassword"]));
+        BootstrapAdminPassword: app.Configuration["Bootstrap:AdminPassword"],
+        // Database:MigrateOnStartup=false when the deployment updates the schema with its own (owner) database user.
+        ApplyMigrations: app.Configuration.GetValue("Database:MigrateOnStartup", true)));
 }
 
 app.UseResponseCompression();
@@ -224,7 +233,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<LabStage.Api.Security.AdminTwoFactorGate>();
 
-app.MapHealthChecks("/api/v1/health");
+// Liveness: the app answers. Readiness: it can also reach the database and is keeping up with notifications.
+app.MapHealthChecks("/api/v1/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/api/v1/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = c => c.Tags.Contains("ready"),
+    ResponseWriter = LabStage.Api.Security.HealthReport.WriteAsync,
+});
 app.MapHub<OrderHub>("/hubs/orders");
 app.MapControllers();
 
