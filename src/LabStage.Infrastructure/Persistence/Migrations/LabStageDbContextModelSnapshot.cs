@@ -274,6 +274,8 @@ namespace LabStage.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("OrderId");
+
                     b.ToTable("Conversations");
                 });
 

@@ -20,7 +20,7 @@ if (string.IsNullOrWhiteSpace(connStr))
 {
     if (!isDevelopment)
         throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured (set ConnectionStrings__DefaultConnection).");
-    connStr = "Server=(localdb)\\mssqllocaldb;Database=LabStageEgyptDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
+    connStr = "Server=(localdb)\\mssqllocaldb;Database=LabStageEgyptDb;Trusted_Connection=True;TrustServerCertificate=True";
 }
 
 var webhookSecret = builder.Configuration["Payments:WebhookSecret"];
@@ -38,8 +38,12 @@ else if (!isDevelopment && (webhookSecret == LegacyDevWebhookSecret || webhookSe
 
 builder.Services.AddSingleton<LabStage.Api.Security.NotificationQueue>();
 builder.Services.AddSingleton<LabStage.Api.Security.NotificationSaveInterceptor>();
+builder.Services.AddSingleton<LabStage.Api.Security.SessionCheckCache>();
+builder.Services.AddSingleton<LabStage.Api.Security.SessionInvalidationInterceptor>();
 builder.Services.AddDbContext<LabStageDbContext>((sp, o) => o.UseSqlServer(connStr)
-    .AddInterceptors(sp.GetRequiredService<LabStage.Api.Security.NotificationSaveInterceptor>()));
+    .AddInterceptors(
+        sp.GetRequiredService<LabStage.Api.Security.NotificationSaveInterceptor>(),
+        sp.GetRequiredService<LabStage.Api.Security.SessionInvalidationInterceptor>()));
 // Real gateway only when its keys are configured; otherwise the local test simulator (usable in Development only).
 if (LabStage.Infrastructure.Payments.PaymobPaymentGateway.IsConfigured(builder.Configuration))
     builder.Services.AddHttpClient<IPaymentGateway, LabStage.Infrastructure.Payments.PaymobPaymentGateway>(c => c.Timeout = TimeSpan.FromSeconds(30));
@@ -66,12 +70,16 @@ builder.Services
         o.Events.OnValidatePrincipal = async ctx =>
         {
             var id = ctx.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var db = ctx.HttpContext.RequestServices.GetRequiredService<LabStageDbContext>();
             // ...and a password change/reset signs out every session issued before it (security stamp).
             var stamp = ctx.Principal?.FindFirst(LabStage.Api.Controllers.AuthController.StampClaim)?.Value;
+            // A session confirmed in the last 30 seconds is not re-checked (any change to the user clears that at once).
+            var sessions = ctx.HttpContext.RequestServices.GetRequiredService<LabStage.Api.Security.SessionCheckCache>();
+            if (Guid.TryParse(id, out var knownId) && stamp != null && sessions.IsKnownActive(knownId, stamp)) return;
+            var db = ctx.HttpContext.RequestServices.GetRequiredService<LabStageDbContext>();
             var active = Guid.TryParse(id, out var userId) &&
                          await db.Users.AsNoTracking().AnyAsync(u => u.Id == userId && !u.IsSuspended && stamp != null && u.SecurityStamp == stamp, ctx.HttpContext.RequestAborted);
-            if (!active)
+            if (active) sessions.MarkActive(userId, stamp!);
+            else
             {
                 ctx.RejectPrincipal();
                 await ctx.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -111,7 +119,7 @@ builder.Services.AddRateLimiter(o =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
             _ => new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
-    o.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+    var perAddress = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
         RateLimitPartition.GetFixedWindowLimiter(
             ctx.Connection.RemoteIpAddress?.ToString() ?? "local",
             _ => new FixedWindowRateLimiterOptions
@@ -120,6 +128,20 @@ builder.Services.AddRateLimiter(o =>
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
             }));
+    // Admission control: at most N API requests run at once; the rest wait in line (oldest first) instead of all
+    // fighting for the database connections and failing. Keep N below the connection pool size (default 100).
+    // Live connections (/hubs) and static files are not counted.
+    var maxApi = builder.Configuration.GetValue("Performance:MaxConcurrentApiRequests", 80);
+    var apiInFlight = PartitionedRateLimiter.Create<HttpContext, string>(ctx =>
+        ctx.Request.Path.StartsWithSegments("/api") && maxApi > 0
+            ? RateLimitPartition.GetConcurrencyLimiter("api", _ => new ConcurrencyLimiterOptions
+            {
+                PermitLimit = maxApi,
+                QueueLimit = 50_000,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            })
+            : RateLimitPartition.GetNoLimiter("other"));
+    o.GlobalLimiter = PartitionedRateLimiter.CreateChained(perAddress, apiInFlight);
 });
 
 builder.Services.AddScoped<LabStage.Api.Security.FinanceGate>();

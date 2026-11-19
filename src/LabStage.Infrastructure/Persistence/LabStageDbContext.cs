@@ -70,6 +70,8 @@ public sealed class LabStageDbContext(DbContextOptions<LabStageDbContext> option
         });
 
         b.Entity<ConversationRead>(e => e.HasIndex(x => new { x.ConversationId, x.UserId }).IsUnique());
+        // Every chat request looks up the conversation by its order.
+        b.Entity<Conversation>(e => e.HasIndex(x => x.OrderId));
 
         b.Entity<Dispute>(e =>
         {

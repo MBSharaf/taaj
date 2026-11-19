@@ -14,7 +14,7 @@ namespace LabStage.Api.Security;
 /// <summary>Queue of saved notifications waiting to be pushed live and emailed.</summary>
 public sealed class NotificationQueue
 {
-    private readonly Channel<Guid> channel = Channel.CreateUnbounded<Guid>(new UnboundedChannelOptions { SingleReader = true });
+    private readonly Channel<Guid> channel = Channel.CreateUnbounded<Guid>(new UnboundedChannelOptions { SingleReader = false });
     public ChannelReader<Guid> Reader => channel.Reader;
     public void Enqueue(Guid id) => channel.Writer.TryWrite(id);
 }
@@ -68,7 +68,11 @@ public sealed class NotificationSaveInterceptor(NotificationQueue queue) : SaveC
 public sealed class NotificationDispatcher(NotificationQueue queue, IServiceScopeFactory scopes, IHubContext<OrderHub> hub, IEmailSender email,
     IConfiguration config, ILogger<NotificationDispatcher> log) : BackgroundService
 {
-    protected override async Task ExecuteAsync(CancellationToken stop)
+    // Several deliveries at once: one at a time could not keep up with a busy chat (minutes of backlog in the load test).
+    protected override Task ExecuteAsync(CancellationToken stop) =>
+        Task.WhenAll(Enumerable.Range(0, Math.Clamp(config.GetValue("Notifications:Workers", 4), 1, 32)).Select(_ => WorkerAsync(stop)));
+
+    private async Task WorkerAsync(CancellationToken stop)
     {
         await foreach (var id in queue.Reader.ReadAllAsync(stop))
         {
